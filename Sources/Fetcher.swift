@@ -16,9 +16,9 @@ class Fetcher {
         self.redis = redis
     }
 
-    func retriveWork() -> Job? {
-        if let value = try? redis.command("LBPOP").toArray() {
-            return Job.deserialize(value)
-        }
-    }
+//    func retriveWork() -> Job? {
+//        if let value = try? redis.command("LBPOP").toArray() {
+//            return Job.deserialize(value)
+//        }
+//    }
 }
