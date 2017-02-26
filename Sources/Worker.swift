@@ -9,7 +9,6 @@
 import Foundation
 
 public protocol ArgumentType {
-    var string: String { get }
 }
 
 public protocol Worker {

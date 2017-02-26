@@ -15,10 +15,4 @@ class Fetcher {
     init(redis: Redbird) {
         self.redis = redis
     }
-
-//    func retriveWork() -> Job? {
-//        if let value = try? redis.command("LBPOP").toArray() {
-//            return Job.deserialize(value)
-//        }
-//    }
 }

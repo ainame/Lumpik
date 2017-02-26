@@ -16,9 +16,7 @@ public protocol Client {
 public struct SwiftkiqClient: Client {
     public let store: ListStorable
     
-    static var `default`: Client {
-        return SwiftkiqClient(store: MockStore())
-    }
+    static var `default`: Client = SwiftkiqClient(store: MockStore())
     
     init(store: ListStorable) {
         self.store = store

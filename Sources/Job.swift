@@ -9,7 +9,9 @@
 import Foundation
 
 public protocol Job {
-    var `class`: AnyClass { get }
+    associatedtype W: Worker
+    
+    var `class`: W.Type { get }
     var argument: String { get }
     var retry: Int { get }
     var queue: Queue { get }
@@ -20,8 +22,8 @@ public protocol Job {
 extension Job {
     public var serialized: Dictionary<String, Any> {
         return [
-            "class": `class`,
-            "argument": argument,
+            "class": String(describing: `class`),
+            "argument": String(describing: argument),
             "retry": retry,
             "queue": queue.rawValue
         ]
