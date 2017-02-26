@@ -17,7 +17,28 @@ class SwiftkiqTests: XCTestCase {
     
     func testExample() {
         try! EchoMessageWorker.performAsync(.init(message: "Hello, World!"))
-        XCTAssertNotNil(EchoMessageWorker.client.store.dequeue(Queue("default")))
+        XCTAssertNotNil(try! EchoMessageWorker.client.store.dequeue(Queue("default")))
+    }
+    
+    func testRedis() {
+        try! Swiftkiq.store.enqueue(["hoge": 1], to: Queue("default"))
+        do {
+            let work = try Swiftkiq.store.dequeue(Queue("default"))
+            XCTAssertNotNil(work)
+        } catch(let error) {
+            print(error)
+            XCTFail()
+        }
+    }
+    
+    func testRedisEmptyDequeue() {
+        do {
+            let work = try Swiftkiq.store.dequeue(Queue("default"))
+            XCTAssertNil(work)
+        } catch(let error) {
+            print(error)
+            XCTFail()
+        }
     }
 
 

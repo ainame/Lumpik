@@ -9,10 +9,17 @@
 import Foundation
 import Redbird
 
-class Fetcher {
-    let redis: Redbird
+protocol Fetcher {
+    func retriveWork() throws -> UnitOfWork?
+}
 
-    init(redis: Redbird) {
-        self.redis = redis
+final class BasicFetcher: Fetcher {
+    let queue: Queue
+    init(queue: Queue) {
+        self.queue = queue
+    }
+    
+    func retriveWork() throws -> UnitOfWork? {
+        return try Swiftkiq.store.dequeue(queue)!
     }
 }

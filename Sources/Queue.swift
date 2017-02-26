@@ -11,6 +11,10 @@ import Foundation
 public struct Queue: RawRepresentable, Equatable, Hashable {
     public let rawValue: String
     
+    var name: String {
+        return "queue:\(rawValue)"
+    }
+    
     public init(_ rawValue: String) {
         self.rawValue = rawValue
     }
