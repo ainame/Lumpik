@@ -8,7 +8,6 @@
 
 import Foundation
 import Redbird
-import Jay
 
 public struct UnitOfWork {
     let queue: Queue
@@ -30,18 +29,17 @@ final class RedisStore: ListStorable {
     let timeout: String = "2"
     
     private let redis: Redbird
-    private let jsonParser: Jay
+    private let helper: JsonHelper
     
     init(host: String, port: UInt16) throws {
         self.host = host
         self.port = port
         self.redis = try Redbird(config: .init(address: host, port: port, password: nil))
-        self.jsonParser = Jay(formatting: .minified, parsing: .none)
+        self.helper = JsonHelper()
     }
     
     public func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws {
-        let json = try jsonParser.dataFromJson(anyDictionary: job)
-        let string = String(bytes: json, encoding: .utf8)!
+        let string = helper.serialize(job)
         try redis.command("LPUSH", params: [queue.name, string])
     }
 
@@ -49,13 +47,7 @@ final class RedisStore: ListStorable {
         let response = try redis.command("BRPOP", params: [queue.name, timeout])
         guard response.respType == .Array else { return nil }
         
-        let array = try response.toArray()
-        precondition(try! array[0].toString() == queue.name)
-        
-        guard let string = try array[1].toMaybeString()?.utf8 else { return nil }
-        let json = try jsonParser.anyJsonFromData(Array<UInt8>(string))
-        let dict = json as! Dictionary<String, Any>
-        
+        let dict = helper.deserialize(response)
         return UnitOfWork(queue: queue, job: dict)
     }
 }
