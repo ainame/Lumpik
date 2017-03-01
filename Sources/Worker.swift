@@ -11,13 +11,14 @@ import Foundation
 public protocol ArgumentType {
 }
 
-public protocol Worker {
+public protocol Worker: class {
     associatedtype Argument: ArgumentType
     
     static var client: Client { get }
     static var queue: Queue { get }
     static var retry: Int { get }
     
+    init()
     static func performAsync(_ argument: Argument, to queue: Queue) throws
     func perform(_ argument: Argument) throws -> ()
 }

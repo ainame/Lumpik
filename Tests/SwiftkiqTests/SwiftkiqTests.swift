@@ -2,6 +2,13 @@ import XCTest
 @testable import Swiftkiq
 
 class SwiftkiqTests: XCTestCase {
+    struct EchoMessageJob: Job {
+        let `class` = EchoMessageWorker.self
+        let argument: EchoMessageWorker.Argument
+        let retry: Int
+        let queue: Queue
+    }
+    
     final class EchoMessageWorker: Worker {
         struct Argument: ArgumentType {
             let message: String
