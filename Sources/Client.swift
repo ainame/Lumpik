@@ -10,7 +10,7 @@ import Foundation
 
 public protocol Client {
     var store: ListStorable { get }
-    func enqueue<W: Worker, Argument: ArgumentType>(`class`: W.Type, argument: Argument, to queue: Queue) throws
+    func enqueue<Worker: WorkerType, Argument: ArgumentType>(`class`: Worker.Type, argument: Argument, to queue: Queue) throws
 }
 
 public struct SwiftkiqClient: Client {
@@ -22,7 +22,7 @@ public struct SwiftkiqClient: Client {
         self.store = store
     }
     
-    public func enqueue<W: Worker, A: ArgumentType>(`class`: W.Type, argument: A, to queue: Queue) throws {
+    public func enqueue<Worker: WorkerType, A: ArgumentType>(`class`: Worker.Type, argument: A, to queue: Queue) throws {
         try self.store.enqueue(["class": `class`, "argument": argument], to: queue)
     }
 }

@@ -11,13 +11,15 @@ import Dispatch
 
 public final class Processor {
     let fetcher: Fetcher
+    let router: Routable
     let dipsatchQueue: DispatchQueue
     
     var down: Bool = false
     var done: Bool = false
 
-    init(fetcher: Fetcher, dispatchQueue: DispatchQueue) {
+    init(fetcher: Fetcher, router: Routable, dispatchQueue: DispatchQueue) {
         self.fetcher = fetcher
+        self.router = router
         self.dipsatchQueue = dispatchQueue
     }
     
@@ -44,5 +46,6 @@ public final class Processor {
     }
     
     func process(_ work: UnitOfWork) throws {
+        try router.dispatch(work)
     }
 }

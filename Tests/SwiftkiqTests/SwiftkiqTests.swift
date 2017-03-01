@@ -3,6 +3,7 @@ import XCTest
 
 class SwiftkiqTests: XCTestCase {
     struct EchoMessageJob: Job {
+        let jid: String
         let `class` = EchoMessageWorker.self
         let argument: EchoMessageWorker.Argument
         let retry: Int
@@ -16,6 +17,7 @@ class SwiftkiqTests: XCTestCase {
 
         static let queue = Queue("default")
         static let retry = 1
+        var jid: String?
 
         func perform(_ job: Argument) {
             print(job.message)

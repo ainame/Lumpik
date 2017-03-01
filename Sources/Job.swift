@@ -8,19 +8,22 @@
 
 import Foundation
 
-public protocol Job {
-    associatedtype W: Worker
+public protocol JobType {
+    associatedtype Worker: WorkerType
     
-    var `class`: W.Type { get }
-    var argument: W.Argument { get }
+    static var `class`: Worker.Type { get }
+    var jid: String { get }
+    var argument: Worker.Argument { get }
     var retry: Int { get }
     var queue: Queue { get }
     
-    func invoke() throws
+    func invokeWorker() throws
 }
 
-extension Job {
-    public func invoke() throws {
-        try self.`class`.init().perform(argument)
+extension JobType {
+    public func invokeWorker() throws {
+        let worker = Self.`class`.init()
+        worker.jid = jid
+        try worker.perform(argument)
     }
 }

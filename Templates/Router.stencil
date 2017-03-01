@@ -1,0 +1,23 @@
+import Foundation
+
+class Router: Routable {
+    func dispatch(_ work: UnitOfWork) throws {
+        switch work.workerClass {
+        {% for type in types.implementing.WorkerType %}
+        case "{{ type.name }}":
+            try invokeWorker(workerClass: {{ type.name }}.self, work: work)
+        {% endfor %}
+        default:
+            break
+        }
+    }
+
+    func invokeWorker<Worker: WorkerType>(workerClass: Worker.Type, work: UnitOfWork) throws {
+        let worker = workerClass.init()
+        let argument = workerClass.Argument.from(work.argument)
+        worker.jid = work.jid
+        worker.retry = work.retry
+        worker.queue = work.queue
+        try worker.perform(argument)
+    }
+}

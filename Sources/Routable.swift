@@ -9,5 +9,5 @@
 import Foundation
 
 protocol Routable {
-    func dispatch<J: Job>(className: String) -> J
+    func dispatch(_ work: UnitOfWork) throws
 }

@@ -11,7 +11,19 @@ import Redbird
 
 public struct UnitOfWork {
     let queue: Queue
-    let job: Dictionary<String, Any>
+    
+    var jid: String { return job["jid"]! as! String }
+    var jobClass: String { return job["jobClass"]! as! String }
+    var workerClass: String { return job["workerClass"]! as! String }
+    var argument: Dictionary<String, Any> { return job["argument"]! as! Dictionary<String, Any> }
+    var retry: Int { return job["retry"]! as! Int }
+    
+    private let job: Dictionary<String, Any>
+    
+    public init(queue: Queue, job: Dictionary<String, Any>) {
+        self.queue = queue
+        self.job = job
+    }
     
     func requeue() throws {
         // TODO
