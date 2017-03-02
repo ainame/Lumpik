@@ -32,7 +32,7 @@ public struct UnitOfWork {
 
 public protocol ListStorable {
     func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws
-    func dequeue(_ queue: Queue) throws -> UnitOfWork?
+    func dequeue(_ queues: [Queue]) throws -> UnitOfWork?
 }
 
 final class RedisStore: ListStorable {
@@ -55,33 +55,14 @@ final class RedisStore: ListStorable {
         try redis.command("LPUSH", params: [queue.name, string])
     }
 
-    func dequeue(_ queue: Queue) throws -> UnitOfWork? {
-        let response = try redis.command("BRPOP", params: [queue.name, timeout])
+    func dequeue(_ queues: [Queue]) throws -> UnitOfWork? {
+        let queusCommand = queues.map { $0.rawValue }.joined(separator: " ")
+        let response = try redis.command("BRPOP", params: [queusCommand, timeout])
         guard response.respType == .Array else { return nil }
         
-        let dict = helper.deserialize(response)
-        return UnitOfWork(queue: queue, job: dict)
-    }
-}
-
-final class MockStore: ListStorable {
-    private var all = Dictionary<Queue, Array<Dictionary<String, Any>>>()
-    
-    public func dequeue(_ queue: Queue) throws -> UnitOfWork? {
-        guard let job = all[queue]?.removeFirst() else {
-            return nil
-        }
-        
-        return UnitOfWork(queue: queue, job: job)
-    }
-    
-    public func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws {
-        if var list = all[queue] {
-            list.append(job)
-        } else {
-            var list = Array<Dictionary<String, Any>>()
-            list.append(job)
-            all[queue] = list
-        }
+        let parsedResponse = helper.deserialize(response) as! Array<Any>
+        let queueStr = parsedResponse[0] as! String
+        let dictionary = parsedResponse[1] as! Dictionary<String, Any>
+        return UnitOfWork(queue: Queue(rawValue: queueStr), job: dictionary)
     }
 }

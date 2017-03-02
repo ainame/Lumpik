@@ -18,11 +18,10 @@ struct JsonHelper {
         return String(bytes: json, encoding: .utf8)!
     }
     
-    func deserialize(_ response: RespObject) -> Dictionary<String, Any> {
+    func deserialize(_ response: RespObject) -> Any {
         let array = try! response.toArray()
         let string = try! array[1].toMaybeString()!.utf8
         let json = try! jay.anyJsonFromData(Array<UInt8>(string))
-        
-        return json as! Dictionary<String, Any>
+        return json
     }
 }
