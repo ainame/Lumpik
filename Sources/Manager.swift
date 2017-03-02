@@ -8,24 +8,30 @@
 
 import Foundation
 
-protocol ProcessorLifecycleDelegate {
+protocol ProcessorLifecycleDelegate: class {
     func stopped(processor: Processor)
     func died(processor: Processor, reason: String)
 }
 
 class Manager: ProcessorLifecycleDelegate {
     let concurrency: Int
-    let processors: [Processor]
+    let queues: [Queue]
+    let strategy: Fetcher.Type
+    let router: Routable
     
-    init(concurrency: Int = 25, queues: [Queue],
-         strategy: Fetcher.Type = BasicFetcher.self, router: Routable) {
-        self.concurrency = concurrency
-        self.processors = (0...concurrency).map { index in
-            DispatchQueue(label: "swiftkiq-queue\(index)")
-        }.map { dispatchQueue in
-            let fetcher = strategy.init(queues: queues)
-            return Processor(fetcher: fetcher, router: router, dispatchQueue: dispatchQueue)
+    lazy var processors: [Processor] = {
+        return (0...self.concurrency).map { index in
+            let fetcher = self.strategy.init(queues: self.queues)
+            let dispatchQueue = DispatchQueue(label: "swiftkiq-queue\(index)")
+            return Processor(fetcher: fetcher, router: self.router, dispatchQueue: dispatchQueue, delegate: self)
         }
+    }()
+    
+    init(concurrency: Int = 25, queues: [Queue], strategy: Fetcher.Type = BasicFetcher.self, router: Routable) {
+        self.concurrency = concurrency
+        self.router = router
+        self.queues = queues
+        self.strategy = strategy
     }
     
     func start() {

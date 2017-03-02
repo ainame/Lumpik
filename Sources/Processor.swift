@@ -13,14 +13,19 @@ public final class Processor {
     let fetcher: Fetcher
     let router: Routable
     let dipsatchQueue: DispatchQueue
+    weak var delegate: ProcessorLifecycleDelegate!
     
     var down: Bool = false
     var done: Bool = false
 
-    init(fetcher: Fetcher, router: Routable, dispatchQueue: DispatchQueue) {
+    init(fetcher: Fetcher,
+         router: Routable,
+         dispatchQueue: DispatchQueue,
+         delegate: ProcessorLifecycleDelegate) {
         self.fetcher = fetcher
         self.router = router
         self.dipsatchQueue = dispatchQueue
+        self.delegate = delegate
     }
     
     func start () {
