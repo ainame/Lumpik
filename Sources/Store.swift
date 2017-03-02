@@ -35,7 +35,7 @@ public protocol ListStorable {
     func dequeue(_ queues: [Queue]) throws -> UnitOfWork?
 }
 
-final class RedisStore: ListStorable {
+final public class RedisStore: ListStorable {
     let host: String
     let port: UInt16
     let timeout: String = "2"
@@ -55,7 +55,7 @@ final class RedisStore: ListStorable {
         try redis.command("LPUSH", params: [queue.name, string])
     }
 
-    func dequeue(_ queues: [Queue]) throws -> UnitOfWork? {
+    public func dequeue(_ queues: [Queue]) throws -> UnitOfWork? {
         let queusCommand = queues.map { $0.rawValue }.joined(separator: " ")
         let response = try redis.command("BRPOP", params: [queusCommand, timeout])
         guard response.respType == .Array else { return nil }

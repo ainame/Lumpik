@@ -15,7 +15,7 @@ public struct LaunchOptions {
     let router: Routable
 }
 
-class Launcher {
+public class Launcher {
     let manager: Manager
     
     init(options: LaunchOptions) {

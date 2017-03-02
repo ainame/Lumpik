@@ -9,7 +9,7 @@
 import Foundation
 import Redbird
 
-protocol Fetcher: class {
+public protocol Fetcher: class {
     init(queues: [Queue])
     func retriveWork() throws -> UnitOfWork?
 }

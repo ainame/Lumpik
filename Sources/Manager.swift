@@ -13,7 +13,7 @@ protocol ProcessorLifecycleDelegate: class {
     func died(processor: Processor, reason: String)
 }
 
-class Manager: ProcessorLifecycleDelegate {
+public class Manager: ProcessorLifecycleDelegate {
     let concurrency: Int
     let queues: [Queue]
     let strategy: Fetcher.Type

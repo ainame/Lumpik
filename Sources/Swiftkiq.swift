@@ -1,4 +1,4 @@
-final class Swiftkiq {
+final public class Swiftkiq {
     static var host: String = "127.0.0.1"
     static var port: UInt16 = 6379
     

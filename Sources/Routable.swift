@@ -8,6 +8,6 @@
 
 import Foundation
 
-protocol Routable {
+public protocol Routable {
     func dispatch(_ work: UnitOfWork) throws
 }
