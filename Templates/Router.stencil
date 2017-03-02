@@ -1,9 +1,10 @@
 import Foundation
+import Swiftkiq
 
 class Router: Routable {
     func dispatch(_ work: UnitOfWork) throws {
         switch work.workerClass {
-        {% for type in types.implementing.WorkerType %}
+        {% for type in types.based.WorkerType %}
         case "{{ type.name }}":
             try invokeWorker(workerClass: {{ type.name }}.self, work: work)
         {% endfor %}
@@ -18,6 +19,10 @@ class Router: Routable {
         worker.jid = work.jid
         worker.retry = work.retry
         worker.queue = work.queue
+        print("[INFO]: \(work.workerClass) start")
+        let start = Date()
         try worker.perform(argument)
+        let interval = Date().timeIntervalSince(start)
+        print(String(format: "[INFO]: %@ done - %.4f msec", work.workerClass, interval))
     }
 }
