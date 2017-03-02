@@ -23,6 +23,6 @@ class Router: Routable {
         let start = Date()
         try worker.perform(argument)
         let interval = Date().timeIntervalSince(start)
-        print(String(format: "[INFO]: %@ done - %.4f msec", work.workerClass, interval))
+        print(String(format: "[INFO]: jid=%@ %@ done - %.4f msec", work.jid, work.workerClass, interval))
     }
 }
