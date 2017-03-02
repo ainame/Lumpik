@@ -10,22 +10,21 @@ import Foundation
 import Redbird
 
 public struct UnitOfWork {
-    let queue: Queue
-    
-    var jid: String { return job["jid"]! as! String }
-    var jobClass: String { return job["jobClass"]! as! String }
-    var workerClass: String { return job["workerClass"]! as! String }
-    var argument: Dictionary<String, Any> { return job["argument"]! as! Dictionary<String, Any> }
-    var retry: Int { return job["retry"]! as! Int }
-    
+    public let queue: Queue
+
+    public var jid: String { return job["jid"]! as! String }
+    public var workerClass: String { return job["class"]! as! String }
+    public var argument: Dictionary<String, Any> { return job["args"]! as! Dictionary<String, Any> }
+    public var retry: Int { return Int(job["retry"]! as! UInt) }
+
     private let job: Dictionary<String, Any>
-    
+
     public init(queue: Queue, job: Dictionary<String, Any>) {
         self.queue = queue
         self.job = job
     }
-    
-    func requeue() throws {
+
+    public func requeue() throws {
         // TODO
     }
 }
@@ -39,30 +38,29 @@ final public class RedisStore: ListStorable {
     let host: String
     let port: UInt16
     let timeout: String = "2"
-    
+
     private let redis: Redbird
     private let helper: JsonHelper
-    
+
     init(host: String, port: UInt16) throws {
         self.host = host
         self.port = port
         self.redis = try Redbird(config: .init(address: host, port: port, password: nil))
         self.helper = JsonHelper()
     }
-    
+
     public func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws {
         let string = helper.serialize(job)
         try redis.command("LPUSH", params: [queue.name, string])
     }
 
     public func dequeue(_ queues: [Queue]) throws -> UnitOfWork? {
-        let queusCommand = queues.map { $0.rawValue }.joined(separator: " ")
+        let queusCommand = queues.map { $0.name }.joined(separator: " ")
         let response = try redis.command("BRPOP", params: [queusCommand, timeout])
         guard response.respType == .Array else { return nil }
-        
-        let parsedResponse = helper.deserialize(response) as! Array<Any>
-        let queueStr = parsedResponse[0] as! String
-        let dictionary = parsedResponse[1] as! Dictionary<String, Any>
-        return UnitOfWork(queue: Queue(rawValue: queueStr), job: dictionary)
+
+        let parsedResponse = helper.deserialize(response)
+        let queue = Queue(rawValue: parsedResponse["queue"]! as! String)
+        return UnitOfWork(queue: queue, job: parsedResponse)
     }
 }

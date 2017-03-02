@@ -16,12 +16,12 @@ public protocol Fetcher: class {
 
 final class BasicFetcher: Fetcher {
     private let queues: [Queue]
-    
+
     init(queues: [Queue]) {
         self.queues = queues
     }
-    
+
     func retriveWork() throws -> UnitOfWork? {
-        return try Swiftkiq.store.dequeue(queues)
+        return try SwiftkiqCore.store.dequeue(queues)
     }
 }

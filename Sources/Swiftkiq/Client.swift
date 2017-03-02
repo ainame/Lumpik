@@ -15,14 +15,14 @@ public protocol Client {
 
 public struct SwiftkiqClient: Client {
     public let store: ListStorable
-    
-    static var `default`: Client = SwiftkiqClient(store: Swiftkiq.store)
-    
+
+    static var `default`: Client = SwiftkiqClient(store: SwiftkiqCore.store)
+
     init(store: ListStorable) {
         self.store = store
     }
-    
+
     public func enqueue<Worker: WorkerType, A: ArgumentType>(`class`: Worker.Type, argument: A, to queue: Queue) throws {
-        try self.store.enqueue(["class": String(describing: `class`), "argument": argument], to: queue)
+        try self.store.enqueue(["jid": UUID().uuidString, "class": String(describing: `class`), "args": argument, "retry": 1], to: queue)
     }
 }

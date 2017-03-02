@@ -13,19 +13,27 @@ public struct LaunchOptions {
     let queues: [Queue]
     let strategy: Fetcher.Type?
     let router: Routable
+
+    public init(concurrency: Int = 25, queues: [Queue],
+        strategy: Fetcher.Type?, router: Routable) {
+        self.concurrency = concurrency
+        self.queues = queues
+        self.strategy = strategy
+        self.router = router
+    }
 }
 
 public class Launcher {
     let manager: Manager
-    
-    init(options: LaunchOptions) {
+
+    required public init(options: LaunchOptions) {
         self.manager = Manager(concurrency: options.concurrency,
                                queues: options.queues,
                                strategy: options.strategy ?? BasicFetcher.self,
                                router: options.router)
     }
-    
-    func run() {
+
+    public func run() {
         self.manager.start()
     }
 }
