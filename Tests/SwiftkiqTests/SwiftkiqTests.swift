@@ -2,20 +2,12 @@ import XCTest
 @testable import Swiftkiq
 
 class SwiftkiqTests: XCTestCase {
-    struct EchoMessageJob: JobType {
-        static let `class` = EchoMessageWorker.self
-        let jid: String
-        let argument: EchoMessageWorker.Argument
-        let retry: Int
-        let queue: Queue
-    }
-    
-    final class EchoMessageWorker: WorkerType {
-        struct Argument: ArgumentType {
+    final class EchoMessageWorker: Worker {
+        struct Args: Argument {
             let message: String
             
-            static func from(_ dictionary: Dictionary<String, Any>) -> Argument {
-                return Argument(
+            static func from(_ dictionary: Dictionary<String, Any>) -> Args {
+                return Args(
                     message: dictionary["message"]! as! String
                 )
             }
@@ -25,20 +17,20 @@ class SwiftkiqTests: XCTestCase {
         var queue: Queue?
         var retry: Int?
 
-        func perform(_ job: Argument) {
+        func perform(_ job: Args) {
             print(job.message)
         }
     }
     
     func testExample() {
         try! EchoMessageWorker.performAsync(.init(message: "Hello, World!"))
-        XCTAssertNotNil(try! Swiftkiq.store.dequeue([Queue("default")]))
+        XCTAssertNotNil(try! SwiftkiqCore.store.dequeue([Queue("default")]))
     }
     
     func testRedis() {
-        try! Swiftkiq.store.enqueue(["hoge": 1], to: Queue("default"))
+        try! SwiftkiqCore.store.enqueue(["hoge": 1], to: Queue("default"))
         do {
-            let work = try Swiftkiq.store.dequeue([Queue("default")])
+            let work = try SwiftkiqCore.store.dequeue([Queue("default")])
             XCTAssertNotNil(work)
         } catch(let error) {
             print(error)
@@ -48,7 +40,7 @@ class SwiftkiqTests: XCTestCase {
     
     func testRedisEmptyDequeue() {
         do {
-            let work = try Swiftkiq.store.dequeue([Queue("default")])
+            let work = try SwiftkiqCore.store.dequeue([Queue("default")])
             XCTAssertNil(work)
         } catch(let error) {
             print(error)

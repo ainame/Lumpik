@@ -1,11 +1,11 @@
 import Swiftkiq
 
-class EchoWorker: WorkerType {
-    struct Argument: ArgumentType {
+class EchoWorker: Worker {
+    struct Args: Argument {
         let message: String
 
-        static func from(_ dictionary: Dictionary<String, Any>) -> Argument {
-            return Argument(
+        static func from(_ dictionary: Dictionary<String, Any>) -> Args {
+            return Args(
                 message: dictionary["message"]! as! String
             )
         }
@@ -16,7 +16,7 @@ class EchoWorker: WorkerType {
 
     required init() {}
 
-    func perform(_ argument: Argument) throws {
-        print(argument.message)
+    func perform(_ args: Args) throws {
+        print(args.message)
     }
 }

@@ -49,6 +49,9 @@ public final class Processor {
         if let work = try fetcher.retriveWork() {
             try process(work)
         }
+        else {
+            fatalError("finish")
+        }
     }
 
     func process(_ work: UnitOfWork) throws {

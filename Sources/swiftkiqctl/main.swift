@@ -3,7 +3,7 @@ import Swiftkiq
 
 let router = Router()
 let options = LaunchOptions(
-    concurrency: 1,
+    concurrency: 25,
     queues: [Queue(rawValue: "default")],
     strategy: nil,
     router: router

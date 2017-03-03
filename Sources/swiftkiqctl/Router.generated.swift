@@ -14,9 +14,9 @@ class Router: Routable {
         }
     }
 
-    func invokeWorker<Worker: WorkerType>(workerClass: Worker.Type, work: UnitOfWork) throws {
+    func invokeWorker<W: Worker>(workerClass: W.Type, work: UnitOfWork) throws {
         let worker = workerClass.init()
-        let argument = workerClass.Argument.from(work.argument)
+        let argument = workerClass.Args.from(work.args)
         worker.jid = work.jid
         worker.retry = work.retry
         worker.queue = work.queue

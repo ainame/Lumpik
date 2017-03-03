@@ -8,12 +8,12 @@
 
 import Foundation
 
-public protocol ArgumentType {
+public protocol Argument {
     static func from(_ dictionary: Dictionary<String, Any>) -> Self
 }
 
-public protocol WorkerType: class {
-    associatedtype Argument: ArgumentType
+public protocol Worker: class {
+    associatedtype Args: Argument
     
     static var client: Client { get }
     static var defaultQueue: Queue { get }
@@ -25,12 +25,12 @@ public protocol WorkerType: class {
 
 
     init()
-    static func performAsync(_ argument: Argument, to queue: Queue) throws
-    func perform(_ argument: Argument) throws -> ()
+    static func performAsync(_ args: Args, to queue: Queue) throws
+    func perform(_ args: Args) throws -> ()
 }
 
 
-extension WorkerType {
+extension Worker {
     public static var client: Client {
         return SwiftkiqClient.default
     }
@@ -43,7 +43,7 @@ extension WorkerType {
         return 25
     }
     
-    public static func performAsync(_ argument: Argument, to queue: Queue = Self.defaultQueue) throws {
-        try Self.client.enqueue(class: self, argument: argument, to: queue)
+    public static func performAsync(_ args: Args, to queue: Queue = Self.defaultQueue) throws {
+        try Self.client.enqueue(class: self, args: args, to: queue)
     }
 }

@@ -14,7 +14,7 @@ public struct UnitOfWork {
 
     public var jid: String { return job["jid"]! as! String }
     public var workerClass: String { return job["class"]! as! String }
-    public var argument: Dictionary<String, Any> { return job["args"]! as! Dictionary<String, Any> }
+    public var args: Dictionary<String, Any> { return job["args"]! as! Dictionary<String, Any> }
     public var retry: Int { return Int(job["retry"]! as! UInt) }
 
     private let job: Dictionary<String, Any>
