@@ -6,12 +6,12 @@ let options = LaunchOptions(
     concurrency: 25,
     queues: [Queue(rawValue: "default")],
     strategy: nil,
-    router: router
+    router: router,
+    daemonize: true
 )
 
 let launcher = Launcher(options: options)
 launcher.run()
-
-let group = DispatchGroup()
-group.enter()
-group.wait()
+while true {
+    sleep(1)
+}
