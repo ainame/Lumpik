@@ -14,7 +14,7 @@ public protocol Routable {
 }
 
 extension Routable {
-    func invokeWorker<W: Worker>(workerType: W.Type, work: UnitOfWork) throws {
+    public func invokeWorker<W: Worker>(workerType: W.Type, work: UnitOfWork) throws {
         var worker = workerType.init()
         let argument = workerType.Args.from(work.args)
         worker.jid = work.jid
