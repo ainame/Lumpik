@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import Redbird
+import SwiftRedis
 
 struct JsonHelper {
     static let defaultWriteOption = JSONSerialization.WritingOptions()
@@ -18,9 +18,9 @@ struct JsonHelper {
         return String(bytes: data, encoding: .utf8)!
     }
 
-    func deserialize(_ response: RespObject) -> Dictionary<String, Any> {
-        let array = try! response.toArray()
-        let data = try! array[1].toString().data(using: .utf8)!
+    func deserialize(_ response: [RedisString?]) -> Dictionary<String, Any> {
+        guard let value = response[1] else { fatalError("can't parse response") }
+        let data = value.asString.data(using: .utf8)!
         let json = try! JSONSerialization.jsonObject(with: data, options: JsonHelper.defaultReadOption)
         return json as! Dictionary<String, Any>
     }

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import Redbird
+import SwiftRedis
 
 public struct UnitOfWork {
     public let queue: Queue
@@ -38,35 +38,62 @@ public protocol ListStorable {
 final public class RedisStore: ListStorable {
     let host: String
     let port: UInt16
-    let timeout: String = "2"
+    let timeout: TimeInterval = 2.0
 
-    private let redis: Redbird
+    private let redis: Redis
     private let helper: JsonHelper
 
     init(host: String, port: UInt16) throws {
         self.host = host
         self.port = port
-        self.redis = try Redbird(config: .init(address: host, port: port, password: nil))
+        self.redis = Redis()
         self.helper = JsonHelper()
-    }
 
+        var error: NSError? = nil
+        redis.connect(host: host, port: Int32(port), callback: { _error in
+            print("ERROR: redis \(error)")
+            error = _error
+        })
+        if let error = error {
+            throw error
+        }
+    }
+    
     public func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws {
         let string = helper.serialize(job)
-        try redis.command("LPUSH", params: [queue.key, string])
+        var error: NSError? = nil
+        redis.lpush(queue.key, values: string, callback: { count, _error in
+            error = _error
+        })
+        if let error = error {
+            throw error
+        }
     }
 
     public func dequeue(_ queues: [Queue]) throws -> UnitOfWork? {
-        var queuesCommand = queues.map { $0.key }
-        queuesCommand.append(timeout)
-        let response = try redis.command("BRPOP", params: queuesCommand)
-        guard response.respType == .Array else { return nil }
-
-        let parsedResponse = helper.deserialize(response)
+        var response: [RedisString?]?
+        var error: NSError? = nil
+        redis.brpop(queues.map{ $0.key }, timeout: timeout) { _response, _error in
+            response = _response
+            error = _error
+        }
+        if let error = error {
+            throw error
+        }
+        guard let validResponse = response else { return nil }
+        
+        let parsedResponse = helper.deserialize(validResponse)
         let queue = Queue(rawValue: parsedResponse["queue"]! as! String)
         return UnitOfWork(queue: queue, job: parsedResponse)
     }
     
     public func clear(_ queue: Queue) throws {
-        try redis.command("DEL", params: [queue.key])
+        var error: NSError? = nil
+        redis.del(queue.key, callback: { _count, _error in
+            error = _error
+        })
+        if let error = error {
+            throw error
+        }
     }
 }
