@@ -3,10 +3,10 @@ import Swiftkiq
 
 class Router: Routable {
     func dispatch(_ work: UnitOfWork) throws {
-        switch work.workerClass {
+        switch work.workerType {
         {% for type in types.based.WorkerType %}
         case "{{ type.name }}":
-            try invokeWorker(workerClass: {{ type.name }}.self, work: work)
+            try invokeWorker(workerType: {{ type.name }}.self, work: work)
         {% endfor %}
         default:
             break

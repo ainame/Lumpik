@@ -13,7 +13,7 @@ public protocol Argument {
     static func from(_ dictionary: Dictionary<String, Any>) -> Self
 }
 
-public protocol Worker: class {
+public protocol Worker {
     associatedtype Args: Argument
 
     static var defaultQueue: Queue { get }
