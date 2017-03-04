@@ -39,6 +39,12 @@ class SwiftkiqTests: XCTestCase {
         XCTAssertNotNil(try! SwiftkiqCore.makeStore().dequeue([Queue("default")]))
     }
     
+    func testFetcher() {
+        let fetcher = BasicFetcher(queues: [Queue("1"), Queue("2"), Queue("3")])
+        print(fetcher.randomSortedQueues())
+        XCTAssertNotNil(fetcher.randomSortedQueues())
+    }
+    
     func testRedis() {
         try! SwiftkiqCore.makeStore().enqueue(["hoge": 1, "queue": "default"], to: Queue("default"))
         do {

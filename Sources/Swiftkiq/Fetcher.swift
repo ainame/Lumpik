@@ -22,6 +22,20 @@ final class BasicFetcher: Fetcher {
     }
 
     func retriveWork() throws -> UnitOfWork? {
-        return try SwiftkiqClient.current.store.dequeue(queues)
+        return try SwiftkiqClient.current.store.dequeue(randomSortedQueues())
+    }
+    
+    func randomSortedQueues () -> [Queue] {
+        var a = queues
+        let n = a.count
+        for i in 0..<n {
+            let ai = a[i]
+            let j = Int(arc4random()) % n
+            if i != j {
+                a[i] = a[j]
+            }
+            a[j] = ai
+        }
+        return a
     }
 }
