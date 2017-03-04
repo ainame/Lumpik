@@ -5,7 +5,6 @@ let router = Router()
 let options = LaunchOptions(
     concurrency: 25,
     queues: [Queue(rawValue: "default")],
-    strategy: BasicFetcher(),
     router: router,
     daemonize: false
 )
