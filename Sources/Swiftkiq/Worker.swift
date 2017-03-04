@@ -33,7 +33,7 @@ public protocol Worker: class {
 
 extension Worker {
     public static var client: Client {
-        return SwiftkiqClient.default
+        return SwiftkiqClient.current
     }
 
     public static var defaultQueue: Queue {

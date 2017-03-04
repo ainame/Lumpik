@@ -15,8 +15,16 @@ public protocol Client {
 
 public struct SwiftkiqClient: Client {
     public let store: ListStorable
-
-    static var `default`: Client = SwiftkiqClient(store: SwiftkiqCore.store)
+    static var current: Client {
+        if let client = instanceCache[Thread.current.name!] {
+            return client
+        }
+        let store = SwiftkiqCore.makeStore()
+        instanceCache[Thread.current.name!] = SwiftkiqClient(store: store)
+        return instanceCache[Thread.current.name!]!
+    }
+    
+    private static var instanceCache = Dictionary<String, Client>()
 
     init(store: ListStorable) {
         self.store = store

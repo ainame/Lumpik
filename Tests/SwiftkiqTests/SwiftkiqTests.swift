@@ -36,13 +36,13 @@ class SwiftkiqTests: XCTestCase {
     
     func testExample() {
         try! EchoMessageWorker.performAsync(.init(message: "Hello, World!"))
-        XCTAssertNotNil(try! SwiftkiqCore.store.dequeue([Queue("default")]))
+        XCTAssertNotNil(try! SwiftkiqCore.makeStore().dequeue([Queue("default")]))
     }
     
     func testRedis() {
-        try! SwiftkiqCore.store.enqueue(["hoge": 1, "queue": "default"], to: Queue("default"))
+        try! SwiftkiqCore.makeStore().enqueue(["hoge": 1, "queue": "default"], to: Queue("default"))
         do {
-            let work = try SwiftkiqCore.store.dequeue([Queue("default")])
+            let work = try SwiftkiqCore.makeStore().dequeue([Queue("default")])
             XCTAssertNotNil(work)
         } catch(let error) {
             print(error)
@@ -52,7 +52,7 @@ class SwiftkiqTests: XCTestCase {
     
     func testRedisEmptyDequeue() {
         do {
-            let work = try SwiftkiqCore.store.dequeue([Queue("default")])
+            let work = try SwiftkiqCore.makeStore().dequeue([Queue("default")])
             XCTAssertNil(work)
         } catch(let error) {
             print(error)

@@ -22,6 +22,6 @@ final class BasicFetcher: Fetcher {
     }
 
     func retriveWork() throws -> UnitOfWork? {
-        return try SwiftkiqCore.store.dequeue(queues)
+        return try SwiftkiqClient.current.store.dequeue(queues)
     }
 }
