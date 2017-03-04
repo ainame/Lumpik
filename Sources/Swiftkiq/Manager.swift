@@ -20,7 +20,7 @@ public class Manager: ProcessorLifecycleDelegate {
     let router: Routable
 
     lazy var processors: [Processor] = {
-        return (0...self.concurrency).map { index in
+        return (1...self.concurrency).map { index in
             let fetcher = self.strategy.init(queues: self.queues)
             let dispatchQueue = DispatchQueue(label: "swiftkiq-queue\(index)")
             return Processor(fetcher: fetcher, router: self.router, dispatchQueue: dispatchQueue, delegate: self)
