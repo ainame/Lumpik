@@ -29,7 +29,7 @@ public final class Processor {
     }
 
     func start () {
-        dipsatchQueue.sync { self.run() }
+        dipsatchQueue.async { self.run() }
     }
 
     func run() {
