@@ -38,14 +38,14 @@ public final class Processor: WorkerFailureCallback {
 
     func run() {
         print("run!")
-        do {
-            while !done {
+        while !done {
+            do {
                 try processOne()
+            } catch Manager.Control.shutdown {
+                break
+            } catch let error {
+                print("ERROR: \(error)")
             }
-        } catch Manager.Control.shutdown {
-            print("shutdown")
-        } catch let error {
-            print("ERROR: \(error)")
         }
     }
 
