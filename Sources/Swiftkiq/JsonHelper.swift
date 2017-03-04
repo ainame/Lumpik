@@ -13,12 +13,12 @@ struct JsonHelper {
     static let defaultWriteOption = JSONSerialization.WritingOptions()
     static let defaultReadOption = JSONSerialization.ReadingOptions()
     
-    func serialize(_ dictionary: Dictionary<String, Any>) -> String {
+    static func serialize(_ dictionary: Dictionary<String, Any>) -> String {
         let data = try! JSONSerialization.data(withJSONObject: dictionary, options: JsonHelper.defaultWriteOption)
         return String(bytes: data, encoding: .utf8)!
     }
-
-    func deserialize(_ response: [RedisString?]) -> Dictionary<String, Any> {
+    
+    static func deserialize(_ response: [RedisString?]) -> Dictionary<String, Any> {
         guard let value = response[1] else { fatalError("can't parse response") }
         let data = value.asString.data(using: .utf8)!
         let json = try! JSONSerialization.jsonObject(with: data, options: JsonHelper.defaultReadOption)

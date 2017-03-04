@@ -41,13 +41,11 @@ final public class RedisStore: ListStorable {
     let timeout: TimeInterval = 2.0
 
     private let redis: Redis
-    private let helper: JsonHelper
 
     init(host: String, port: UInt16) throws {
         self.host = host
         self.port = port
         self.redis = Redis()
-        self.helper = JsonHelper()
 
         var error: NSError? = nil
         redis.connect(host: host, port: Int32(port), callback: { _error in
@@ -59,7 +57,7 @@ final public class RedisStore: ListStorable {
     }
     
     public func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws {
-        let string = helper.serialize(job)
+        let string = JsonHelper.serialize(job)
         var error: NSError? = nil
         redis.lpush(queue.key, values: string, callback: { count, _error in
             error = _error
@@ -81,7 +79,7 @@ final public class RedisStore: ListStorable {
         }
         guard let validResponse = response else { return nil }
         
-        let parsedResponse = helper.deserialize(validResponse)
+        let parsedResponse = JsonHelper.deserialize(validResponse)
         let queue = Queue(rawValue: parsedResponse["queue"]! as! String)
         return UnitOfWork(queue: queue, job: parsedResponse)
     }
