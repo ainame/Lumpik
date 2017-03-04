@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Dispatch
 
 protocol ProcessorLifecycleDelegate: class {
     func stopped(processor: Processor)
@@ -21,9 +22,9 @@ public class Manager: ProcessorLifecycleDelegate {
 
     lazy var processors: [Processor] = {
         return (1...self.concurrency).map { index in
-            let fetcher = self.strategy.init(queues: self.queues)
+            let fetcher = self.strategy.init(processorId: index, queues: self.queues)
             let dispatchQueue = DispatchQueue(label: "swiftkiq-queue\(index)")
-            return Processor(fetcher: fetcher, router: self.router, dispatchQueue: dispatchQueue, delegate: self)
+            return Processor(processorId: index, fetcher: fetcher, router: self.router, dispatchQueue: dispatchQueue, delegate: self)
         }
     }()
 

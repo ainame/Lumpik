@@ -11,6 +11,7 @@ class EchoWorker: Worker {
             return Args(message: dictionary["message"] as! String)
         }
     }
+    var processorId: Int?
     var jid: String?
     var queue: Queue?
     var retry: Int?

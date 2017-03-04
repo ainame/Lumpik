@@ -16,10 +16,11 @@ public protocol Argument {
 public protocol Worker: class {
     associatedtype Args: Argument
 
-    static var client: Client { get }
     static var defaultQueue: Queue { get }
     static var defaultRetry: Int { get }
 
+    var client: Client { get }
+    var processorId: Int? { get set }
     var jid: String? { get set }
     var queue: Queue? { get set }
     var retry: Int? { get set }
@@ -32,8 +33,8 @@ public protocol Worker: class {
 
 
 extension Worker {
-    public static var client: Client {
-        return SwiftkiqClient.current
+    public var client: Client {
+        return SwiftkiqClient.current(processorId!)
     }
 
     public static var defaultQueue: Queue {
@@ -45,6 +46,8 @@ extension Worker {
     }
 
     public static func performAsync(_ args: Args, to queue: Queue = Self.defaultQueue) throws {
-        try Self.client.enqueue(class: self, args: args, to: queue)
+        // TODO: use cached connections every thread
+        let client = SwiftkiqClient(store: SwiftkiqCore.makeStore())
+        try client.enqueue(class: self, args: args, to: queue)
     }
 }

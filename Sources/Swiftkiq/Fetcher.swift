@@ -10,19 +10,21 @@ import Foundation
 import Redbird
 
 public protocol Fetcher: class {
-    init(queues: [Queue])
+    init(processorId: Int, queues: [Queue])
     func retriveWork() throws -> UnitOfWork?
 }
 
 final class BasicFetcher: Fetcher {
+    let processorId: Int
     private let queues: [Queue]
 
-    init(queues: [Queue]) {
+    init(processorId: Int, queues: [Queue]) {
+        self.processorId = processorId
         self.queues = queues
     }
 
     func retriveWork() throws -> UnitOfWork? {
-        return try SwiftkiqClient.current.store.dequeue(randomSortedQueues())
+        return try SwiftkiqClient.current(processorId).store.dequeue(randomSortedQueues())
     }
     
     func randomSortedQueues () -> [Queue] {

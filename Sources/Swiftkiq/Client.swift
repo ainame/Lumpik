@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Dispatch
 
 public protocol Client {
     var store: ListStorable { get }
@@ -15,14 +16,6 @@ public protocol Client {
 
 public struct SwiftkiqClient: Client {
     public let store: ListStorable
-    static var current: Client {
-        if let client = instanceCache[Thread.current.name!] {
-            return client
-        }
-        let store = SwiftkiqCore.makeStore()
-        instanceCache[Thread.current.name!] = SwiftkiqClient(store: store)
-        return instanceCache[Thread.current.name!]!
-    }
     
     private static var instanceCache = Dictionary<String, Client>()
 
@@ -37,4 +30,15 @@ public struct SwiftkiqClient: Client {
                                 "retry": 1,
                                 "queue": queue.name], to: queue)
     }
+    
+    static func current(_ key: Int) -> Client {
+        let k = String(key)
+        if let client = SwiftkiqClient.instanceCache[k] {
+            return client
+        }
+        let store = SwiftkiqCore.makeStore()
+        SwiftkiqClient.instanceCache[k] = SwiftkiqClient(store: store)
+        return SwiftkiqClient.instanceCache[k]!
+    }
+
 }
