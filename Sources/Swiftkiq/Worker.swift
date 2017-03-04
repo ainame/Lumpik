@@ -9,6 +9,7 @@
 import Foundation
 
 public protocol Argument {
+    func toDictionary() -> [String: Any]
     static func from(_ dictionary: Dictionary<String, Any>) -> Self
 }
 
