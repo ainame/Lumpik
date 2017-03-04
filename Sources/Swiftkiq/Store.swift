@@ -51,7 +51,6 @@ final public class RedisStore: ListStorable {
 
         var error: NSError? = nil
         redis.connect(host: host, port: Int32(port), callback: { _error in
-            print("ERROR: redis \(error)")
             error = _error
         })
         if let error = error {
