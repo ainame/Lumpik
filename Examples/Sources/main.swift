@@ -7,7 +7,7 @@ let options = LaunchOptions(
     queues: [Queue(rawValue: "default")],
     strategy: nil,
     router: router,
-    daemonize: true
+    daemonize: false
 )
 
 let launcher = Launcher(options: options)

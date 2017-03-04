@@ -55,8 +55,8 @@ final public class RedisStore: ListStorable {
     }
 
     public func dequeue(_ queues: [Queue]) throws -> UnitOfWork? {
-        let queusCommand = queues.map { $0.name }.joined(separator: " ")
-        let response = try redis.command("BRPOP", params: [queusCommand, timeout])
+        let queuesCommand = queues.map { $0.name }.joined(separator: " ")
+        let response = try redis.command("BRPOP", params: [queuesCommand, timeout])
         guard response.respType == .Array else { return nil }
 
         let parsedResponse = helper.deserialize(response)
