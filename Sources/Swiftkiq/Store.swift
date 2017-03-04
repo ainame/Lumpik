@@ -51,7 +51,7 @@ final public class RedisStore: ListStorable {
 
     public func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws {
         let string = helper.serialize(job)
-        try redis.command("LPUSH", params: [queue.name, string])
+        try redis.command("LPUSH", params: [queue.key, string])
     }
 
     public func dequeue(_ queues: [Queue]) throws -> UnitOfWork? {

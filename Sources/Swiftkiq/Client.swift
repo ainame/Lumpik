@@ -23,6 +23,6 @@ public struct SwiftkiqClient: Client {
     }
 
     public func enqueue<W: Worker, A: Argument>(`class`: W.Type, args: A, to queue: Queue) throws {
-        try self.store.enqueue(["jid": UUID().uuidString, "class": String(describing: `class`), "args": args.toDictionary(), "retry": 1], to: queue)
+        try self.store.enqueue(["jid": UUID().uuidString, "class": String(describing: `class`), "args": args.toDictionary(), "retry": 1, "queue": queue.name], to: queue)
     }
 }
