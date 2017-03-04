@@ -30,7 +30,7 @@ extension Routable {
         do {
             try worker.perform(argument)
         } catch let error {
-            errorCallback.didFailed(workerType: workerType, error: error)
+            errorCallback.didFailed(worker: worker, work: work, error: error)
             throw error
         }
     }

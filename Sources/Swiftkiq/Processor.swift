@@ -10,7 +10,7 @@ import Foundation
 import Dispatch
 
 public protocol WorkerFailureCallback {
-    func didFailed<W: Worker>(workerType: W.Type, error: Error)
+    func didFailed<W : Worker>(worker: W, work: UnitOfWork, error: Error)
 }
 
 public final class Processor: WorkerFailureCallback {
@@ -43,8 +43,8 @@ public final class Processor: WorkerFailureCallback {
                 try processOne()
             } catch Manager.Control.shutdown {
                 break
-            } catch let error {
-                print("ERROR: \(error)")
+            } catch {
+                // handle error at didFailed
             }
         }
     }
@@ -59,7 +59,20 @@ public final class Processor: WorkerFailureCallback {
         try router.dispatch(work, errorCallback: self)
     }
 
-    public func didFailed<W : Worker>(workerType: W.Type, error: Error) {
-        print("ERROR: \(error) on \(workerType)")
+    public func didFailed<W : Worker>(worker: W, work: UnitOfWork, error: Error) {
+        print("ERROR: \(error) on \(worker)")
+        attemptRetry(worker: worker, work: work, error: error)
+    }
+
+    func attemptRetry<W: Worker>(worker: W, work: UnitOfWork, error: Error) {
+        let max = worker.retry ?? W.defaultRetry
+        let current = work.retryCount ?? 0
+
+        if current < max {
+            var newJob = work.job
+            newJob["retryCount"] = current + 1
+            let args = W.Args.from(newJob)
+            try! SwiftkiqClient.current.enqueue(class: W.self, args: args, to: work.queue)
+        }
     }
 }
