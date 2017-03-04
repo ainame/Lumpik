@@ -20,7 +20,7 @@ class Router: Routable {
         worker.jid = work.jid
         worker.retry = work.retry
         worker.queue = work.queue
-        print("[INFO]: \(work.workerClass) start")
+        print(String(format: "[INFO]: jid=%@ %@ start", work.jid, work.workerClass))
         let start = Date()
         try worker.perform(argument)
         let interval = Date().timeIntervalSince(start)
