@@ -5,10 +5,10 @@ import Foundation
 import Swiftkiq
 
 class Router: Routable {
-    func dispatch(_ work: UnitOfWork) throws {
+    func dispatch(_ work: UnitOfWork, errorCallback: WorkerFailureCallback) throws {
         switch work.workerType {
         case "EchoWorker":
-            try invokeWorker(workerType: EchoWorker.self, work: work)
+            try invokeWorker(workerType: EchoWorker.self, work: work, errorCallback: errorCallback)
         default:
             break
         }

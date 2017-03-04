@@ -9,7 +9,11 @@
 import Foundation
 import Dispatch
 
-public final class Processor {
+public protocol WorkerFailureCallback {
+    func didFailed<W: Worker>(workerType: W.Type, error: Error)
+}
+
+public final class Processor: WorkerFailureCallback {
     let fetcher: Fetcher
     let router: Routable
     let dipsatchQueue: DispatchQueue
@@ -52,6 +56,10 @@ public final class Processor {
     }
 
     func process(_ work: UnitOfWork) throws {
-        try router.dispatch(work)
+        try router.dispatch(work, errorCallback: self)
+    }
+
+    public func didFailed<W : Worker>(workerType: W.Type, error: Error) {
+        print("ERROR: \(error) on \(workerType)")
     }
 }
