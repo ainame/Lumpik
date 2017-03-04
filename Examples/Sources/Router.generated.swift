@@ -13,18 +13,4 @@ class Router: Routable {
             break
         }
     }
-
-    func invokeWorker<W: Worker>(processorId: Int, workerClass: W.Type, work: UnitOfWork) throws {
-        let worker = workerClass.init()
-        let argument = workerClass.Args.from(work.args)
-        worker.processorId = processorId
-        worker.jid = work.jid
-        worker.retry = work.retry
-        worker.queue = work.queue
-        print(String(format: "[INFO]: jid=%@ %@ start", work.jid, work.workerClass))
-        let start = Date()
-        try worker.perform(argument)
-        let interval = Date().timeIntervalSince(start)
-        print(String(format: "[INFO]: jid=%@ %@ done - %.4f msec", work.jid, work.workerClass, interval))
-    }
 }
