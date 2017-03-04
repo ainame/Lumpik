@@ -3,6 +3,6 @@ import PackageDescription
 let package = Package(
     name: "swiftkiq_example",
     dependencies: [
-        .Package(url: "../", majorVersion: 0)
+        .Package(url: "../../Swiftkiq", majorVersion: 0)
     ]
 )
