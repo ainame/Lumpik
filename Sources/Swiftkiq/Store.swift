@@ -30,12 +30,25 @@ public struct UnitOfWork {
 }
 
 public protocol ListStorable {
+    static func makeStore() -> ListStorable
     func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws
     func dequeue(_ queues: [Queue]) throws -> UnitOfWork?
     func clear(_ queue: Queue) throws
 }
 
+public struct RedisConfig {
+    let host: String = "127.0.0.1"
+    let port: Int = 6379
+    let password: String? = nil
+}
+
 final public class RedisStore: ListStorable {
+    static var defaultConfig = RedisConfig()
+    
+    public static func makeStore() -> ListStorable {
+        return try! RedisStore(host: defaultConfig.host, port: UInt16(defaultConfig.port))
+    }
+    
     let host: String
     let port: UInt16
     let timeout: TimeInterval = 2.0

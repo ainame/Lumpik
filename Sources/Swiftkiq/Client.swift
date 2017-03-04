@@ -9,40 +9,35 @@
 import Foundation
 import Dispatch
 
-public protocol Client {
-    var store: ListStorable { get }
-    func enqueue<W: Worker, A: Argument>(`class`: W.Type, args: A, to queue: Queue) throws
-}
+fileprivate let lock = NSLock()
+fileprivate let cacheKey = "tokyo.ainame.swiftkiq.client"
+fileprivate var instanceCache = Dictionary<String, SwiftkiqClient>()
 
-public struct SwiftkiqClient: Client {
-    public let store: ListStorable
-    
-    private static let lock = NSLock()
-    private static var instanceCache = Dictionary<String, Client>()
+public struct SwiftkiqClient {
+    public static var current: SwiftkiqClient {
+        lock.lock()
+        defer { lock.unlock() }
+        
+        if let client = Thread.current.threadDictionary[cacheKey] as? SwiftkiqClient {
+            return client
+        }
+
+        let store = RedisStore.makeStore()
+        Thread.current.threadDictionary[cacheKey] = SwiftkiqClient(store: store)
+        return Thread.current.threadDictionary[cacheKey] as! SwiftkiqClient
+    }
+
+    public var store: ListStorable
 
     init(store: ListStorable) {
         self.store = store
     }
 
-    public func enqueue<W: Worker, A: Argument>(`class`: W.Type, args: A, to queue: Queue) throws {
+    public func enqueue<W: Worker, A: Argument>(`class`: W.Type, args: A, retry: Int = W.defaultRetry, to queue: Queue = W.defaultQueue) throws {
         try self.store.enqueue(["jid": UUID().uuidString,
                                 "class": String(describing: `class`),
                                 "args": args.toDictionary(),
-                                "retry": 1,
+                                "retry": retry,
                                 "queue": queue.name], to: queue)
     }
-    
-    static func current(_ key: Int) -> Client {
-        let k = String(key)
-        lock.lock()
-        defer { lock.unlock() }
-
-        if let client = SwiftkiqClient.instanceCache[k] {
-            return client
-        }
-        let store = SwiftkiqCore.makeStore()
-        SwiftkiqClient.instanceCache[k] = SwiftkiqClient(store: store)
-        return SwiftkiqClient.instanceCache[k]!
-    }
-
 }

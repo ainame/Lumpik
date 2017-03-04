@@ -10,7 +10,6 @@ import Foundation
 import Dispatch
 
 public final class Processor {
-    let processorId: Int
     let fetcher: Fetcher
     let router: Routable
     let dipsatchQueue: DispatchQueue
@@ -19,12 +18,10 @@ public final class Processor {
     var down: Bool = false
     var done: Bool = false
 
-    init(processorId: Int,
-         fetcher: Fetcher,
+    init(fetcher: Fetcher,
          router: Routable,
          dispatchQueue: DispatchQueue,
          delegate: ProcessorLifecycleDelegate) {
-        self.processorId = processorId
         self.fetcher = fetcher
         self.router = router
         self.dipsatchQueue = dispatchQueue
@@ -41,7 +38,7 @@ public final class Processor {
             while !done {
                 try processOne()
             }
-        } catch SwiftkiqCore.Control.shutdown {
+        } catch Manager.Control.shutdown {
             print("shutdown")
         } catch let error {
             print("ERROR: \(error)")
@@ -55,6 +52,6 @@ public final class Processor {
     }
 
     func process(_ work: UnitOfWork) throws {
-        try router.dispatch(processorId: processorId, work: work)
+        try router.dispatch(work)
     }
 }

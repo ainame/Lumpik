@@ -9,15 +9,14 @@
 import Foundation
 
 public protocol Routable {
-    func dispatch(processorId: Int, work: UnitOfWork) throws
-    func invokeWorker<W: Worker>(processorId: Int, workerClass: W.Type, work: UnitOfWork) throws
+    func dispatch(_ work: UnitOfWork) throws
+    func invokeWorker<W: Worker>(workerClass: W.Type, work: UnitOfWork) throws
 }
 
 extension Routable {
-    func invokeWorker<W: Worker>(processorId: Int, workerClass: W.Type, work: UnitOfWork) throws {
+    func invokeWorker<W: Worker>(workerClass: W.Type, work: UnitOfWork) throws {
         let worker = workerClass.init()
         let argument = workerClass.Args.from(work.args)
-        worker.processorId = processorId
         worker.jid = work.jid
         worker.retry = work.retry
         worker.queue = work.queue

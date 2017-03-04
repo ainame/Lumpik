@@ -32,6 +32,6 @@ public struct Queue: RawRepresentable, Equatable, Hashable {
     }
 
     public func clear() throws {
-        try SwiftkiqCore.makeStore().clear(self)
+        try SwiftkiqClient.current.store.clear(self)
     }
 }

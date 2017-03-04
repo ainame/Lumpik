@@ -15,6 +15,10 @@ protocol ProcessorLifecycleDelegate: class {
 }
 
 public class Manager: ProcessorLifecycleDelegate {
+    enum Control: Error {
+        case shutdown
+    }
+    
     let concurrency: Int
     let queues: [Queue]
     let strategy: Fetcher.Type
@@ -22,9 +26,9 @@ public class Manager: ProcessorLifecycleDelegate {
 
     lazy var processors: [Processor] = {
         return (1...self.concurrency).map { index in
-            let fetcher = self.strategy.init(processorId: index, queues: self.queues)
+            let fetcher = self.strategy.init(queues: self.queues)
             let dispatchQueue = DispatchQueue(label: "swiftkiq-queue\(index)")
-            return Processor(processorId: index, fetcher: fetcher, router: self.router, dispatchQueue: dispatchQueue, delegate: self)
+            return Processor(fetcher: fetcher, router: self.router, dispatchQueue: dispatchQueue, delegate: self)
         }
     }()
 
