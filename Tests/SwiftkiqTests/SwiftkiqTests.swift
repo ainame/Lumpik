@@ -6,6 +6,12 @@ class SwiftkiqTests: XCTestCase {
         struct Args: Argument {
             let message: String
             
+            func toDictionary() -> [String : Any] {
+                return [
+                    "message": message
+                ]
+            }
+
             static func from(_ dictionary: Dictionary<String, Any>) -> Args {
                 return Args(
                     message: dictionary["message"]! as! String

@@ -4,6 +4,12 @@ class EchoWorker: Worker {
     struct Args: Argument {
         let message: String
 
+        public func toDictionary() -> [String: Any] {
+            return [
+                "message": message
+            ]
+        }
+
         static func from(_ dictionary: Dictionary<String, Any>) -> Args {
             return Args(
                 message: dictionary["message"]! as! String
