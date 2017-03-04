@@ -17,6 +17,7 @@ public protocol Client {
 public struct SwiftkiqClient: Client {
     public let store: ListStorable
     
+    private static let lock = NSLock()
     private static var instanceCache = Dictionary<String, Client>()
 
     init(store: ListStorable) {
@@ -33,6 +34,9 @@ public struct SwiftkiqClient: Client {
     
     static func current(_ key: Int) -> Client {
         let k = String(key)
+        lock.lock()
+        defer { lock.unlock() }
+
         if let client = SwiftkiqClient.instanceCache[k] {
             return client
         }
