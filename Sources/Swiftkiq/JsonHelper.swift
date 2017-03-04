@@ -8,20 +8,20 @@
 
 import Foundation
 import Redbird
-import Jay
 
 struct JsonHelper {
-    let jay = Jay()
-
+    static let defaultWriteOption = JSONSerialization.WritingOptions()
+    static let defaultReadOption = JSONSerialization.ReadingOptions()
+    
     func serialize(_ dictionary: Dictionary<String, Any>) -> String {
-        let json = try! jay.dataFromJson(anyDictionary: dictionary)
-        return String(bytes: json, encoding: .utf8)!
+        let data = try! JSONSerialization.data(withJSONObject: dictionary, options: JsonHelper.defaultWriteOption)
+        return String(bytes: data, encoding: .utf8)!
     }
 
     func deserialize(_ response: RespObject) -> Dictionary<String, Any> {
         let array = try! response.toArray()
-        let string = try! array[1].toMaybeString()!.utf8
-        let json = try! jay.anyJsonFromData(Array<UInt8>(string))
+        let data = try! array[1].toString().data(using: .utf8)!
+        let json = try! JSONSerialization.jsonObject(with: data, options: JsonHelper.defaultReadOption)
         return json as! Dictionary<String, Any>
     }
 }

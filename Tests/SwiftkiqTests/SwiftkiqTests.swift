@@ -1,7 +1,13 @@
 import XCTest
 @testable import Swiftkiq
 
+// need redis-server for host: '127.0.0.1', port: 6379
 class SwiftkiqTests: XCTestCase {
+
+    override func setUp() {
+        try! Queue("default").clear()
+    }
+    
     final class EchoMessageWorker: Worker {
         struct Args: Argument {
             let message: String
@@ -34,7 +40,7 @@ class SwiftkiqTests: XCTestCase {
     }
     
     func testRedis() {
-        try! SwiftkiqCore.store.enqueue(["hoge": 1], to: Queue("default"))
+        try! SwiftkiqCore.store.enqueue(["hoge": 1, "queue": "default"], to: Queue("default"))
         do {
             let work = try SwiftkiqCore.store.dequeue([Queue("default")])
             XCTAssertNotNil(work)

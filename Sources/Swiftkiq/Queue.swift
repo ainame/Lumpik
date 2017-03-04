@@ -10,7 +10,7 @@ import Foundation
 
 public struct Queue: RawRepresentable, Equatable, Hashable {
     public let rawValue: String
-    
+
     var key: String {
         return "queue:\(rawValue)"
     }
@@ -22,12 +22,16 @@ public struct Queue: RawRepresentable, Equatable, Hashable {
     public init(_ rawValue: String) {
         self.rawValue = rawValue
     }
-    
+
     public init(rawValue: String) {
         self.rawValue = rawValue
     }
-    
+
     public var hashValue: Int {
         return rawValue.hashValue
+    }
+
+    public func clear() throws {
+        try SwiftkiqClient.default.store.clear(self)
     }
 }

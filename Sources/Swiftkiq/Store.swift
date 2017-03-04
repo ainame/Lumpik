@@ -32,6 +32,7 @@ public struct UnitOfWork {
 public protocol ListStorable {
     func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws
     func dequeue(_ queues: [Queue]) throws -> UnitOfWork?
+    func clear(_ queue: Queue) throws
 }
 
 final public class RedisStore: ListStorable {
@@ -55,12 +56,16 @@ final public class RedisStore: ListStorable {
     }
 
     public func dequeue(_ queues: [Queue]) throws -> UnitOfWork? {
-        let queuesCommand = queues.map { $0.name }.joined(separator: " ")
+        let queuesCommand = queues.map { $0.key }.joined(separator: " ")
         let response = try redis.command("BRPOP", params: [queuesCommand, timeout])
         guard response.respType == .Array else { return nil }
 
         let parsedResponse = helper.deserialize(response)
         let queue = Queue(rawValue: parsedResponse["queue"]! as! String)
         return UnitOfWork(queue: queue, job: parsedResponse)
+    }
+    
+    public func clear(_ queue: Queue) throws {
+        try redis.command("DEL", params: [queue.key])
     }
 }
