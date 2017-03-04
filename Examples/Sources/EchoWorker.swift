@@ -2,18 +2,12 @@ import Swiftkiq
 
 class EchoWorker: Worker {
     struct Args: Argument {
-        let message: String
-
         public func toDictionary() -> [String: Any] {
-            return [
-                "message": message
-            ]
+            return [String: Any]()
         }
 
         static func from(_ dictionary: Dictionary<String, Any>) -> Args {
-            return Args(
-                message: dictionary["message"]! as! String
-            )
+            return Args()
         }
     }
     var jid: String?
@@ -23,6 +17,5 @@ class EchoWorker: Worker {
     required init() {}
 
     func perform(_ args: Args) throws {
-        print(args.message)
     }
 }
