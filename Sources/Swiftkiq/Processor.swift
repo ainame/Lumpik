@@ -37,7 +37,6 @@ public final class Processor: WorkerFailureCallback {
     }
 
     func run() {
-        print("run!")
         while !done {
             do {
                 try processOne()
