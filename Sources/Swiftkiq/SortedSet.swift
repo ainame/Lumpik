@@ -26,4 +26,6 @@ public struct SortedSet: StoreKey {
     public var hashValue: Int {
         return rawValue.hashValue
     }
+    
+    static let retrySet = SortedSet("retry")
 }

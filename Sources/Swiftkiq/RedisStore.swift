@@ -34,9 +34,9 @@ final public class RedisStore: Storable {
         self.redis = Redis()
         
         var error: NSError? = nil
-        redis.connect(host: host, port: Int32(port), callback: { _error in
+        redis.connect(host: host, port: Int32(port)) { _error in
             error = _error
-        })
+        }
         if let error = error {
             throw error
         }
@@ -45,9 +45,9 @@ final public class RedisStore: Storable {
     public func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws {
         let string = JsonHelper.serialize(job)
         var error: NSError? = nil
-        redis.lpush(queue.key, values: string, callback: { count, _error in
+        redis.lpush(queue.key, values: string) { count, _error in
             error = _error
-        })
+        }
         if let error = error {
             throw error
         }
@@ -72,9 +72,9 @@ final public class RedisStore: Storable {
     
     public func clear<K: StoreKey>(_ key: K) throws {
         var error: NSError? = nil
-        redis.del(key.key, callback: { _count, _error in
+        redis.del(key.key) { _count, _error in
             error = _error
-        })
+        }
         if let error = error {
             throw error
         }
@@ -83,7 +83,9 @@ final public class RedisStore: Storable {
     public func add(_ job: Dictionary<String, Any>, with score: Int, to set: SortedSet) throws {
         let string = JsonHelper.serialize(job)
         var error: NSError? = nil
-        
+        redis.zadd(set.key, tuples: (score, string)) { _count, _error in
+            error = _error
+        }
         if let error = error {
             throw error
         }

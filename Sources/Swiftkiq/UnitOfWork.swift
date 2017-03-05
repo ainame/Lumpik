@@ -7,7 +7,7 @@
 //
 
 import Foundation
-
+ 
 public struct UnitOfWork {
     public let queue: Queue
     public let job: Dictionary<String, Any>
