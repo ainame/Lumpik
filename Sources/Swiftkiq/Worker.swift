@@ -18,6 +18,7 @@ public protocol Worker {
 
     static var defaultQueue: Queue { get }
     static var defaultRetry: Int { get }
+    static var retryIn: Int? { get }
 
     var jid: String? { get set }
     var queue: Queue? { get set }
@@ -38,6 +39,10 @@ extension Worker {
         return 25
     }
     
+    public static var retryIn: Int? {
+        return nil
+    }
+
     public static func performAsync(_ args: Args, on queue: Queue = Self.defaultQueue) throws {
         try SwiftkiqClient.current.enqueue(class: self, args: args, to: queue)
     }
