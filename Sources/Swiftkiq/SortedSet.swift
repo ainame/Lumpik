@@ -1,16 +1,16 @@
 //
-//  Queue.swift
+//  Set.swift
 //  Swiftkiq
 //
-//  Created by Namai Satoshi on 2017/02/26.
+//  Created by Namai Satoshi on 2017/03/05.
 //
 //
 
 import Foundation
 
-public struct Queue: StoreKey {
+public struct SortedSet: StoreKey {
     public let rawValue: String
-
+    
     public init(_ rawValue: String) {
         self.rawValue = rawValue
     }
@@ -20,10 +20,10 @@ public struct Queue: StoreKey {
     }
     
     public var key: String {
-        return "queue:\(rawValue)"
+        return rawValue
     }
     
-    public func clear() throws {
-        try SwiftkiqClient.current.store.clear(self)
+    public var hashValue: Int {
+        return rawValue.hashValue
     }
 }

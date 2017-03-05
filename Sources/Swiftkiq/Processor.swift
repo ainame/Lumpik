@@ -64,14 +64,46 @@ public final class Processor: WorkerFailureCallback {
     }
 
     func attemptRetry<W: Worker>(worker: W, work: UnitOfWork, error: Error) {
+        var newJob = work.job
+
+        newJob["error_message"] = error.localizedDescription
+
+        if let retryCount = newJob["retry_count"] as? Int {
+            newJob["retried_at"] = Date().timeIntervalSince1970
+            newJob["retry_count"] = retryCount + 1
+        } else {
+            newJob["failed_at"] = Date().timeIntervalSince1970
+            newJob["retry_count"] = 0
+        }
+
+        let backtrace = newJob["backtrace"] ?? false
+        switch backtrace {
+        case is Bool:
+            let backtraceBool = backtrace as! Bool
+            if backtraceBool {
+                newJob["error_backtrace"] = Thread.callStackSymbols
+            }
+        case is Int:
+            let backtraceInt = backtrace as! Int
+            let all = Thread.callStackSymbols.joined()
+            newJob["error_backtrace"] = all.substring(to: all.index(all.startIndex, offsetBy: backtraceInt))
+        default:
+            break
+        }
+
         let max = worker.retry ?? W.defaultRetry
         let current = work.retryCount ?? 0
-
         if current < max {
-            var newJob = work.job
-            newJob["retryCount"] = current + 1
-            let args = W.Args.from(newJob)
-            try! SwiftkiqClient.current.enqueue(class: W.self, args: args, to: work.queue)
+            // logging
+            // let payload = newJob
+            // let delay = 1
+            // let retryAt = Date().timeIntervalSince1970 + delay
+            // try! SwiftkiqClient.current.store.enqueue(class: W.self, args: args, to: work.queue)
+        } else {
+            // TODO: retries_exhausted
         }
+
+        // do not throw error in heare
+        // because this is only delegate
     }
 }

@@ -27,9 +27,9 @@ public struct SwiftkiqClient {
         return Thread.current.threadDictionary[cacheKey] as! SwiftkiqClient
     }
 
-    public var store: ListStorable
+    public var store: Storable
 
-    init(store: ListStorable) {
+    init(store: Storable) {
         self.store = store
     }
 
