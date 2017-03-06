@@ -8,13 +8,9 @@
 
 import Foundation
 
-public protocol StoreKey: RawRepresentable, Equatable, Hashable {
-    var key: String { get }
-}
-
-public protocol Storable: ListStorable, SortedSetStorable {
+public protocol Storable: ListStorable, SetStorable, SortedSetStorable {
     static func makeStore() -> Storable
-    func clear<K: StoreKey>(_ queue: K) throws
+    func clear<K: StoreKeyConvertible>(_ queue: K) throws
 }
 
 public protocol ListStorable {
@@ -22,11 +18,18 @@ public protocol ListStorable {
     func dequeue(_ queues: [Queue]) throws -> UnitOfWork?
 }
 
-public protocol SortedSetStorable {
-    func add(_ job: Dictionary<String, Any>, with score: Int, to sortedSet: SortedSet) throws
+public protocol SetStorable {
+    func add(_ job: Dictionary<String, Any>, to set: Set) throws
+    func members(_ set: Set) throws -> [Dictionary<String, Any>]
+    func size(_ set: Set) throws -> Int
 }
 
-extension StoreKey where Self: RawRepresentable, Self.RawValue == String {
+public protocol SortedSetStorable {
+    func add(_ job: Dictionary<String, Any>, with score: Int, to sortedSet: SortedSet) throws
+    func size(_ sortedSet: SortedSet) throws -> Int
+}
+
+extension StoreKeyConvertible where Self: RawRepresentable, Self.RawValue == String {
     public var name: String {
         return rawValue
     }

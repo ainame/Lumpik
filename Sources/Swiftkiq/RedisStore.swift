@@ -70,7 +70,7 @@ final public class RedisStore: Storable {
         return UnitOfWork(queue: queue, job: parsedResponse)
     }
     
-    public func clear<K: StoreKey>(_ key: K) throws {
+    public func clear<K: StoreKeyConvertible>(_ key: K) throws {
         var error: NSError? = nil
         redis.del(key.key) { _count, _error in
             error = _error
@@ -80,6 +80,43 @@ final public class RedisStore: Storable {
         }
     }
     
+    public func add(_ job: Dictionary<String, Any>, to set: Set) throws {
+        let string = JsonHelper.serialize(job)
+        var error: NSError? = nil
+        redis.sadd(set.key, members: string) { _count, _error in
+            error = _error
+        }
+        if let error = error {
+            throw error
+        }
+    }
+    
+    public func members(_ set: Set) throws -> [Dictionary<String, Any>] {
+        var members: [Any]? = nil
+        var error: NSError? = nil
+        redis.smembers(set.key) { _members, _error in
+            members = _members
+            error = _error
+        }
+        if let error = error {
+            throw error
+        }
+        return members as! [Dictionary<String, Any>]
+    }
+
+    public func size(_ set: Set) throws -> Int {
+        var count: Int? = nil
+        var error: NSError? = nil
+        redis.scard(set.key) { _count, _error in
+            count = _count
+            error = _error
+        }
+        if let error = error {
+            throw error
+        }
+        return count!
+    }
+
     public func add(_ job: Dictionary<String, Any>, with score: Int, to set: SortedSet) throws {
         let string = JsonHelper.serialize(job)
         var error: NSError? = nil
@@ -89,5 +126,18 @@ final public class RedisStore: Storable {
         if let error = error {
             throw error
         }
-    }        
+    }
+
+    public func size(_ sortedSet: SortedSet) throws -> Int {
+        var count: Int? = nil
+        var error: NSError? = nil
+        redis.zcard(sortedSet.key) { _count, _error in
+            count = _count
+            error = _error
+        }
+        if let error = error {
+            throw error
+        }
+        return count!
+    }
 }
