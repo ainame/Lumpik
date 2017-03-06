@@ -27,6 +27,18 @@ struct Compat {
     }
 }
 
+struct ProcessIdentityGenerator {
+    static let identity = ProcessIdentityGenerator.makeIdentity()
+
+    // TODO: use SecureRandom.hex(6)
+    private static let processNonce = String(format: "%6hx", Compat.random(9999999999))
+    private static func makeIdentity() -> String {
+        let info = ProcessInfo.processInfo
+        return "\(info.hostName)\(info.processIdentifier)\(processNonce)"
+    }
+}
+
+
 // MARK: Mapper Convertibles
 
 extension Queue: Convertible {

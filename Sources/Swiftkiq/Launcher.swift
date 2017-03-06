@@ -31,6 +31,7 @@ public struct LaunchOptions {
 public class Launcher {
     let options: LaunchOptions
     let manager: Manager
+    let heartbeatQueue = DispatchQueue(label: "tokyo.ainame.swiftkiq.launcher.heartbeat")
 
     required public init(options: LaunchOptions) {
         self.options = options
@@ -45,6 +46,20 @@ public class Launcher {
             Daemon.daemonize()
         }
         
+        self.startHeartbeat()
         self.manager.start()
+    }
+    
+    func startHeartbeat() {
+        heartbeatQueue.async { [weak self] in
+            while true {
+                self?.heartbeat()
+                sleep(5)
+            }
+        }
+    }
+    
+    func heartbeat() {
+        
     }
 }
