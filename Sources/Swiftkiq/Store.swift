@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Mapper
 
 public protocol Storable: ListStorable, SetStorable, SortedSetStorable {
     static func makeStore() -> Storable
@@ -20,7 +21,7 @@ public protocol ListStorable {
 
 public protocol SetStorable {
     func add(_ job: Dictionary<String, Any>, to set: Set) throws
-    func members(_ set: Set) throws -> [Dictionary<String, Any>]
+    func members<T: Mappable>(_ set: Set) throws -> [T]
     func size(_ set: Set) throws -> Int
 }
 

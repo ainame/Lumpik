@@ -38,8 +38,11 @@ public final class ProcessSet: Set {
         self.init(rawValue: "processes")
     }
     
-    func each(_ block: (Process) -> ()) {
-        //      procs = Sidekiq.redis { |conn| conn.smembers('processes') }.sort
+    func each(_ block: (Process) -> ()) throws {
+        let processes: [Process] = try SwiftkiqClient.current.store.members(self).sorted { $0.hostname < $1.hostname }
+        for process in processes {
+            block(process)
+        }
     }
 }
 
