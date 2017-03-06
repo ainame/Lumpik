@@ -33,3 +33,37 @@ public struct Process: Mappable {
     }
 }
 
+public final class ProcessSet: Set {
+    public convenience init() {
+        self.init(rawValue: "processes")
+    }
+    
+    func each(_ block: (Process) -> ()) {
+        //      procs = Sidekiq.redis { |conn| conn.smembers('processes') }.sort
+    }
+}
+
+public class JobSet: SortedSet {
+}
+
+public final class ScheduledSet: JobSet {
+    public convenience init() {
+        self.init(rawValue: "scheduled")
+    }
+}
+
+public final class RetrySet: JobSet {
+    public convenience init() {
+        self.init(rawValue: "retry")
+    }
+}
+
+extension StoreKeyConvertible {
+    public func clear() throws {
+        try SwiftkiqClient.current.store.clear(self)
+    }
+    
+    public func 💣() throws {
+        try clear()
+    }
+}
