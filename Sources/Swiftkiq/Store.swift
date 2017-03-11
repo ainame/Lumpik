@@ -9,9 +9,15 @@
 import Foundation
 import Mapper
 
-public protocol Storable: ListStorable, SetStorable, SortedSetStorable {
+public protocol Storable: ValueStorable, ListStorable, SetStorable, SortedSetStorable {
     static func makeStore() -> Storable
     func clear<K: StoreKeyConvertible>(_ queue: K) throws
+}
+
+public protocol ValueStorable {
+    func get<K: StoreKeyConvertible>(_ key: K) throws -> String
+    func set<K: StoreKeyConvertible>(_ key: K, value: String) throws
+    func increment<K: StoreKeyConvertible>(_ key: K, by count: Int) throws -> Int
 }
 
 public protocol ListStorable {

@@ -27,7 +27,7 @@ final public class RedisStore: Storable {
     let port: UInt16
     let timeout: TimeInterval = 2.0
 
-    private let redis: Redis
+    fileprivate let redis: Redis
 
     init(host: String, port: UInt16) throws {
         self.host = host
@@ -42,7 +42,62 @@ final public class RedisStore: Storable {
             throw error
         }
     }
+    
+    public func clear<K: StoreKeyConvertible>(_ key: K) throws {
+        var error: NSError? = nil
+        redis.del(key.key) { _count, _error in
+            error = _error
+        }
+        if let error = error {
+            throw error
+        }
+    }
+}
 
+extension RedisStore: ValueStorable {
+    public func get<K: StoreKeyConvertible>(_ key: K) throws -> String {
+        var value: String? = nil
+        var error: NSError? = nil
+        
+        redis.get(key.key) { _value, _error in
+            value = _value?.asString
+            error = _error
+        }
+        if let error = error {
+            throw error
+        }
+        
+        return value!
+    }
+    
+    public func set<K: StoreKeyConvertible>(_ key: K, value: String) throws {
+        var error: NSError? = nil
+        
+        redis.set(key.key, value: "") { _, _error in
+            error = _error
+        }
+        if let error = error {
+            throw error
+        }
+    }
+    
+    public func increment<K: StoreKeyConvertible>(_ key: K, by count: Int) throws -> Int {
+        var newCount: Int? = nil
+        var error: NSError? = nil
+        
+        redis.incr(key.key, by: count) { _newCount, _error in
+            newCount = _newCount
+            error = _error
+        }
+        if let error = error {
+            throw error
+        }
+        
+        return newCount!
+    }
+}
+
+extension RedisStore: ListStorable {
     public func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws {
         let string = JsonHelper.serialize(job)
         var error: NSError? = nil
@@ -70,17 +125,9 @@ final public class RedisStore: Storable {
         let queue = Queue(rawValue: parsedResponse["queue"]! as! String)
         return UnitOfWork(queue: queue, job: parsedResponse)
     }
+}
 
-    public func clear<K: StoreKeyConvertible>(_ key: K) throws {
-        var error: NSError? = nil
-        redis.del(key.key) { _count, _error in
-            error = _error
-        }
-        if let error = error {
-            throw error
-        }
-    }
-
+extension RedisStore: SetStorable {
     public func add(_ job: Dictionary<String, Any>, to set: Set) throws {
         let string = JsonHelper.serialize(job)
         var error: NSError? = nil
@@ -128,7 +175,9 @@ final public class RedisStore: Storable {
         }
         return count!
     }
-
+}
+    
+extension RedisStore: SortedSetStorable {
     public func add(_ job: Dictionary<String, Any>, with score: Int, to set: SortedSet) throws {
         let string = JsonHelper.serialize(job)
         var error: NSError? = nil
