@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import SwiftRedis
+import Redbird
 import Mapper
 
 public struct RedisConfig {
@@ -17,6 +17,7 @@ public struct RedisConfig {
 }
 
 final public class RedisStore: Storable {
+    typealias Redis = Redbird
     static var defaultConfig = RedisConfig()
 
     public static func makeStore() -> Storable {
@@ -25,135 +26,111 @@ final public class RedisStore: Storable {
 
     let host: String
     let port: UInt16
-    let timeout: TimeInterval = 2.0
+    let timeout: Int = 2
 
     fileprivate let redis: Redis
 
     init(host: String, port: UInt16) throws {
         self.host = host
         self.port = port
-        self.redis = Redis()
-
-        var error: NSError? = nil
-        redis.connect(host: host, port: Int32(port)) { _error in
-            error = _error
-        }
-        if let error = error {
-            throw error
-        }
+        self.redis = try Redbird(config: RedbirdConfig(address: host, port: port, password: nil))
     }
     
-    public func clear<K: StoreKeyConvertible>(_ key: K) throws {
-        var error: NSError? = nil
-        redis.del(key.key) { _count, _error in
-            error = _error
-        }
-        if let error = error {
-            throw error
-        }
+    @discardableResult
+    public func clear<K: StoreKeyConvertible>(_ key: K) throws -> Int {
+        let response = try redis.command("DEL", params: [key.key])
+        
+        guard response.respType != .Error else { throw try! response.toError() }
+        assert((response.respType == .Integer))
+        
+        return try! response.toInt()
     }
 }
 
 extension RedisStore: ValueStorable {
-    public func get<K: StoreKeyConvertible>(_ key: K) throws -> String {
-        var value: String? = nil
-        var error: NSError? = nil
+    public func get<K: StoreKeyConvertible>(_ key: K) throws -> String? {
+        let response = try redis.command("GET", params: [key.key])
         
-        redis.get(key.key) { _value, _error in
-            value = _value?.asString
-            error = _error
-        }
-        if let error = error {
-            throw error
-        }
-        
-        return value!
+        guard response.respType != .Error else { throw try! response.toError() }
+        assert((response.respType == .BulkString || response.respType == .NullBulkString))
+
+        return try! response.toMaybeString()
     }
     
-    public func set<K: StoreKeyConvertible>(_ key: K, value: String) throws {
-        var error: NSError? = nil
+    public func set<K: StoreKeyConvertible>(_ key: K, value: String) throws -> Bool {
+        let response = try redis.command("SET", params: [key.key, value])
         
-        redis.set(key.key, value: "") { _, _error in
-            error = _error
-        }
-        if let error = error {
-            throw error
-        }
+        guard response.respType != .Error else { throw try! response.toError() }
+        assert((response.respType == .Integer))
+
+        return try! response.toBool()
     }
     
-    public func increment<K: StoreKeyConvertible>(_ key: K, by count: Int) throws -> Int {
-        var newCount: Int? = nil
-        var error: NSError? = nil
+    public func increment<K: StoreKeyConvertible>(_ key: K, by count: Int = 1) throws -> Int {
+        let response = try redis.command("INCRBY", params: [key.key, String(count)])
         
-        redis.incr(key.key, by: count) { _newCount, _error in
-            newCount = _newCount
-            error = _error
-        }
-        if let error = error {
-            throw error
-        }
-        
-        return newCount!
+        guard response.respType != .Error else { throw try! response.toError() }
+        assert((response.respType == .Integer))
+
+        return try! response.toInt()
     }
 }
 
 extension RedisStore: ListStorable {
-    public func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws {
+    @discardableResult
+    public func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws -> Int {
         let string = JsonHelper.serialize(job)
-        var error: NSError? = nil
-        redis.lpush(queue.key, values: string) { count, _error in
-            error = _error
-        }
-        if let error = error {
-            throw error
-        }
+        let response = try redis.command("LPUSH", params: [queue.key, string])
+        guard response.respType != .Error else { throw try! response.toError() }
+        assert((response.respType == .Integer))
+
+        return try! response.toInt()
     }
 
     public func dequeue(_ queues: [Queue]) throws -> UnitOfWork? {
-        var response: [RedisString?]?
-        var error: NSError? = nil
-        redis.brpop(queues.map{ $0.key }, timeout: timeout) { _response, _error in
-            response = _response
-            error = _error
+        var params = queues.map { $0.key }
+        params.append(String(timeout))
+        
+        let response = try redis.command("BRPOP", params: params)
+        guard response.respType != .Error else { throw try! response.toError() }
+        assert(response.respType == .Array || response.respType == .NullArray)
+        
+        if response.respType == .NullArray {
+            return nil
         }
-        if let error = error {
-            throw error
-        }
-        guard let validResponse = response else { return nil }
 
-        let parsedResponse = JsonHelper.deserialize(validResponse)
-        let queue = Queue(rawValue: parsedResponse["queue"]! as! String)
-        return UnitOfWork(queue: queue, job: parsedResponse)
+        let responseArray = try! response.toArray()
+        let queueName = try! responseArray[0].toString()
+        let jsonString = try! responseArray[1].toString()
+        let parsedJson = JsonHelper.deserialize(jsonString)
+        let queue = Queue(queueName)
+        return UnitOfWork(queue: queue, job: parsedJson)
     }
 }
 
 extension RedisStore: SetStorable {
-    public func add(_ job: Dictionary<String, Any>, to set: Set) throws {
+    @discardableResult
+    public func add(_ job: Dictionary<String, Any>, to set: Set) throws -> Int {
         let string = JsonHelper.serialize(job)
-        var error: NSError? = nil
-        redis.sadd(set.key, members: string) { _count, _error in
-            error = _error
-        }
-        if let error = error {
-            throw error
-        }
+        let response = try redis.command("SADD", params: [string])
+        
+        guard response.respType != .Error else { throw try! response.toError() }
+        assert((response.respType == .Integer))
+
+        return try! response.toInt()
     }
 
     public func members<T: Mappable>(_ set: Set) throws -> [T] {
-        var members: [RedisString?]? = nil
-        var error: NSError? = nil
-        redis.smembers(set.key) { _members, _error in
-            members = _members
-            error = _error
-        }
-        if let error = error {
-            throw error
-        }
-
+        let response = try redis.command("SMEMBERS", params: [set.key])
+        
+        guard response.respType != .Error else { throw try! response.toError() }
+        assert((response.respType == .Array))
+        
+        let members = try! response.toArray().map { try $0.toString() }
         var all = [T]()
 
-        for case let member? in members! {
-            let data = member.asString.data(using: .utf8)!
+        for member in members {
+            let data = member.data(using: .utf8)!
             let json = try JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions()) as! NSDictionary
             if let object = T.from(json) {
                 all.append(object)
@@ -164,41 +141,33 @@ extension RedisStore: SetStorable {
     }
 
     public func size(_ set: Set) throws -> Int {
-        var count: Int? = nil
-        var error: NSError? = nil
-        redis.scard(set.key) { _count, _error in
-            count = _count
-            error = _error
-        }
-        if let error = error {
-            throw error
-        }
-        return count!
+        let response = try redis.command("SCARD", params: [set.key])
+        
+        guard response.respType != .Error else { throw try! response.toError() }
+        assert((response.respType == .Integer))
+        
+        return try! response.toInt()
     }
 }
     
 extension RedisStore: SortedSetStorable {
-    public func add(_ job: Dictionary<String, Any>, with score: Int, to set: SortedSet) throws {
+    @discardableResult
+    public func add(_ job: Dictionary<String, Any>, with score: Int, to set: SortedSet) throws -> Int {
         let string = JsonHelper.serialize(job)
-        var error: NSError? = nil
-        redis.zadd(set.key, tuples: (score, string)) { _count, _error in
-            error = _error
-        }
-        if let error = error {
-            throw error
-        }
+        let response = try redis.command("ZADD", params: [string, String(score)])
+        
+        guard response.respType != .Error else { throw try! response.toError() }
+        assert((response.respType == .Integer))
+        
+        return try! response.toInt()
     }
 
     public func size(_ sortedSet: SortedSet) throws -> Int {
-        var count: Int? = nil
-        var error: NSError? = nil
-        redis.zcard(sortedSet.key) { _count, _error in
-            count = _count
-            error = _error
-        }
-        if let error = error {
-            throw error
-        }
-        return count!
+        let response = try redis.command("ZCARD", params: [sortedSet.key])
+        
+        guard response.respType != .Error else { throw try! response.toError() }
+        assert((response.respType == .Integer))
+        
+        return try! response.toInt()
     }
 }

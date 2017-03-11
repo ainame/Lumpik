@@ -11,28 +11,28 @@ import Mapper
 
 public protocol Storable: ValueStorable, ListStorable, SetStorable, SortedSetStorable {
     static func makeStore() -> Storable
-    func clear<K: StoreKeyConvertible>(_ queue: K) throws
+    @discardableResult func clear<K: StoreKeyConvertible>(_ key: K) throws -> Int
 }
 
 public protocol ValueStorable {
-    func get<K: StoreKeyConvertible>(_ key: K) throws -> String
-    func set<K: StoreKeyConvertible>(_ key: K, value: String) throws
-    func increment<K: StoreKeyConvertible>(_ key: K, by count: Int) throws -> Int
+    func get<K: StoreKeyConvertible>(_ key: K) throws -> String?
+    @discardableResult func set<K: StoreKeyConvertible>(_ key: K, value: String) throws -> Bool
+    @discardableResult func increment<K: StoreKeyConvertible>(_ key: K, by count: Int) throws -> Int
 }
 
 public protocol ListStorable {
-    func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws
+    @discardableResult func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws -> Int
     func dequeue(_ queues: [Queue]) throws -> UnitOfWork?
 }
 
 public protocol SetStorable {
-    func add(_ job: Dictionary<String, Any>, to set: Set) throws
+    @discardableResult func add(_ job: Dictionary<String, Any>, to set: Set) throws -> Int
     func members<T: Mappable>(_ set: Set) throws -> [T]
     func size(_ set: Set) throws -> Int
 }
 
 public protocol SortedSetStorable {
-    func add(_ job: Dictionary<String, Any>, with score: Int, to sortedSet: SortedSet) throws
+    @discardableResult func add(_ job: Dictionary<String, Any>, with score: Int, to sortedSet: SortedSet) throws -> Int
     func size(_ sortedSet: SortedSet) throws -> Int
 }
 
