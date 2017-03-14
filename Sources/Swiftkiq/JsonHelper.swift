@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import SwiftRedis
 
 struct JsonHelper {
     static let defaultWriteOption = JSONSerialization.WritingOptions()
