@@ -37,7 +37,7 @@ public protocol SortedSetStorable {
 }
 
 public protocol Transaction {
-    func enqueue(_ name: String, params: [String]) throws -> Self
+    func addCommand(_ name: String, params: [String]) throws -> Self
     func exec() throws -> Bool
 }
 

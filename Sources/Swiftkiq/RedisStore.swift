@@ -23,17 +23,22 @@ public struct PipelineTransaction: Transaction {
         self.pipeline = pipeline
     }
 
-    public func enqueue(_ name: String, params: [String]) throws -> PipelineTransaction {
+    public func addCommand(_ name: String, params: [String]) throws -> PipelineTransaction {
         return try PipelineTransaction(pipeline: pipeline.enqueue(name, params: params))
     }
 
     public func exec() throws -> Bool {
-        let response = try pipeline.enqueue("EXEC").execute()
-        guard let lastResponse = response.last else {
-            return false
-        }
+        let responses = try pipeline.enqueue("EXEC").execute()
+        guard try responses[0].toString() == "OK" else { return false }
 
-        return (try? lastResponse.toBool()) ?? false
+        let quueingSuccessful = responses.map { $0.respType != .Error }.reduce(true) { $0 && $1 }
+        guard quueingSuccessful else { return false }
+
+        let transactionSuccessful = try responses[responses.count - 1]
+            .toArray().map { $0.respType != .Error }.reduce(true) { $0 && $1 }
+        guard transactionSuccessful else { return false }
+
+        return true
     }
 }
 
