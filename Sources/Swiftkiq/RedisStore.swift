@@ -16,6 +16,27 @@ public struct RedisConfig {
     let password: String? = nil
 }
 
+public struct PipelineTransaction: Transaction {
+    let pipeline: Pipeline
+
+    public init(pipeline: Pipeline) {
+        self.pipeline = pipeline
+    }
+
+    public func enqueue(_ name: String, params: [String]) throws -> PipelineTransaction {
+        return try PipelineTransaction(pipeline: pipeline.enqueue(name, params: params))
+    }
+
+    public func exec() throws -> Bool {
+        let response = try pipeline.enqueue("EXEC").execute()
+        guard let lastResponse = response.last else {
+            return false
+        }
+
+        return (try? lastResponse.toBool()) ?? false
+    }
+}
+
 final public class RedisStore: Storable {
     typealias Redis = Redbird
     static var defaultConfig = RedisConfig()
@@ -35,14 +56,18 @@ final public class RedisStore: Storable {
         self.port = port
         self.redis = try Redbird(config: RedbirdConfig(address: host, port: port, password: nil))
     }
-    
+
+    public func multi() throws -> Transaction {
+        return PipelineTransaction(pipeline: try redis.pipeline().enqueue("MULTI"))
+    }
+
     @discardableResult
     public func clear<K: StoreKeyConvertible>(_ key: K) throws -> Int {
         let response = try redis.command("DEL", params: [key.key])
-        
+
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Integer))
-        
+
         return try! response.toInt()
     }
 }
@@ -50,25 +75,25 @@ final public class RedisStore: Storable {
 extension RedisStore: ValueStorable {
     public func get<K: StoreKeyConvertible>(_ key: K) throws -> String? {
         let response = try redis.command("GET", params: [key.key])
-        
+
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .BulkString || response.respType == .NullBulkString))
 
         return try! response.toMaybeString()
     }
-    
+
     public func set<K: StoreKeyConvertible>(_ key: K, value: String) throws -> Bool {
         let response = try redis.command("SET", params: [key.key, value])
-        
+
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Integer))
 
         return try! response.toBool()
     }
-    
+
     public func increment<K: StoreKeyConvertible>(_ key: K, by count: Int = 1) throws -> Int {
         let response = try redis.command("INCRBY", params: [key.key, String(count)])
-        
+
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Integer))
 
@@ -90,11 +115,11 @@ extension RedisStore: ListStorable {
     public func dequeue(_ queues: [Queue]) throws -> UnitOfWork? {
         var params = queues.map { $0.key }
         params.append(String(timeout))
-        
+
         let response = try redis.command("BRPOP", params: params)
         guard response.respType != .Error else { throw try! response.toError() }
         assert(response.respType == .Array || response.respType == .NullArray)
-        
+
         if response.respType == .NullArray {
             return nil
         }
@@ -113,7 +138,7 @@ extension RedisStore: SetStorable {
     public func add(_ job: Dictionary<String, Any>, to set: Set) throws -> Int {
         let string = JsonHelper.serialize(job)
         let response = try redis.command("SADD", params: [string])
-        
+
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Integer))
 
@@ -122,10 +147,10 @@ extension RedisStore: SetStorable {
 
     public func members<T: Mappable>(_ set: Set) throws -> [T] {
         let response = try redis.command("SMEMBERS", params: [set.key])
-        
+
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Array))
-        
+
         let members = try! response.toArray().map { try $0.toString() }
         var all = [T]()
 
@@ -142,32 +167,32 @@ extension RedisStore: SetStorable {
 
     public func size(_ set: Set) throws -> Int {
         let response = try redis.command("SCARD", params: [set.key])
-        
+
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Integer))
-        
+
         return try! response.toInt()
     }
 }
-    
+
 extension RedisStore: SortedSetStorable {
     @discardableResult
     public func add(_ job: Dictionary<String, Any>, with score: Int, to set: SortedSet) throws -> Int {
         let string = JsonHelper.serialize(job)
         let response = try redis.command("ZADD", params: [string, String(score)])
-        
+
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Integer))
-        
+
         return try! response.toInt()
     }
 
     public func size(_ sortedSet: SortedSet) throws -> Int {
         let response = try redis.command("ZCARD", params: [sortedSet.key])
-        
+
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Integer))
-        
+
         return try! response.toInt()
     }
 }

@@ -9,7 +9,7 @@
 import Foundation
 import Mapper
 
-public protocol Storable: ValueStorable, ListStorable, SetStorable, SortedSetStorable {
+public protocol Storable: Transactionable, ValueStorable, ListStorable, SetStorable, SortedSetStorable {
     static func makeStore() -> Storable
     @discardableResult func clear<K: StoreKeyConvertible>(_ key: K) throws -> Int
 }
@@ -34,6 +34,15 @@ public protocol SetStorable {
 public protocol SortedSetStorable {
     @discardableResult func add(_ job: Dictionary<String, Any>, with score: Int, to sortedSet: SortedSet) throws -> Int
     func size(_ sortedSet: SortedSet) throws -> Int
+}
+
+public protocol Transaction {
+    func enqueue(_ name: String, params: [String]) throws -> Self
+    func exec() throws -> Bool
+}
+
+public protocol Transactionable {
+    func multi() throws -> Transaction
 }
 
 extension StoreKeyConvertible where Self: RawRepresentable, Self.RawValue == String {
