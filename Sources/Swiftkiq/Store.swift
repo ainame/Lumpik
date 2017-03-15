@@ -38,7 +38,7 @@ public protocol SortedSetStorable {
 
 public protocol Transaction {
     func addCommand(_ name: String, params: [String]) throws -> Self
-    func exec() throws -> Bool
+    @discardableResult func exec() throws -> Bool
 }
 
 public protocol Transactionable {

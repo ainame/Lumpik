@@ -24,7 +24,8 @@ public struct PipelineTransaction: Transaction {
     }
 
     public func addCommand(_ name: String, params: [String]) throws -> PipelineTransaction {
-        return try PipelineTransaction(pipeline: pipeline.enqueue(name, params: params))
+        let _ = try pipeline.enqueue(name, params: params)
+        return self
     }
 
     public func exec() throws -> Bool {
