@@ -48,7 +48,7 @@ public class Launcher {
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.calendar = Calendar(identifier: .gregorian)
-        formatter.dateFormat = "%Y-%m-%d"
+        formatter.dateFormat = "Y-M-d"
         self.formatter = formatter
     }
 
