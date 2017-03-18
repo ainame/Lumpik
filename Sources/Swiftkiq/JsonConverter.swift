@@ -33,24 +33,24 @@ public final class JsonConverter: Converter {
     }
     
     func serialize(_ dictionary: [String: Any]) -> String {
-        let data = try! JSONSerialization.data(withJSONObject: dictionary, options: JsonConverter.defaultWriteOption)
+        let data = try! JSONSerialization.data(withJSONObject: dictionary, options: writeOption)
         return String(bytes: data, encoding: .utf8)!
     }
     
     func serialize(_ array: [Any]) -> String {
-        let data = try! JSONSerialization.data(withJSONObject: array, options: JsonConverter.defaultWriteOption)
+        let data = try! JSONSerialization.data(withJSONObject: array, options: writeOption)
         return String(bytes: data, encoding: .utf8)!
     }
     
     func deserialize(dictionary rawValue: String) -> [String: Any] {
         let data = rawValue.data(using: .utf8)!
-        let json = try! JSONSerialization.jsonObject(with: data, options: JsonConverter.defaultReadOption)
+        let json = try! JSONSerialization.jsonObject(with: data, options: readOption)
         return json as! [String: Any]
     }
     
     func deserialize(array rawValue: String) -> [Any] {
         let data = rawValue.data(using: .utf8)!
-        let json = try! JSONSerialization.jsonObject(with: data, options: JsonConverter.defaultReadOption)
+        let json = try! JSONSerialization.jsonObject(with: data, options: readOption)
         return json as! [Any]
     }
 }
