@@ -39,9 +39,9 @@ extension Routable {
     }
     
     func stats<W: Worker>(worker: W, work: UnitOfWork, block: () throws -> ()) throws {
-        Processor.workerStates[work.jid] = WorkerState(work: work, runAt: Date())
+        Processor.updateState(WorkerState(work: work, runAt: Date()), for: work.jid)
         defer {
-            Processor.workerStates.removeValue(forKey: work.jid)
+            Processor.updateState(nil, for: work.jid)
             Processor.processedCounter.increment()
         }
         

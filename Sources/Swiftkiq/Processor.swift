@@ -14,10 +14,20 @@ public protocol WorkerFailureCallback {
 }
 
 public final class Processor: WorkerFailureCallback {
-    static var workerStates = [Jid: WorkerState]()
+    private static let mutex = Mutex()
+    private static var _workerState = [Jid: WorkerState]()
+
+    static var workerStates: [Jid: WorkerState] {
+        return mutex.synchronize { return _workerState }
+    }
+
+    static func updateState(_ value: WorkerState?, for jid: Jid) {
+        mutex.synchronize { _workerState[jid] = value }
+    }
+
     static var processedCounter = AtomicCounter<Int>(0)
     static var failureCounter = AtomicCounter<Int>(0)
-    
+
     let fetcher: Fetcher
     let router: Routable
     let dipsatchQueue: DispatchQueue
@@ -61,7 +71,7 @@ public final class Processor: WorkerFailureCallback {
     func process(_ work: UnitOfWork) throws {
         try router.dispatch(work, errorCallback: self)
     }
-    
+
     public func didFailed<W : Worker>(worker: W, work: UnitOfWork, error: Error) {
         print("ERROR: \(error) on \(worker)")
         attemptRetry(worker: worker, work: work, error: error)
