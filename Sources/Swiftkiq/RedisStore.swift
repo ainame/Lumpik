@@ -132,10 +132,9 @@ extension RedisStore: ListStorable {
         }
 
         let responseArray = try! response.toArray()
-        let queueName = try! responseArray[0].toString()
         let jsonString = try! responseArray[1].toString()
         let parsedJson = converter.deserialize(dictionary: jsonString)
-        let queue = Queue(queueName)
+        let queue = Queue(parsedJson["queue"]! as! String)
         return UnitOfWork(queue: queue, job: parsedJson)
     }
 }
