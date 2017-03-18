@@ -9,7 +9,7 @@
 import Foundation
 import Mapper
 
-public struct Process: Mappable {
+public struct Process: JsonConvertible {
     let hostname: String
     let startedAt: Date
     let pid: Int
@@ -22,7 +22,7 @@ public struct Process: Mappable {
 
     public init(map: Mapper) throws {
         self.hostname = try map.from("hostname")
-        self.startedAt = try map.from("started_at")
+        self.startedAt = try map.from("started_at") { Date(timeIntervalSince1970: $0 as! TimeInterval) }
         self.pid = try map.from("pid")
         self.tag = try map.from("tag")
         self.concurrency = try map.from("concurrency")
@@ -30,6 +30,20 @@ public struct Process: Mappable {
         self.busy = try map.from("busy")
         self.beat = try map.from("beat")
         self.identity = try map.from("identity")
+    }
+    
+    public var asDictionary: [String : Any] {
+        return [
+            "hostname": hostname,
+            "started_at": startedAt.timeIntervalSince1970,
+            "pid": pid,
+            "tag": tag,
+            "concurrency": concurrency,
+            "queues": queues,
+            "busy": busy,
+            "beat": beat,
+            "identity": identity,
+        ]
     }
 }
 

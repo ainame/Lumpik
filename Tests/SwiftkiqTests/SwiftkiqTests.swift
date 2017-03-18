@@ -24,7 +24,7 @@ class SwiftkiqTests: XCTestCase {
             }
         }
 
-        var jid: String?
+        var jid: Jid?
         var queue: Queue?
         var retry: Int?
 

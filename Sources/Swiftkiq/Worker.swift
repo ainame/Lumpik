@@ -20,7 +20,7 @@ public protocol Worker {
     static var defaultRetry: Int { get }
     static var retryIn: Int? { get }
 
-    var jid: String? { get set }
+    var jid: Jid? { get set }
     var queue: Queue? { get set }
     var retry: Int? { get set }
 
@@ -28,7 +28,6 @@ public protocol Worker {
     static func performAsync(_ args: Args, on queue: Queue) throws
     func perform(_ args: Args) throws -> ()
 }
-
 
 extension Worker {
     public static var defaultQueue: Queue {

@@ -12,7 +12,7 @@ public struct UnitOfWork {
     public let queue: Queue
     public let job: Dictionary<String, Any>
 
-    public var jid: String { return job["jid"]! as! String }
+    public var jid: Jid { return Jid(job["jid"]! as! String)! }
     public var workerType: String { return job["class"]! as! String }
     public var args: Dictionary<String, Any> { return job["args"]! as! Dictionary<String, Any> }
     public var retry: Int { return Int(job["retry"]! as! UInt) }

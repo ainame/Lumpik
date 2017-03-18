@@ -27,7 +27,7 @@ public protocol ListStorable {
 
 public protocol SetStorable {
     @discardableResult func add(_ job: Dictionary<String, Any>, to set: Set) throws -> Int
-    func members<T: Mappable>(_ set: Set) throws -> [T]
+    func members<T: JsonConvertible>(_ set: Set) throws -> [T]
     func size(_ set: Set) throws -> Int
 }
 
@@ -37,7 +37,7 @@ public protocol SortedSetStorable {
 }
 
 public protocol Transaction {
-    func addCommand(_ name: String, params: [String]) throws -> Self
+    @discardableResult func addCommand(_ name: String, params: [String]) throws -> Self
     @discardableResult func exec() throws -> Bool
 }
 

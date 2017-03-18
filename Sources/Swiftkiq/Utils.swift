@@ -27,33 +27,20 @@ struct Compat {
     }
 }
 
-struct ProcessIdentityGenerator {
-    static let identity = ProcessIdentityGenerator.makeIdentity()
-
-    // TODO: use SecureRandom.hex(6)
-    private static let processNonce = String(format: "%6hx", Compat.random(9999999999))
-    private static func makeIdentity() -> String {
-        let info = ProcessInfo.processInfo
-        return "\(info.hostName)\(info.processIdentifier)\(processNonce)"
-    }
-}
-
-
 // MARK: Mapper Convertibles
-
 extension Queue: Convertible {
     public static func fromMap(_ value: Any) throws -> Queue {
         if let rawValue = value as? String {
             return Queue(rawValue)
         }
-        throw MapperError.convertibleError(value: value, type: ConvertedType.self)
+        throw MapperError.convertibleError(value: value, type: Queue.self)
     }
 }
 
 extension Date: Convertible {
     public static func fromMap(_ value: Any) throws -> Date {
-        if let floatValue = value as? Double {
-            return Date(timeIntervalSinceReferenceDate: floatValue)
+        if let floatValue = value as? TimeInterval {
+            return Date(timeIntervalSince1970: floatValue)
         }
         throw MapperError.convertibleError(value: value, type: Date.self)
     }

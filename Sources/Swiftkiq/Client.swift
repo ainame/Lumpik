@@ -9,22 +9,22 @@
 import Foundation
 import Dispatch
 
-fileprivate let lock = NSLock()
 fileprivate let cacheKey = "tokyo.ainame.swiftkiq.client"
 fileprivate var instanceCache = Dictionary<String, SwiftkiqClient>()
 
 public struct SwiftkiqClient {
+    private static let mutex = Mutex()
+    
     public static var current: SwiftkiqClient {
-        lock.lock()
-        defer { lock.unlock() }
-        
-        if let client = Thread.current.threadDictionary[cacheKey] as? SwiftkiqClient {
-            return client
+        return mutex.synchronize { () -> SwiftkiqClient in
+            if let client = Thread.current.threadDictionary[cacheKey] as? SwiftkiqClient {
+                return client
+            }
+            
+            let store = RedisStore.makeStore()
+            Thread.current.threadDictionary[cacheKey] = SwiftkiqClient(store: store)
+            return Thread.current.threadDictionary[cacheKey] as! SwiftkiqClient
         }
-
-        let store = RedisStore.makeStore()
-        Thread.current.threadDictionary[cacheKey] = SwiftkiqClient(store: store)
-        return Thread.current.threadDictionary[cacheKey] as! SwiftkiqClient
     }
 
     public var store: Storable
@@ -34,7 +34,7 @@ public struct SwiftkiqClient {
     }
 
     public func enqueue<W: Worker, A: Argument>(`class`: W.Type, args: A, retry: Int = W.defaultRetry, to queue: Queue = W.defaultQueue) throws {
-        try self.store.enqueue(["jid": UUID().uuidString,
+        try self.store.enqueue(["jid": JobIdentityGenerator.identity().rawValue,
                                 "class": String(describing: `class`),
                                 "args": args.toDictionary(),
                                 "retry": retry,

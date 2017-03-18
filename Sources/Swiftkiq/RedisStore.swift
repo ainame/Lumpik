@@ -56,6 +56,7 @@ final public class RedisStore: Storable {
     let timeout: Int = 2
 
     fileprivate let redis: Redis
+    fileprivate let converter: Converter = JsonConverter.default
 
     init(host: String, port: UInt16) throws {
         self.host = host
@@ -110,7 +111,7 @@ extension RedisStore: ValueStorable {
 extension RedisStore: ListStorable {
     @discardableResult
     public func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws -> Int {
-        let string = JsonHelper.serialize(job)
+        let string = JsonConverter.default.serialize(job)
         let response = try redis.command("LPUSH", params: [queue.key, string])
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Integer))
@@ -133,7 +134,7 @@ extension RedisStore: ListStorable {
         let responseArray = try! response.toArray()
         let queueName = try! responseArray[0].toString()
         let jsonString = try! responseArray[1].toString()
-        let parsedJson = JsonHelper.deserialize(jsonString)
+        let parsedJson = converter.deserialize(dictionary: jsonString)
         let queue = Queue(queueName)
         return UnitOfWork(queue: queue, job: parsedJson)
     }
@@ -142,7 +143,7 @@ extension RedisStore: ListStorable {
 extension RedisStore: SetStorable {
     @discardableResult
     public func add(_ job: Dictionary<String, Any>, to set: Set) throws -> Int {
-        let string = JsonHelper.serialize(job)
+        let string = converter.serialize(job)
         let response = try redis.command("SADD", params: [string])
 
         guard response.respType != .Error else { throw try! response.toError() }
@@ -151,7 +152,7 @@ extension RedisStore: SetStorable {
         return try! response.toInt()
     }
 
-    public func members<T: Mappable>(_ set: Set) throws -> [T] {
+    public func members<T: JsonConvertible>(_ set: Set) throws -> [T] {
         let response = try redis.command("SMEMBERS", params: [set.key])
 
         guard response.respType != .Error else { throw try! response.toError() }
@@ -184,7 +185,7 @@ extension RedisStore: SetStorable {
 extension RedisStore: SortedSetStorable {
     @discardableResult
     public func add(_ job: Dictionary<String, Any>, with score: Int, to set: SortedSet) throws -> Int {
-        let string = JsonHelper.serialize(job)
+        let string = converter.serialize(job)
         let response = try redis.command("ZADD", params: [string, String(score)])
 
         guard response.respType != .Error else { throw try! response.toError() }

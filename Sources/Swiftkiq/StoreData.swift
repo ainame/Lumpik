@@ -7,7 +7,7 @@
 //
 
 import Foundation
-
+import Mapper
 
 public protocol StoreKeyConvertible: RawRepresentable, Equatable, Hashable {
     var key: String { get }
