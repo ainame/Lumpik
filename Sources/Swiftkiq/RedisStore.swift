@@ -110,7 +110,7 @@ extension RedisStore: ValueStorable {
 
 extension RedisStore: ListStorable {
     @discardableResult
-    public func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws -> Int {
+    public func enqueue(_ job: [String: Any], to queue: Queue) throws -> Int {
         let string = JsonConverter.default.serialize(job)
         let response = try redis.command("LPUSH", params: [queue.key, string])
         guard response.respType != .Error else { throw try! response.toError() }
@@ -141,7 +141,7 @@ extension RedisStore: ListStorable {
 
 extension RedisStore: SetStorable {
     @discardableResult
-    public func add(_ job: Dictionary<String, Any>, to set: Set) throws -> Int {
+    public func add(_ job: [String: Any], to set: Set) throws -> Int {
         let string = converter.serialize(job)
         let response = try redis.command("SADD", params: [string])
 
@@ -183,7 +183,7 @@ extension RedisStore: SetStorable {
 
 extension RedisStore: SortedSetStorable {
     @discardableResult
-    public func add(_ job: Dictionary<String, Any>, with score: Int, to set: SortedSet) throws -> Int {
+    public func add(_ job: [String: Any], with score: Int, to set: SortedSet) throws -> Int {
         let string = converter.serialize(job)
         let response = try redis.command("ZADD", params: [string, String(score)])
 
@@ -191,6 +191,26 @@ extension RedisStore: SortedSetStorable {
         assert((response.respType == .Integer))
 
         return try! response.toInt()
+    }
+
+    @discardableResult public func remove(_ member: [String: Any], to sortedSet: SortedSet) throws -> Int {
+        let string = converter.serialize(member)
+        let response = try redis.command("ZREM", params: [sortedSet.key, string])
+        
+        guard response.respType != .Error else { throw try! response.toError() }
+        assert((response.respType == .Integer))
+        
+        return try! response.toInt()
+    }
+    
+    public func range(by score: Double, from sortedSet: SortedSet, limit: [Int]) throws -> [[String: Any]] {
+        var params = [sortedSet.key, "LIMIT"]
+        params.append(contentsOf: limit.map { String($0) })
+        
+        let response = try redis.command("ZRENGEBYSCORE", params: params)
+        guard response.respType != .Error else { throw try! response.toError() }
+        
+        return try! response.toArray().map { try! $0.toString() }.map { converter.deserialize(dictionary: $0) }
     }
 
     public func size(_ sortedSet: SortedSet) throws -> Int {

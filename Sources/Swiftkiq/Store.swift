@@ -21,18 +21,20 @@ public protocol ValueStorable {
 }
 
 public protocol ListStorable {
-    @discardableResult func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws -> Int
+    @discardableResult func enqueue(_ job: [String: Any], to queue: Queue) throws -> Int
     func dequeue(_ queues: [Queue]) throws -> UnitOfWork?
 }
 
 public protocol SetStorable {
-    @discardableResult func add(_ job: Dictionary<String, Any>, to set: Set) throws -> Int
+    @discardableResult func add(_ job: [String: Any], to set: Set) throws -> Int
     func members<T: JsonConvertible>(_ set: Set) throws -> [T]
     func size(_ set: Set) throws -> Int
 }
 
 public protocol SortedSetStorable {
-    @discardableResult func add(_ job: Dictionary<String, Any>, with score: Int, to sortedSet: SortedSet) throws -> Int
+    @discardableResult func add(_ job: [String: Any], with score: Int, to sortedSet: SortedSet) throws -> Int
+    @discardableResult func remove(_ member: [String: Any], to sortedSet: SortedSet) throws -> Int
+    func range(by score: Double, from sortedSet: SortedSet, limit: [Int]) throws -> [[String: Any]]
     func size(_ sortedSet: SortedSet) throws -> Int
 }
 
