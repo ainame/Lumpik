@@ -1,5 +1,5 @@
 //
-//  Scheduler.swift
+//  Poller.swift
 //  Swiftkiq
 //
 //  Created by Namai Satoshi on 2017/03/04.
@@ -36,7 +36,7 @@ public class Poller {
         for jobSet in [RetrySet(), ScheduledSet()] {
             do {
                 let now = Date().timeIntervalSince1970
-                while let job = try client.store.range(min: .infinityNegative, max: .value(now), from: jobSet, limit: [1,2]).first {
+                while let job = try client.store.range(min: .infinityNegative, max: .value(now), from: jobSet, offset: 1, count: 2).first {
                     guard let queue = job["queue"] as? String else { continue }
                     
                     if try client.store.remove(job, to: jobSet) {
@@ -60,7 +60,8 @@ public class Poller {
     }
 
     private func wait() {
-        sleep(UInt32(randomPollInterval()))
+        let interval = randomPollInterval()
+        sleep(UInt32(interval))
     }
 
     // calculate interval with randomness

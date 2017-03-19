@@ -143,7 +143,7 @@ extension RedisStore: SetStorable {
     @discardableResult
     public func add(_ job: [String: Any], to set: Set) throws -> Int {
         let string = converter.serialize(job)
-        let response = try redis.command("SADD", params: [string])
+        let response = try redis.command("SADD", params: [set.key, string])
 
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Integer))
@@ -183,9 +183,9 @@ extension RedisStore: SetStorable {
 
 extension RedisStore: SortedSetStorable {
     @discardableResult
-    public func add(_ job: [String: Any], with score: SortedSetScore, to set: SortedSet) throws -> Int {
+    public func add(_ job: [String: Any], with score: SortedSetScore, to sortedSet: SortedSet) throws -> Int {
         let string = converter.serialize(job)
-        let response = try redis.command("ZADD", params: [string, score.string])
+        let response = try redis.command("ZADD", params: [sortedSet.key, score.string, string])
 
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Integer))
@@ -203,11 +203,9 @@ extension RedisStore: SortedSetStorable {
         return try! response.toBool()
     }
     
-    public func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, limit: [Int]) throws -> [[String: Any]] {
-        var params = [sortedSet.key, min.string, max.string, "LIMIT"]
-        params.append(contentsOf: limit.map { String($0) })
-        
-        let response = try redis.command("ZRENGEBYSCORE", params: params)
+    public func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, offset: Int, count: Int) throws -> [[String: Any]] {
+        let params = [sortedSet.key, min.string, max.string, "LIMIT", String(offset), String(count)]
+        let response = try redis.command("ZRANGEBYSCORE", params: params)
         guard response.respType != .Error else { throw try! response.toError() }
         
         return try! response.toArray().map { try! $0.toString() }.map { converter.deserialize(dictionary: $0) }

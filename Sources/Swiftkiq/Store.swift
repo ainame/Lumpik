@@ -34,7 +34,7 @@ public protocol SetStorable {
 public protocol SortedSetStorable {
     @discardableResult func add(_ job: [String: Any], with score: SortedSetScore, to sortedSet: SortedSet) throws -> Int
     @discardableResult func remove(_ member: [String: Any], to sortedSet: SortedSet) throws -> Bool
-    func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, limit: [Int]) throws -> [[String: Any]]
+    func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, offset: Int, count: Int) throws -> [[String: Any]]
     func size(_ sortedSet: SortedSet) throws -> Int
 }
 

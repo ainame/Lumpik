@@ -31,6 +31,7 @@ public struct LaunchOptions {
 public class Launcher {
     let options: LaunchOptions
     let manager: Manager
+    let poller: Poller
     let heartbeatQueue = DispatchQueue(label: "tokyo.ainame.swiftkiq.launcher.heartbeat")
     let formatter: DateFormatter
     let converter: Converter = JsonConverter.default
@@ -44,6 +45,7 @@ public class Launcher {
                                queues: options.queues,
                                strategy: options.strategy,
                                router: options.router)
+        self.poller = Poller()
         let formatter = DateFormatter()
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.locale = Locale(identifier: "en_US_POSIX")
@@ -59,6 +61,7 @@ public class Launcher {
         
         self.startHeartbeat()
         self.manager.start()
+        self.poller.start()
     }
     
     func startHeartbeat() {
