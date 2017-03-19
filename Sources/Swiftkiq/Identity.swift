@@ -80,8 +80,8 @@ struct ProcessIdentityGenerator {
     static let identity = ProcessIdentityGenerator.makeIdentity()
     
     // TODO: use SecureRandom.hex(6)
-    private static let processNonce = String(format: "%6hx", Compat.random(99_999_999))
-    private static func makeIdentity() -> ProcessIdentity {
+    static let processNonce = String(format: "%6x", UInt64(Compat.random(99_999_999)) * UInt64(Compat.random(10000)))
+    static func makeIdentity() -> ProcessIdentity {
         let info = ProcessInfo.processInfo
         return ProcessIdentity("\(info.hostName)\(info.processIdentifier)\(processNonce)")!
     }
@@ -97,7 +97,7 @@ struct ThreadIdentityGenerator {
 struct JobIdentityGenerator {
     // TODO: use SecureRandom.hex(12)
     static func identity() -> Jid {
-        let jid = String(format: "%12hx", Compat.random(99_999_999))
+        let jid = String(format: "%12x", UInt64(Compat.random(99_999_999)) * UInt64(Compat.random(10000)))
         return Jid(jid)!
     }
 }

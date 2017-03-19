@@ -29,4 +29,13 @@ class ProcessTests: XCTestCase {
         let process = Swiftkiq.Process.from(dict)
         XCTAssertNotNil(process)
     }
+    
+    func testIndentity() throws {
+        let nonce = ProcessIdentityGenerator.processNonce
+        print(nonce)
+        XCTAssertGreaterThanOrEqual(nonce.characters.count, 6)
+        
+        let jid = JobIdentityGenerator.identity()
+        XCTAssertGreaterThanOrEqual(jid.rawValue.characters.count, 12)
+    }
 }
