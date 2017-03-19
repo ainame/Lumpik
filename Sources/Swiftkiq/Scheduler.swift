@@ -32,8 +32,21 @@ public class Poller {
     }
 
     func enqueue () {
-        let store = SwiftkiqClient.current.store
-        [RetrySet(), ScheduledSet()].forEach { jobSet in
+        let client = SwiftkiqClient.current
+        for jobSet in [RetrySet(), ScheduledSet()] {
+            do {
+                let now = Date().timeIntervalSince1970
+                while let job = try client.store.range(min: .infinityNegative, max: .value(now), from: jobSet, limit: [1,2]).first {
+                    guard let queue = job["queue"] as? String else { continue }
+                    
+                    if try client.store.remove(job, to: jobSet) {
+                        try client.enqueue(job, to: Queue(queue))
+                        print("enqueued \(jobSet): \(job)")
+                    }
+                }
+            } catch {
+                print("poller error: \(error)")
+            }
         }
     }
 

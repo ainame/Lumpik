@@ -32,9 +32,9 @@ public protocol SetStorable {
 }
 
 public protocol SortedSetStorable {
-    @discardableResult func add(_ job: [String: Any], with score: Int, to sortedSet: SortedSet) throws -> Int
-    @discardableResult func remove(_ member: [String: Any], to sortedSet: SortedSet) throws -> Int
-    func range(by score: Double, from sortedSet: SortedSet, limit: [Int]) throws -> [[String: Any]]
+    @discardableResult func add(_ job: [String: Any], with score: SortedSetScore, to sortedSet: SortedSet) throws -> Int
+    @discardableResult func remove(_ member: [String: Any], to sortedSet: SortedSet) throws -> Bool
+    func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, limit: [Int]) throws -> [[String: Any]]
     func size(_ sortedSet: SortedSet) throws -> Int
 }
 
@@ -45,6 +45,23 @@ public protocol Transaction {
 
 public protocol Transactionable {
     func multi() throws -> Transaction
+}
+
+public enum SortedSetScore {
+    case value(Double)
+    case infinityPositive
+    case infinityNegative
+    
+    var string: String {
+        switch self {
+        case .value(let double):
+            return String(double)
+        case .infinityPositive:
+            return "+Inf"
+        case .infinityNegative:
+            return "-Inf"
+        }
+    }
 }
 
 extension StoreKeyConvertible where Self: RawRepresentable, Self.RawValue == String {

@@ -40,4 +40,10 @@ public struct SwiftkiqClient {
                                 "retry": retry,
                                 "queue": queue.name], to: queue)
     }
+    
+    public func enqueue(_ job: [String: Any], to queue: Queue = Queue("default")) throws {
+        var newJob = job
+        newJob["jid"] = (job["jid"] != nil) ? job["jid"] : JobIdentityGenerator.identity().rawValue
+        try self.store.enqueue(newJob, to: queue)
+    }
 }

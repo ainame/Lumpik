@@ -183,9 +183,9 @@ extension RedisStore: SetStorable {
 
 extension RedisStore: SortedSetStorable {
     @discardableResult
-    public func add(_ job: [String: Any], with score: Int, to set: SortedSet) throws -> Int {
+    public func add(_ job: [String: Any], with score: SortedSetScore, to set: SortedSet) throws -> Int {
         let string = converter.serialize(job)
-        let response = try redis.command("ZADD", params: [string, String(score)])
+        let response = try redis.command("ZADD", params: [string, score.string])
 
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Integer))
@@ -193,18 +193,18 @@ extension RedisStore: SortedSetStorable {
         return try! response.toInt()
     }
 
-    @discardableResult public func remove(_ member: [String: Any], to sortedSet: SortedSet) throws -> Int {
+    @discardableResult public func remove(_ member: [String: Any], to sortedSet: SortedSet) throws -> Bool {
         let string = converter.serialize(member)
         let response = try redis.command("ZREM", params: [sortedSet.key, string])
         
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Integer))
         
-        return try! response.toInt()
+        return try! response.toBool()
     }
     
-    public func range(by score: Double, from sortedSet: SortedSet, limit: [Int]) throws -> [[String: Any]] {
-        var params = [sortedSet.key, "LIMIT"]
+    public func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, limit: [Int]) throws -> [[String: Any]] {
+        var params = [sortedSet.key, min.string, max.string, "LIMIT"]
         params.append(contentsOf: limit.map { String($0) })
         
         let response = try redis.command("ZRENGEBYSCORE", params: params)

@@ -110,8 +110,8 @@ public final class Processor: WorkerFailureCallback {
         if current < max {
             // TODO: logging
             let delay = Delay.next(for: worker, by: current)
-            let retryAt = Int(Date().timeIntervalSince1970) + delay
-            try! SwiftkiqClient.current.store.add(newJob, with: retryAt, to: RetrySet())
+            let retryAt = Date().timeIntervalSince1970 + Double(delay)
+            try! SwiftkiqClient.current.store.add(newJob, with: .value(retryAt), to: RetrySet())
         } else {
             // TODO: retries_exhausted
         }
