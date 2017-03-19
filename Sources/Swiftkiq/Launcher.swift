@@ -116,7 +116,7 @@ public class Launcher {
                 .addCommand("EXISTS", params: [workerKey])
                 .addCommand("HMSET", params: [workerKey,
                                               "info", processState.json,
-                                              "busy", "\(Processor.workerStates.count))",
+                                              "busy", "\(Processor.workerStates.count)",
                     "beat", "\(Date().timeIntervalSince1970)",
                     "quit", "\(done)"])
                 .addCommand("EXPIRE", params: [workerKey, "60"])
