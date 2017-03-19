@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Redis
 import Mapper
 
 public protocol Storable: Transactionable, ValueStorable, ListStorable, SetStorable, SortedSetStorable {

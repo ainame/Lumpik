@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Redbird
 
 public protocol Fetcher: class {
     init(queues: [Queue])
