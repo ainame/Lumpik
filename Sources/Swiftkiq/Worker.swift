@@ -10,7 +10,7 @@ import Foundation
 
 public protocol Argument {
     func toDictionary() -> [String: Any]
-    static func from(_ dictionary: Dictionary<String, Any>) -> Self
+    static func from(_ dictionary: [String: Any]) -> Self
 }
 
 public protocol Worker {

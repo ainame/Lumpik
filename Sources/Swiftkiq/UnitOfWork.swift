@@ -10,11 +10,11 @@ import Foundation
  
 public struct UnitOfWork {
     public let queue: Queue
-    public let job: Dictionary<String, Any>
+    public let job: [String: Any]
 
     public var jid: Jid { return Jid(job["jid"]! as! String)! }
     public var workerType: String { return job["class"]! as! String }
-    public var args: Dictionary<String, Any> { return job["args"]! as! Dictionary<String, Any> }
+    public var args: [String: Any] { return job["args"]! as! [String: Any] }
     public var retry: Int { return Int(job["retry"]! as! UInt) }
     public var retryCount: Int? { return Int(job["retry_count"]! as! UInt) }
     public var retriedAt: String? { return job["retried_at"]! as? String }
@@ -24,7 +24,7 @@ public struct UnitOfWork {
     }
     public var failedAt: String? { return job["failed_at"]! as? String }
 
-    public init(queue: Queue, job: Dictionary<String, Any>) {
+    public init(queue: Queue, job: [String: Any]) {
         self.queue = queue
         self.job = job
     }
