@@ -11,8 +11,15 @@ import Foundation
 public class Poller {
     static let initalWait: UInt32 = 10
 
+    public let averageScheduledPollInterval: Int
+    
     private let dispatchQueue = DispatchQueue(label: "tokyo.ainame.swiftkiq.poller")
     private var done: Bool = false
+    private var _pollIntervalAverage: Int? = nil
+    
+    init(averageScheduledPollInterval: Int = 15) {
+        self.averageScheduledPollInterval = averageScheduledPollInterval
+    }
 
     func start() {
         dispatchQueue.async { [weak self] in
@@ -25,6 +32,9 @@ public class Poller {
     }
 
     func enqueue () {
+        let store = SwiftkiqClient.current.store
+        [RetrySet(), ScheduledSet()].forEach { jobSet in
+        }
     }
 
     private func run () {
@@ -37,12 +47,27 @@ public class Poller {
     }
 
     private func wait() {
-        sleep(randomPollInterval())
+        sleep(UInt32(randomPollInterval()))
     }
 
-    private func randomPollInterval() -> UInt32 {
-        // poll_interval_average * rand + poll_interval_average.to_f / 2
-        return 1
+    // calculate interval with randomness
+    private func randomPollInterval() -> Int {
+        return pollIntervalAverage() * Int(Compat.random(1)) + Int(Double(pollIntervalAverage()) / 2.0)
+    }
+    
+    private func pollIntervalAverage() -> Int {
+        if let val = _pollIntervalAverage {
+            return val
+        }
+        
+        var processCount = ProcessSet().size
+        if processCount == 0 {
+            processCount = 1
+        }
+        
+        let newValue = processCount * averageScheduledPollInterval
+        _pollIntervalAverage = newValue
+        return newValue
     }
 
     private func initialWait() {

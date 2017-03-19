@@ -58,6 +58,10 @@ public final class ProcessSet: Set {
             block(process)
         }
     }
+    
+    var count: Int {
+        return (try? SwiftkiqClient.current.store.size(self)) ?? 0
+    }
 }
 
 public class JobSet: SortedSet {
