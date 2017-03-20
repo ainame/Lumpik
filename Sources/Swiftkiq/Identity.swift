@@ -8,11 +8,24 @@
 
 import Foundation
 
-public protocol Identity: RawRepresentable, Equatable, Hashable, Comparable, CustomStringConvertible {
-}
+public protocol Identity: RawRepresentable, Equatable, Hashable, Comparable, CustomStringConvertible {}
 
-public func < <I: Identity>(lhs: I, rhs: I) -> Bool where I.RawValue == String {
-    return lhs.rawValue < rhs.rawValue
+extension Identity where RawValue == String {
+    public var hashValue: Int {
+        return self.rawValue.hashValue
+    }
+    
+    public static func ==(lhs: Self, rhs: Self) -> Bool {
+        return lhs.rawValue == rhs.rawValue
+    }
+    
+    public static func <(lhs: Self, rhs: Self) -> Bool {
+        return lhs.rawValue < rhs.rawValue
+    }
+    
+    public var description: String {
+        return rawValue
+    }
 }
 
 // avoid duplicate name
@@ -26,14 +39,6 @@ public struct ProcessIdentity: Identity {
     public init?(_ rawValue: String) {
         self.rawValue = rawValue
     }
-    
-    public var hashValue: Int {
-        return rawValue.hashValue
-    }
-    
-    public var description: String {
-        return rawValue
-    }
 }
 
 public struct Tid: Identity {
@@ -46,14 +51,6 @@ public struct Tid: Identity {
     public init?(_ rawValue: String) {
         self.rawValue = rawValue
     }
-    
-    public var hashValue: Int {
-        return rawValue.hashValue
-    }
-    
-    public var description: String {
-        return rawValue
-    }
 }
 
 public struct Jid: Identity {
@@ -65,14 +62,6 @@ public struct Jid: Identity {
     
     public init?(_ rawValue: String) {
         self.rawValue = rawValue
-    }
-    
-    public var hashValue: Int {
-        return rawValue.hashValue
-    }
-    
-    public var description: String {
-        return rawValue
     }
 }
 
@@ -97,7 +86,7 @@ struct ThreadIdentityGenerator {
 struct JobIdentityGenerator {
     // TODO: use SecureRandom.hex(12)
     static func identity() -> Jid {
-        let jid = String(format: "%12x", UInt64(Compat.random(99_999_999)) * UInt64(Compat.random(10000)))
+        let jid = String(format: "%x", UInt64(Compat.random(99_999_999)) * UInt64(Compat.random(99_999_999)))
         return Jid(jid)!
     }
 }
