@@ -111,6 +111,7 @@ public final class Processor: WorkerFailureCallback {
             // TODO: logging
             let delay = Delay.next(for: worker, by: current)
             let retryAt = Date().timeIntervalSince1970 + Double(delay)
+            print("retry after \(delay) sec")
             try! SwiftkiqClient.current.store.add(newJob, with: .value(retryAt), to: RetrySet())
         } else {
             // TODO: retries_exhausted
