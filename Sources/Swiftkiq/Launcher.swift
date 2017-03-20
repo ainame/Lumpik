@@ -35,8 +35,8 @@ public class Launcher {
 
     private let manager: Manager
     private let poller: Poller
-    private let heartbeatQueue = DispatchQueue(label: "tokyo.ainame.swiftkiq.launcher.heartbeat")
     private let heart: Heart
+    private let heartbeatQueue = DispatchQueue(label: "tokyo.ainame.swiftkiq.launcher.heartbeat")
     private var done: Bool = false
 
     required public init(options: LaunchOptions) {
@@ -47,6 +47,10 @@ public class Launcher {
                                router: options.router)
         self.poller = Poller()
         self.heart = Heart(concurrency: options.concurrency, queues: options.queues)
+        
+        if !LoggerInitializer.isInitialized {
+            LoggerInitializer.initialize()
+        }
     }
 
     public func run() {
@@ -65,7 +69,7 @@ public class Launcher {
                 do {
                     try self?.heartbeat()
                 } catch {
-                    print("heartbeat failure: \(error)")
+                    logger.error("heartbeat failure: \(error)")
                 }
                 sleep(5)
             }

@@ -41,6 +41,8 @@ class Router: Routable {
     }
 }
 
+LoggerInitializer.initialize(loglevel: .verbose)
+
 let router = Router()
 let options = LaunchOptions(
     concurrency: 2,
@@ -48,7 +50,6 @@ let options = LaunchOptions(
     router: router,
     daemonize: false
 )
-
 let launcher = Launcher(options: options)
 launcher.run()
 

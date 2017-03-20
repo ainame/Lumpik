@@ -82,7 +82,7 @@ public class Heart {
                 .addCommand("EXEC")
                 .execute()
         } catch let error {
-            print("heartbeat: \(error)")
+            logger.error("heartbeat: \(error)")
             Processor.processedCounter.increment(by: processed)
             Processor.failureCounter.increment(by: failed)
         }
