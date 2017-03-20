@@ -9,69 +9,52 @@
 import Foundation
 import Mapper
 
-public struct Process: JsonConvertible {
-    let hostname: String
-    let startedAt: Date
-    let pid: Int
-    let tag: String
-    let concurrency: Int
-    let queues: [Queue]
-    let busy: Int
-    let beat: Date?
-    let identity: String
-
-    public init(map: Mapper) throws {
-        self.hostname = try map.from("hostname")
-        self.startedAt = try map.from("started_at") { Date(timeIntervalSince1970: $0 as! TimeInterval) }
-        self.pid = try map.from("pid")
-        self.tag = try map.from("tag")
-        self.concurrency = try map.from("concurrency")
-        self.queues = try map.from("queues")
-        self.busy = try map.from("busy")
-        self.beat = map.optionalFrom("beat")
-        self.identity = try map.from("identity")
-    }
-    
-    public var asDictionary: [String : Any] {
-        var base: [String : Any] = [
-            "hostname": hostname,
-            "started_at": startedAt.timeIntervalSince1970,
-            "pid": pid,
-            "tag": tag,
-            "concurrency": concurrency,
-            "queues": queues,
-            "busy": busy,
-            "identity": identity]
-        if beat != nil {
-            base["beat"] = beat
-        }
-        return base
-    }
-}
-
 public final class ProcessSet: Set {
     public convenience init() {
         self.init(rawValue: "processes")
     }
     
-    public static func cleanup() throws {
+    public static func cleanup() throws -> Int {
         let set = ProcessSet()
         let store = SwiftkiqClient.current.store
-        let processes: [Process] = try store.members(set)
+        let processes: [String] = try store.members(set)
         let pipeline = try store.pipelined()
         
-        for process in processes {
-            try pipeline.addCommand("HGET", params: [process.json, "info"])
+        for processKey in processes {
+            try pipeline.addCommand("HGET", params: [processKey, "info"])
         }
         
         let converter = JsonConverter.default
         let heartbeats = try pipeline.execute().flatMap { try? $0.toString() }.map { converter.deserialize(dictionary: $0) }
-        try store.remove(heartbeats, from: set)
+        let count = try store.remove(heartbeats, from: set)
+        return count
     }
     
-    public func each(_ block: (Process) -> ()) throws {
-        let processes: [Process] = try SwiftkiqClient.current.store.members(self).sorted { $0.hostname < $1.hostname }
-        for process in processes {
+    public func each(_ block: (ProcessState) -> ()) throws {
+        let store = SwiftkiqClient.current.store
+        let processeKeys: [String] = try store.members(self).sorted { $0 < $1 }
+        
+        let converter = JsonConverter.default
+        let pipeline = try store.pipelined()
+        for processKey in processeKeys {
+            try pipeline.addCommand("HMGET", params: [processKey, "info", "busy", "beat", "quit"])
+        }
+        
+        let responses = try pipeline.execute()
+        let tmp: [[String]] = responses.flatMap { try? $0.toArray() }
+            .map { $0.flatMap { try? $0.toString() } }
+        let filtered = tmp.filter { $0.count == 4 }
+        let processes = filtered.map { (elem: [String]) -> [String: Any?] in
+            let info: [String: Any] = converter.deserialize(dictionary: elem[0])
+            let dict: [String: Any?] = [
+                "info": info,
+                "busy": Int(elem[1]),
+                "beat": Double(elem[2]),
+                "quit": Bool(elem[3])]
+            return dict
+        }
+        let parsedProcesses = ProcessState.from(processes as NSArray) ?? []
+        for process in parsedProcesses {
             block(process)
         }
     }

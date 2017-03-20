@@ -41,7 +41,7 @@ public class Poller {
                 while let job = try client.store.range(min: .infinityNegative, max: .value(now), from: jobSet, offset: 0, count: 1).first {
                     guard let queue = job["queue"] as? String else { continue }
                     
-                    if try client.store.remove(job, from: jobSet) {
+                    if try client.store.remove(job, from: jobSet) > 0 {
                         try client.enqueue(job, to: Queue(queue))
                         print("enqueued \(jobSet): \(job["jid"])")
                     }
