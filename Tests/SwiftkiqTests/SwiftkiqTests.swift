@@ -1,4 +1,5 @@
 import XCTest
+import Foundation
 @testable import Swiftkiq
 
 // need redis-server for host: '127.0.0.1', port: 6379

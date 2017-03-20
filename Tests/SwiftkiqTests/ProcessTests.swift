@@ -7,6 +7,8 @@
 //
 
 import XCTest
+import Foundation
+import Dispatch
 @testable import Swiftkiq
 
 class ProcessTests: XCTestCase {

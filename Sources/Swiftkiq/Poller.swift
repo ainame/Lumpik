@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Dispatch
 
 public class Poller {
     static let initalWait: UInt32 = 10

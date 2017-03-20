@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Dispatch
 
 public protocol Identity: RawRepresentable, Equatable, Hashable, Comparable, CustomStringConvertible {}
 
