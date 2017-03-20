@@ -14,20 +14,32 @@ public final class ProcessSet: Set {
         self.init(rawValue: "processes")
     }
     
+    @discardableResult
     public static func cleanup() throws -> Int {
         let set = ProcessSet()
         let store = SwiftkiqClient.current.store
-        let processes: [String] = try store.members(set)
-        let pipeline = try store.pipelined()
-        
-        for processKey in processes {
-            try pipeline.addCommand("HGET", params: [processKey, "info"])
+        let processeKeys: [String] = try store.members(set)
+
+        guard processeKeys.count > 0 else {
+            return 0
         }
         
-        let converter = JsonConverter.default
-        let heartbeats = try pipeline.execute().flatMap { try? $0.toString() }.map { converter.deserialize(dictionary: $0) }
-        let count = try store.remove(heartbeats, from: set)
-        return count
+        let pipeline = try store.pipelined()
+        for processKey in processeKeys {
+            try pipeline.addCommand("HGET", params: [processKey, "info"])
+        }
+        let heartbeats = try pipeline.execute().map { try? $0.toString() }
+
+        var pruned = [String]()
+        for (index, beat) in heartbeats.enumerated() {
+            if beat != nil {
+                pruned.append(processeKeys[index])
+            }
+        }
+        guard pruned.count > 0 else {
+            return 0
+        }
+        return try store.remove(pruned, from: set)
     }
     
     public func each(_ block: (ProcessState) -> ()) throws {

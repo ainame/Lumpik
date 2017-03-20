@@ -16,7 +16,7 @@ class ProcessSetTests: XCTestCase {
     override func setUp() {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
-        try! ProcessSet().clear()
+        try! ProcessSet.cleanup()
     }
     
     override func tearDown() {
@@ -31,10 +31,7 @@ class ProcessSetTests: XCTestCase {
         let dict = json as! NSDictionary
         let process = Swiftkiq.Process.from(dict)
         XCTAssertNotNil(process)
-        
-        try SwiftkiqClient.current.store.add(dict as! [String: Any], to: ProcessSet())
-        XCTAssertEqual(ProcessSet().size, 1)
-        
+                
         let heart = Heart(concurrency: 25, queues: [Queue("default")])
         heart.beat(done: false)
         try ProcessSet().each { process in

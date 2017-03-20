@@ -35,7 +35,7 @@ public struct PipelineTransaction: Transaction {
 
     public func execute() throws -> [RespObject] {
         let responses = try pipeline.execute()
-        
+
         let errors = try responses.flatMap {
             try($0.respType == .Array ? $0.toArray() : [$0])
         }.filter {
@@ -46,7 +46,7 @@ public struct PipelineTransaction: Transaction {
         if let error = errors.first {
             throw error
         }
-        
+
         return responses
     }
 }
@@ -158,9 +158,9 @@ extension RedisStore: SetStorable {
         return try! response.toInt()
     }
 
-    public func remove(_ members: [[String: Any]], from set: Set) throws -> Int {
+    public func remove(_ members: [String], from set: Set) throws -> Int {
         var params = [set.key]
-        members.forEach { params.append(converter.serialize($0)) }
+        members.forEach { params.append($0) }
 
         let response = try redis.command("SREM", params: params)
 
@@ -172,10 +172,10 @@ extension RedisStore: SetStorable {
 
     public func members(_ set: Set) throws -> [String] {
         let response = try redis.command("SMEMBERS", params: [set.key])
-        
+
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Array))
-        
+
         let members = try! response.toArray().map { try $0.toString() }
         return members
     }
@@ -202,9 +202,10 @@ extension RedisStore: SortedSetStorable {
         return try! response.toInt()
     }
 
-    @discardableResult public func remove(_ member: [String: Any], from sortedSet: SortedSet) throws -> Int {
-        let string = converter.serialize(member)
-        let response = try redis.command("ZREM", params: [sortedSet.key, string])
+    @discardableResult public func remove(_ members: [String], from sortedSet: SortedSet) throws -> Int {
+        var params = [sortedSet.key]
+        members.forEach { params.append($0) }
+        let response = try redis.command("ZREM", params: params)
 
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Integer))

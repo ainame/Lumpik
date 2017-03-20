@@ -28,14 +28,14 @@ public protocol ListStorable {
 
 public protocol SetStorable {
     @discardableResult func add(_ member: [String: Any], to set: Set) throws -> Int
-    @discardableResult func remove(_ members: [[String: Any]], from set: Set) throws -> Int
+    @discardableResult func remove(_ members: [String], from set: Set) throws -> Int
     func members(_ set: Set) throws -> [String]
     func size(_ set: Set) throws -> Int
 }
 
 public protocol SortedSetStorable {
     @discardableResult func add(_ member: [String: Any], with score: SortedSetScore, to sortedSet: SortedSet) throws -> Int
-    @discardableResult func remove(_ member: [String: Any], from sortedSet: SortedSet) throws -> Int
+    @discardableResult func remove(_ members: [String], from sortedSet: SortedSet) throws -> Int
     func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, offset: Int, count: Int) throws -> [[String: Any]]
     func size(_ sortedSet: SortedSet) throws -> Int
 }
@@ -54,7 +54,7 @@ public enum SortedSetScore {
     case value(Double)
     case infinityPositive
     case infinityNegative
-    
+
     var string: String {
         switch self {
         case .value(let double):
@@ -71,7 +71,7 @@ extension StoreKeyConvertible where Self: RawRepresentable, Self.RawValue == Str
     public var name: String {
         return rawValue
     }
-    
+
     public var hashValue: Int {
         return rawValue.hashValue
     }
