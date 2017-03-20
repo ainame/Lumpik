@@ -67,21 +67,29 @@ class SwiftkiqTests: XCTestCase {
 
     func testTransaction() {
         do {
-            let success = try SwiftkiqClient.current.store.multi()
+            let results1 = try SwiftkiqClient.current.store.pipelined()
+                .addCommand("MULTI")
                 .addCommand("SET", params: ["default", "1"])
                 .addCommand("INCR", params: ["default"])
                 .addCommand("INCR", params: ["default"])
-                .exec()
-            XCTAssertTrue(success)
-
-            let failure = try SwiftkiqClient.current.store.multi()
-                .addCommand("SET", params: ["default", "1", "2"])
-                .addCommand("INCR", params: ["default", "absc"])
-                .exec()
-            XCTAssertFalse(failure)
+                .addCommand("EXEC")
+                .execute()
+            XCTAssertNotNil(results1)
         } catch(let error) {
             print(error)
             XCTFail()
+        }
+        
+        do {
+            _ = try SwiftkiqClient.current.store.pipelined()
+                .addCommand("MULTI")
+                .addCommand("SET", params: ["default", "1", "2"])
+                .addCommand("INCR", params: ["default", "absc"])
+                .addCommand("EXEC")
+                .execute()
+            XCTFail("this case will failure")
+        } catch {
+            XCTAssertNotNil(error)
         }
     }
 

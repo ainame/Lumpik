@@ -35,12 +35,12 @@ class ProcessTests: XCTestCase {
         print(nonce)
         XCTAssertGreaterThanOrEqual(nonce.characters.count, 6)
         
-        let jid = JobIdentityGenerator.identity()
-        XCTAssertGreaterThanOrEqual(jid.rawValue.characters.count, 12)
+        let jid = JobIdentityGenerator.makeIdentity()
+        XCTAssertGreaterThanOrEqual(jid.rawValue.characters.count, 6) // TODO: use 12
         
-        let tid1 = ThreadIdentityGenerator.identity(from: DispatchQueue(label: "aa"))
-        let tid2 = ThreadIdentityGenerator.identity(from: DispatchQueue(label: "aa"))
-        let tid3 = ThreadIdentityGenerator.identity(from: DispatchQueue(label: "bb"))
+        let tid1 = ThreadIdentityGenerator.makeIdentity(from: DispatchQueue(label: "aa"))
+        let tid2 = ThreadIdentityGenerator.makeIdentity(from: DispatchQueue(label: "aa"))
+        let tid3 = ThreadIdentityGenerator.makeIdentity(from: DispatchQueue(label: "bb"))
         XCTAssertEqual(tid1, tid2)
         XCTAssertNotEqual(tid1, tid3)
     }
