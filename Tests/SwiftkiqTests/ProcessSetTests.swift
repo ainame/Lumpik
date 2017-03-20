@@ -11,11 +11,12 @@ import Foundation
 import Dispatch
 @testable import Swiftkiq
 
-class ProcessTests: XCTestCase {
+class ProcessSetTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
+        try! ProcessSet.cleanup()
     }
     
     override func tearDown() {
@@ -30,20 +31,13 @@ class ProcessTests: XCTestCase {
         let dict = json as! NSDictionary
         let process = Swiftkiq.Process.from(dict)
         XCTAssertNotNil(process)
+                
+        let heart = Heart(concurrency: 25, queues: [Queue("default")])
+        heart.beat(done: false)
+        try ProcessSet().each { process in
+            print(process)
+            XCTAssertNotNil(process)
+        }
     }
-    
-    func testIndentity() throws {
-        let nonce = ProcessIdentityGenerator.processNonce
-        print(nonce)
-        XCTAssertGreaterThanOrEqual(nonce.characters.count, 6)
-        
-        let jid = JobIdentityGenerator.makeIdentity()
-        XCTAssertGreaterThanOrEqual(jid.rawValue.characters.count, 6) // TODO: use 12
-        
-        let tid1 = ThreadIdentityGenerator.makeIdentity(from: DispatchQueue(label: "aa"))
-        let tid2 = ThreadIdentityGenerator.makeIdentity(from: DispatchQueue(label: "aa"))
-        let tid3 = ThreadIdentityGenerator.makeIdentity(from: DispatchQueue(label: "bb"))
-        XCTAssertEqual(tid1, tid2)
-        XCTAssertNotEqual(tid1, tid3)
-    }
+
 }

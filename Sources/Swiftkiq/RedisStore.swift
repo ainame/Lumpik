@@ -35,6 +35,7 @@ public struct PipelineTransaction: Transaction {
 
     public func execute() throws -> [RespObject] {
         let responses = try pipeline.execute()
+
         let errors = try responses.flatMap {
             try($0.respType == .Array ? $0.toArray() : [$0])
         }.filter {
@@ -46,7 +47,7 @@ public struct PipelineTransaction: Transaction {
             throw error
         }
 
-        return try responses[responses.count - 1].toArray()
+        return responses
     }
 }
 
@@ -96,13 +97,13 @@ extension RedisStore: ValueStorable {
         return try! response.toMaybeString()
     }
 
-    public func set<K: StoreKeyConvertible>(_ key: K, value: String) throws -> Bool {
+    public func set<K: StoreKeyConvertible>(_ key: K, value: String) throws -> Int {
         let response = try redis.command("SET", params: [key.key, value])
 
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Integer))
 
-        return try! response.toBool()
+        return try! response.toInt()
     }
 
     public func increment<K: StoreKeyConvertible>(_ key: K, by count: Int = 1) throws -> Int {
@@ -157,36 +158,26 @@ extension RedisStore: SetStorable {
         return try! response.toInt()
     }
 
-    public func remove(_ members: [[String: Any]], from set: Set) throws -> Bool {
+    public func remove(_ members: [String], from set: Set) throws -> Int {
         var params = [set.key]
-        members.forEach { params.append(converter.serialize($0)) }
+        members.forEach { params.append($0) }
 
         let response = try redis.command("SREM", params: params)
 
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Integer))
 
-        return try! response.toBool()
+        return try! response.toInt()
     }
 
-    public func members<T: JsonConvertible>(_ set: Set) throws -> [T] {
+    public func members(_ set: Set) throws -> [String] {
         let response = try redis.command("SMEMBERS", params: [set.key])
 
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Array))
 
         let members = try! response.toArray().map { try $0.toString() }
-        var all = [T]()
-
-        for member in members {
-            let data = member.data(using: .utf8)!
-            let json = try JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions()) as! NSDictionary
-            if let object = T.from(json) {
-                all.append(object)
-            }
-        }
-
-        return all
+        return members
     }
 
     public func size(_ set: Set) throws -> Int {
@@ -211,14 +202,15 @@ extension RedisStore: SortedSetStorable {
         return try! response.toInt()
     }
 
-    @discardableResult public func remove(_ member: [String: Any], from sortedSet: SortedSet) throws -> Bool {
-        let string = converter.serialize(member)
-        let response = try redis.command("ZREM", params: [sortedSet.key, string])
+    @discardableResult public func remove(_ members: [String], from sortedSet: SortedSet) throws -> Int {
+        var params = [sortedSet.key]
+        members.forEach { params.append($0) }
+        let response = try redis.command("ZREM", params: params)
 
         guard response.respType != .Error else { throw try! response.toError() }
         assert((response.respType == .Integer))
 
-        return try! response.toBool()
+        return try! response.toInt()
     }
 
     public func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, offset: Int, count: Int) throws -> [[String: Any]] {

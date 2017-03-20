@@ -15,6 +15,7 @@ public class Poller {
     public let averageScheduledPollInterval: Int
     
     private let dispatchQueue = DispatchQueue(label: "tokyo.ainame.swiftkiq.poller")
+    private let converter = JsonConverter.default
     private var done: Bool = false
     private var _pollIntervalAverage: Int? = nil
     
@@ -40,8 +41,8 @@ public class Poller {
                 let now = Date().timeIntervalSince1970
                 while let job = try client.store.range(min: .infinityNegative, max: .value(now), from: jobSet, offset: 0, count: 1).first {
                     guard let queue = job["queue"] as? String else { continue }
-                    
-                    if try client.store.remove(job, from: jobSet) {
+                    let serialized = converter.serialize(job)
+                    if try client.store.remove([serialized], from: jobSet) > 0 {
                         try client.enqueue(job, to: Queue(queue))
                         print("enqueued \(jobSet): \(job["jid"])")
                     }
