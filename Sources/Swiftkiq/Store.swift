@@ -40,11 +40,12 @@ public protocol SortedSetStorable {
 
 public protocol Transaction {
     @discardableResult func addCommand(_ name: String, params: [String]) throws -> Self
-    @discardableResult func exec() throws -> Bool
+    @discardableResult func addCommand(_ name: String) throws -> Self
+    @discardableResult func execute() throws -> Bool
 }
 
 public protocol Transactionable {
-    func multi() throws -> Transaction
+    func pipelined() throws -> Transaction
 }
 
 public enum SortedSetScore {

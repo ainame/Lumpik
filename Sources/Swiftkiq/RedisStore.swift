@@ -27,8 +27,13 @@ public struct PipelineTransaction: Transaction {
         let _ = try pipeline.enqueue(name, params: params)
         return self
     }
+    
+    public func addCommand(_ name: String) throws -> PipelineTransaction {
+        let _ = try pipeline.enqueue(name)
+        return self
+    }
 
-    public func exec() throws -> Bool {
+    public func execute() throws -> Bool {
         let responses = try pipeline.enqueue("EXEC").execute()
         guard try responses[0].toString() == "OK" else { return false }
 
@@ -64,10 +69,10 @@ final public class RedisStore: Storable {
         self.redis = try Redbird(config: RedbirdConfig(address: host, port: port, password: nil))
     }
 
-    public func multi() throws -> Transaction {
-        return PipelineTransaction(pipeline: try redis.pipeline().enqueue("MULTI"))
+    public func pipelined() -> Transaction {
+        return PipelineTransaction(pipeline: redis.pipeline())
     }
-
+    
     @discardableResult
     public func clear<K: StoreKeyConvertible>(_ key: K) throws -> Int {
         let response = try redis.command("DEL", params: [key.key])

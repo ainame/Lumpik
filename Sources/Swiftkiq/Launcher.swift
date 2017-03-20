@@ -88,7 +88,8 @@ public class Launcher {
         
         do {
             let nowdate = formatter.string(from: Date())
-            let transaction = try store.multi()
+            let transaction = try store.pipelined()
+                .addCommand("MULTI")
                 .addCommand("INCRBY", params: ["stat:processed", "\(processed)"])
                 .addCommand("INCRBY", params: ["stat:failed", "\(failed)"])
                 .addCommand("INCRBY", params: ["stat:processed:\(nowdate)", "\(processed)"])
@@ -102,7 +103,8 @@ public class Launcher {
             }
             try transaction
                 .addCommand("EXPIRE", params: [workerKey, String(60)])
-                .exec()
+                .addCommand("EXEC")
+                .execute()
             
             let processState = ProcessState(
                 hostname: ProcessInfo.processInfo.hostName,
@@ -114,7 +116,8 @@ public class Launcher {
                 labels: [""],
                 identity: ProcessIdentityGenerator.identity)
             
-            try store.multi()
+            try store.pipelined()
+                .addCommand("MULTI")
                 .addCommand("SADD", params: ["processes", workerKey])
                 .addCommand("EXISTS", params: [workerKey])
                 .addCommand("HMSET", params: [workerKey,
@@ -124,7 +127,8 @@ public class Launcher {
                     "quit", "\(done)"])
                 .addCommand("EXPIRE", params: [workerKey, "60"])
                 .addCommand("RPOP", params: ["\(workerKey)-signals"])
-                .exec()
+                .addCommand("EXEC")
+                .execute()
         } catch let error {
             print("heartbeat: \(error)")
             Processor.processedCounter.increment(by: processed)
