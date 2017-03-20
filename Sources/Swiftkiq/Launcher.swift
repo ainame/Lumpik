@@ -120,9 +120,10 @@ public class Launcher {
                 .addCommand("MULTI")
                 .addCommand("SADD", params: ["processes", workerKey])
                 .addCommand("EXISTS", params: [workerKey])
-                .addCommand("HMSET", params: [workerKey,
-                                              "info", processState.json,
-                                              "busy", "\(Processor.workerStates.count)",
+                .addCommand("HMSET", params: [
+                    workerKey,
+                    "info", processState.json,
+                    "busy", "\(Processor.workerStates.count)",
                     "beat", "\(Date().timeIntervalSince1970)",
                     "quit", "\(done)"])
                 .addCommand("EXPIRE", params: [workerKey, "60"])

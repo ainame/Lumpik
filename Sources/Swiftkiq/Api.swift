@@ -17,7 +17,7 @@ public struct Process: JsonConvertible {
     let concurrency: Int
     let queues: [Queue]
     let busy: Int
-    let beat: Date
+    let beat: Date?
     let identity: String
 
     public init(map: Mapper) throws {
@@ -28,12 +28,12 @@ public struct Process: JsonConvertible {
         self.concurrency = try map.from("concurrency")
         self.queues = try map.from("queues")
         self.busy = try map.from("busy")
-        self.beat = try map.from("beat")
+        self.beat = map.optionalFrom("beat")
         self.identity = try map.from("identity")
     }
     
     public var asDictionary: [String : Any] {
-        return [
+        var base: [String : Any] = [
             "hostname": hostname,
             "started_at": startedAt.timeIntervalSince1970,
             "pid": pid,
@@ -41,9 +41,11 @@ public struct Process: JsonConvertible {
             "concurrency": concurrency,
             "queues": queues,
             "busy": busy,
-            "beat": beat,
-            "identity": identity,
-        ]
+            "identity": identity]
+        if beat != nil {
+            base["beat"] = beat
+        }
+        return base
     }
 }
 
@@ -52,14 +54,18 @@ public final class ProcessSet: Set {
         self.init(rawValue: "processes")
     }
     
-    func each(_ block: (Process) -> ()) throws {
+    public static func cleanup() throws {
+        // SwiftkiqClient.current.store
+    }
+    
+    public func each(_ block: (Process) -> ()) throws {
         let processes: [Process] = try SwiftkiqClient.current.store.members(self).sorted { $0.hostname < $1.hostname }
         for process in processes {
             block(process)
         }
     }
     
-    var count: Int {
+    public var count: Int {
         return (try? SwiftkiqClient.current.store.size(self)) ?? 0
     }
 }
