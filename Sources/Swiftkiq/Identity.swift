@@ -77,7 +77,7 @@ struct ProcessIdentityGenerator {
 }
 
 struct ThreadIdentityGenerator {
-    static func identity(from queue: DispatchQueue) -> Tid {
+    static func makeIdentity(from queue: DispatchQueue) -> Tid {
         let tid = "\(ProcessIdentityGenerator.identity)\(queue.label)".data(using: .utf8)!.base64EncodedString()
         return Tid(tid)!
     }
@@ -85,7 +85,7 @@ struct ThreadIdentityGenerator {
 
 struct JobIdentityGenerator {
     // TODO: use SecureRandom.hex(12)
-    static func identity() -> Jid {
+    static func makeIdentity() -> Jid {
         let jid = String(format: "%x", UInt64(Compat.random(99_999_999)) * UInt64(Compat.random(99_999_999)))
         return Jid(jid)!
     }

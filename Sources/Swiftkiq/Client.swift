@@ -34,7 +34,7 @@ public struct SwiftkiqClient {
     }
 
     public func enqueue<W: Worker, A: Argument>(`class`: W.Type, args: A, retry: Int = W.defaultRetry, to queue: Queue = W.defaultQueue) throws {
-        try self.store.enqueue(["jid": JobIdentityGenerator.identity().rawValue,
+        try self.store.enqueue(["jid": JobIdentityGenerator.makeIdentity().rawValue,
                                 "class": String(describing: `class`),
                                 "args": args.toDictionary(),
                                 "retry": retry,
@@ -43,7 +43,7 @@ public struct SwiftkiqClient {
     
     public func enqueue(_ job: [String: Any], to queue: Queue = Queue("default")) throws {
         var newJob = job
-        newJob["jid"] = (job["jid"] != nil) ? job["jid"] : JobIdentityGenerator.identity().rawValue
+        newJob["jid"] = (job["jid"] != nil) ? job["jid"] : JobIdentityGenerator.makeIdentity().rawValue
         try self.store.enqueue(newJob, to: queue)
     }
 }
