@@ -34,7 +34,7 @@ public class Poller {
     }
 
     func enqueue () {
-        print("poll... at \(Date().timeIntervalSince1970)")
+        logger.debug("poll... at \(Date().timeIntervalSince1970)")
         let client = SwiftkiqClient.current
         for jobSet in [RetrySet(), ScheduledSet()] {
             do {
@@ -44,11 +44,11 @@ public class Poller {
                     let serialized = converter.serialize(job)
                     if try client.store.remove([serialized], from: jobSet) > 0 {
                         try client.enqueue(job, to: Queue(queue))
-                        print("enqueued \(jobSet): \(job["jid"])")
+                        logger.error("enqueued \(jobSet): \(job["jid"])")
                     }
                 }
             } catch {
-                print("poller error: \(error)")
+                logger.error("poller error: \(error)")
             }
         }
     }

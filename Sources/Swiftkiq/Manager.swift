@@ -8,6 +8,7 @@
 
 import Foundation
 import Dispatch
+import SwiftyBeaver
 
 protocol ProcessorLifecycleDelegate: class {
     func stopped(processor: Processor)
@@ -54,10 +55,10 @@ public class Manager: ProcessorLifecycleDelegate {
     }
 
     func stopped(processor: Processor) {
-        print("stopped: \(processor)")
+        logger.debug("stopped: \(processor)")
     }
 
     func died(processor: Processor, reason: String) {
-        print("died: \(processor)")
+        logger.debug("died: \(processor)")
     }
 }

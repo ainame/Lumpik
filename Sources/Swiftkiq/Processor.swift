@@ -73,7 +73,7 @@ public final class Processor: WorkerFailureCallback {
     }
 
     public func didFailed<W : Worker>(worker: W, work: UnitOfWork, error: Error) {
-        print("ERROR: \(error) on \(worker)")
+        logger.error("ERROR: \(error) on \(worker)")
         attemptRetry(worker: worker, work: work, error: error)
     }
 
@@ -111,7 +111,7 @@ public final class Processor: WorkerFailureCallback {
             // TODO: logging
             let delay = Delay.next(for: worker, by: current)
             let retryAt = Date().timeIntervalSince1970 + Double(delay)
-            print("retry after \(delay) sec")
+            logger.debug("retry after \(delay) sec")
             try! SwiftkiqClient.current.store.add(newJob, with: .value(retryAt), to: RetrySet())
         } else {
             // TODO: retries_exhausted

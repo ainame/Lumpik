@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import SwiftyBeaver
 
 public protocol Routable {
     func dispatch(_ work: UnitOfWork, errorCallback: WorkerFailureCallback) throws
@@ -21,11 +22,11 @@ extension Routable {
         worker.retry = work.retry
         worker.queue = work.queue
 
-        print("[INFO]: jid=\(work.jid) \(work.workerType) start")
+        logger.info("jid=\(work.jid) \(work.workerType) start")
         let start = Date()
         defer {
             let interval = Date().timeIntervalSince(start)
-            print("[INFO]: jid=\(work.jid) \(work.workerType) done - \(interval) msec")
+            logger.info("jid=\(work.jid) \(work.workerType) done - \(interval) msec")
         }
         
         do {
