@@ -55,7 +55,18 @@ public final class ProcessSet: Set {
     }
     
     public static func cleanup() throws {
-        // SwiftkiqClient.current.store
+        let set = ProcessSet()
+        let store = SwiftkiqClient.current.store
+        let processes: [Process] = try store.members(set)
+        let pipeline = try store.pipelined()
+        
+        for process in processes {
+            try pipeline.addCommand("HGET", params: [process.json, "info"])
+        }
+        
+        let converter = JsonConverter.default
+        let heartbeats = try pipeline.execute().flatMap { try? $0.toString() }.map { converter.deserialize(dictionary: $0) }
+        try store.remove(heartbeats, from: set)
     }
     
     public func each(_ block: (Process) -> ()) throws {
