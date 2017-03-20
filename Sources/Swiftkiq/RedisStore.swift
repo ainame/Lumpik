@@ -11,7 +11,7 @@ import Redbird
 import Mapper
 
 public struct RedisConfig {
-    let host: String = "127.0.0.1"
+    let host: String = "localhost"
     let port: Int = 6379
     let password: String? = nil
 }

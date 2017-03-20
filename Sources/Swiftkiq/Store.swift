@@ -10,7 +10,7 @@ import Foundation
 import Mapper
 import Redbird
 
-public protocol Storable: Transactionable, ValueStorable, ListStorable, SetStorable, SortedSetStorable {
+public protocol Storable: class, Transactionable, ValueStorable, ListStorable, SetStorable, SortedSetStorable {
     static func makeStore() -> Storable
     @discardableResult func clear<K: StoreKeyConvertible>(_ key: K) throws -> Int
 }

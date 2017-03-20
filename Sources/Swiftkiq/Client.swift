@@ -17,13 +17,13 @@ public struct SwiftkiqClient {
     
     public static var current: SwiftkiqClient {
         return mutex.synchronize { () -> SwiftkiqClient in
-            if let client = Thread.current.threadDictionary[cacheKey] as? SwiftkiqClient {
-                return client
+            if let store = Thread.current.threadDictionary[cacheKey] as? Storable {
+                return SwiftkiqClient(store: store)
             }
             
             let store = RedisStore.makeStore()
-            Thread.current.threadDictionary[cacheKey] = SwiftkiqClient(store: store)
-            return Thread.current.threadDictionary[cacheKey] as! SwiftkiqClient
+            Thread.current.threadDictionary[cacheKey] = store
+            return SwiftkiqClient(store: store)
         }
     }
 
