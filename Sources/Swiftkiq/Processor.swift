@@ -14,6 +14,20 @@ public protocol WorkerFailureCallback {
 }
 
 public final class Processor: WorkerFailureCallback {
+    private static let mutex = Mutex()
+    private static var _workerState = [Jid: WorkerState]()
+
+    static var workerStates: [Jid: WorkerState] {
+        return mutex.synchronize { return _workerState }
+    }
+
+    static func updateState(_ value: WorkerState?, for jid: Jid) {
+        mutex.synchronize { _workerState[jid] = value }
+    }
+
+    static var processedCounter = AtomicCounter<Int>(0)
+    static var failureCounter = AtomicCounter<Int>(0)
+
     let fetcher: Fetcher
     let router: Routable
     let dipsatchQueue: DispatchQueue
@@ -96,8 +110,9 @@ public final class Processor: WorkerFailureCallback {
         if current < max {
             // TODO: logging
             let delay = Delay.next(for: worker, by: current)
-            let retryAt = Int(Date().timeIntervalSince1970) + delay
-            try! SwiftkiqClient.current.store.add(newJob, with: retryAt, to: SortedSet.retrySet)
+            let retryAt = Date().timeIntervalSince1970 + Double(delay)
+            print("retry after \(delay) sec")
+            try! SwiftkiqClient.current.store.add(newJob, with: .value(retryAt), to: RetrySet())
         } else {
             // TODO: retries_exhausted
         }

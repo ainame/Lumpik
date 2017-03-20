@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Redbird
 
 public protocol Fetcher: class {
     init(queues: [Queue])
@@ -30,7 +29,7 @@ final class BasicFetcher: Fetcher {
         let n = a.count
         for i in 0..<n {
             let ai = a[i]
-            let j = Int(arc4random()) % n
+            let j = Int(Compat.random(n))
             if i != j {
                 a[i] = a[j]
             }

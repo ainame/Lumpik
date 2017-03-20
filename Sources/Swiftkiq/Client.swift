@@ -9,22 +9,22 @@
 import Foundation
 import Dispatch
 
-fileprivate let lock = NSLock()
 fileprivate let cacheKey = "tokyo.ainame.swiftkiq.client"
 fileprivate var instanceCache = Dictionary<String, SwiftkiqClient>()
 
 public struct SwiftkiqClient {
+    private static let mutex = Mutex()
+    
     public static var current: SwiftkiqClient {
-        lock.lock()
-        defer { lock.unlock() }
-        
-        if let client = Thread.current.threadDictionary[cacheKey] as? SwiftkiqClient {
-            return client
+        return mutex.synchronize { () -> SwiftkiqClient in
+            if let client = Thread.current.threadDictionary[cacheKey] as? SwiftkiqClient {
+                return client
+            }
+            
+            let store = RedisStore.makeStore()
+            Thread.current.threadDictionary[cacheKey] = SwiftkiqClient(store: store)
+            return Thread.current.threadDictionary[cacheKey] as! SwiftkiqClient
         }
-
-        let store = RedisStore.makeStore()
-        Thread.current.threadDictionary[cacheKey] = SwiftkiqClient(store: store)
-        return Thread.current.threadDictionary[cacheKey] as! SwiftkiqClient
     }
 
     public var store: Storable
@@ -34,10 +34,16 @@ public struct SwiftkiqClient {
     }
 
     public func enqueue<W: Worker, A: Argument>(`class`: W.Type, args: A, retry: Int = W.defaultRetry, to queue: Queue = W.defaultQueue) throws {
-        try self.store.enqueue(["jid": UUID().uuidString,
+        try self.store.enqueue(["jid": JobIdentityGenerator.makeIdentity().rawValue,
                                 "class": String(describing: `class`),
                                 "args": args.toDictionary(),
                                 "retry": retry,
                                 "queue": queue.name], to: queue)
+    }
+    
+    public func enqueue(_ job: [String: Any], to queue: Queue = Queue("default")) throws {
+        var newJob = job
+        newJob["jid"] = (job["jid"] != nil) ? job["jid"] : JobIdentityGenerator.makeIdentity().rawValue
+        try self.store.enqueue(newJob, to: queue)
     }
 }

@@ -7,26 +7,67 @@
 //
 
 import Foundation
+import Mapper
+import Redbird
 
-public protocol StoreKey: RawRepresentable, Equatable, Hashable {
-    var key: String { get }
+public protocol Storable: Transactionable, ValueStorable, ListStorable, SetStorable, SortedSetStorable {
+    static func makeStore() -> Storable
+    @discardableResult func clear<K: StoreKeyConvertible>(_ key: K) throws -> Int
 }
 
-public protocol Storable: ListStorable, SortedSetStorable {
-    static func makeStore() -> Storable
-    func clear<K: StoreKey>(_ queue: K) throws
+public protocol ValueStorable {
+    func get<K: StoreKeyConvertible>(_ key: K) throws -> String?
+    @discardableResult func set<K: StoreKeyConvertible>(_ key: K, value: String) throws -> Bool
+    @discardableResult func increment<K: StoreKeyConvertible>(_ key: K, by count: Int) throws -> Int
 }
 
 public protocol ListStorable {
-    func enqueue(_ job: Dictionary<String, Any>, to queue: Queue) throws
+    @discardableResult func enqueue(_ job: [String: Any], to queue: Queue) throws -> Int
     func dequeue(_ queues: [Queue]) throws -> UnitOfWork?
 }
 
-public protocol SortedSetStorable {
-    func add(_ job: Dictionary<String, Any>, with score: Int, to sortedSet: SortedSet) throws
+public protocol SetStorable {
+    @discardableResult func add(_ member: [String: Any], to set: Set) throws -> Int
+    @discardableResult func remove(_ members: [[String: Any]], from set: Set) throws -> Bool
+    func members<T: JsonConvertible>(_ set: Set) throws -> [T]
+    func size(_ set: Set) throws -> Int
 }
 
-extension StoreKey where Self: RawRepresentable, Self.RawValue == String {
+public protocol SortedSetStorable {
+    @discardableResult func add(_ member: [String: Any], with score: SortedSetScore, to sortedSet: SortedSet) throws -> Int
+    @discardableResult func remove(_ member: [String: Any], from sortedSet: SortedSet) throws -> Bool
+    func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, offset: Int, count: Int) throws -> [[String: Any]]
+    func size(_ sortedSet: SortedSet) throws -> Int
+}
+
+public protocol Transaction {
+    @discardableResult func addCommand(_ name: String) throws -> Self
+    @discardableResult func addCommand(_ name: String, params: [String]) throws -> Self
+    @discardableResult func execute() throws -> [RespObject] // TODO: remove dependency
+}
+
+public protocol Transactionable {
+    func pipelined() throws -> Transaction
+}
+
+public enum SortedSetScore {
+    case value(Double)
+    case infinityPositive
+    case infinityNegative
+    
+    var string: String {
+        switch self {
+        case .value(let double):
+            return String(double)
+        case .infinityPositive:
+            return "+Inf"
+        case .infinityNegative:
+            return "-Inf"
+        }
+    }
+}
+
+extension StoreKeyConvertible where Self: RawRepresentable, Self.RawValue == String {
     public var name: String {
         return rawValue
     }

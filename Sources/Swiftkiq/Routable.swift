@@ -21,17 +21,36 @@ extension Routable {
         worker.retry = work.retry
         worker.queue = work.queue
 
-        print(String(format: "[INFO]: jid=%@ %@ start", work.jid, work.workerType))
+        print("[INFO]: jid=\(work.jid) \(work.workerType) start")
         let start = Date()
         defer {
             let interval = Date().timeIntervalSince(start)
-            print(String(format: "[INFO]: jid=%@ %@ done - %.4f msec", work.jid, work.workerType, interval))
+            print("[INFO]: jid=\(work.jid) \(work.workerType) done - \(interval) msec")
         }
+        
         do {
-            try worker.perform(argument)
+            try stats(worker: worker, work: work) {
+                try worker.perform(argument)
+            }
         } catch let error {
             errorCallback.didFailed(worker: worker, work: work, error: error)
             throw error
         }
     }
+    
+    func stats<W: Worker>(worker: W, work: UnitOfWork, block: () throws -> ()) throws {
+        Processor.updateState(WorkerState(work: work, runAt: Date()), for: work.jid)
+        defer {
+            Processor.updateState(nil, for: work.jid)
+            Processor.processedCounter.increment()
+        }
+        
+        do {
+            try block()
+        } catch {
+            Processor.failureCounter.increment()
+            throw error
+        }
+    }
+
 }
