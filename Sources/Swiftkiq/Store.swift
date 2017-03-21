@@ -47,7 +47,7 @@ public protocol Transaction {
 }
 
 public protocol Transactionable {
-    func pipelined() throws -> Transaction
+    func pipelined() -> Transaction
 }
 
 public enum SortedSetScore {
