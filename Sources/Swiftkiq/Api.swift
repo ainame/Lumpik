@@ -24,7 +24,7 @@ public final class ProcessSet: Set {
             return 0
         }
         
-        let pipeline = try store.pipelined()
+        let pipeline = store.pipelined()
         for processKey in processeKeys {
             try pipeline.addCommand("HGET", params: [processKey, "info"])
         }
@@ -47,7 +47,7 @@ public final class ProcessSet: Set {
         let processeKeys: [String] = try store.members(self).sorted { $0 < $1 }
         
         let converter = JsonConverter.default
-        let pipeline = try store.pipelined()
+        let pipeline = store.pipelined()
         for processKey in processeKeys {
             try pipeline.addCommand("HMGET", params: [processKey, "info", "busy", "beat", "quit"])
         }
