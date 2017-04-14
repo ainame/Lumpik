@@ -9,6 +9,7 @@
 import Foundation
 import Dispatch
 import Daemon
+import Signals
 
 public struct LaunchOptions {
     let concurrency: Int
