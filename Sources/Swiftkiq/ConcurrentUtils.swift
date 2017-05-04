@@ -18,6 +18,24 @@ final class Mutex {
     }
 }
 
+final class AtomicProperty<T> {
+    private let mutex = Mutex()
+    private var _value: T
+
+    required init(_ initialValue: T) {
+        _value = initialValue
+    }
+    
+    var value: T {
+        get {
+            return mutex.synchronize { _value }
+        }
+        set {
+            mutex.synchronize { _value = newValue }
+        }
+    }
+}
+
 final class AtomicCounter<T: SignedInteger> {
     private let mutex = Mutex()
     private var _value: T = 0
