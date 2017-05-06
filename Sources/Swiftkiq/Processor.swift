@@ -61,6 +61,10 @@ public final class Processor: WorkerFailureCallback {
             }
         }
     }
+    
+    func terminate() {
+        fatalError("not implemented yet")
+    }
 
     func processOne() throws {
         if let work = try fetcher.retriveWork() {

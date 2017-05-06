@@ -32,13 +32,13 @@ public struct LaunchOptions {
 
 public class Launcher {
     let options: LaunchOptions
-    var isStopping: Bool { return done }
+    var isStopping: Bool { return done.value }
 
     private let manager: Manager
     private let poller: Poller
     private let heart: Heart
     private let heartbeatQueue = DispatchQueue(label: "tokyo.ainame.swiftkiq.launcher.heartbeat")
-    private var done: Bool = false
+    private let done = AtomicProperty<Bool>(false)
 
     required public init(options: LaunchOptions) {
         self.options = options
@@ -48,10 +48,6 @@ public class Launcher {
                                router: options.router)
         self.poller = Poller()
         self.heart = Heart(concurrency: options.concurrency, queues: options.queues)
-        
-        if !LoggerInitializer.isInitialized {
-            LoggerInitializer.initialize()
-        }
     }
 
     public func run() {
@@ -59,9 +55,29 @@ public class Launcher {
             Daemon.daemonize()
         }
         
+        if !LoggerInitializer.isInitialized {
+            LoggerInitializer.initialize()
+        }
+        
+        
         self.startHeartbeat()
         self.manager.start()
         self.poller.start()
+    }
+    
+    public func stop() {
+        // deadline = ... + timeout
+        quiet()
+        manager.stop() // with timeout
+        
+        // bulk_requeue
+        // clear_heatbeat()
+    }
+    
+    public func quiet() {
+        done.value = true
+        manager.quiet()
+        poller.terminate()
     }
     
     func startHeartbeat() {
@@ -78,6 +94,6 @@ public class Launcher {
     }
     
     func heartbeat() throws {
-        heart.beat(done: done)
+        heart.beat(done: done.value)
     }
 }
