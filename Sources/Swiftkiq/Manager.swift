@@ -71,6 +71,20 @@ public class Manager: ProcessorLifecycleDelegate {
         guard !processors.isEmpty else { return }
         
         logger.info("Pausing to allow workers to finish...")
+        
+        // remaining = deadline - Time.now
+        // while remaining > PAUSE_TIME
+        // return if @workers.empty?
+        // sleep PAUSE_TIME
+        // remaining = deadline - Time.now
+        // end
+        // return if @workers.empty?
+        
+        hardShutdown()
+    }
+    
+    func hardShutdown() {
+        fatalError("not implemented yet")
     }
     
     func stopped(processor: Processor) {
