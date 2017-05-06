@@ -16,7 +16,7 @@ public protocol WorkerFailureCallback {
 public final class Processor: WorkerFailureCallback {
     private static let mutex = Mutex()
     private static var _workerState = [Jid: WorkerState]()
-
+    
     static var workerStates: [Jid: WorkerState] {
         return mutex.synchronize { return _workerState }
     }
@@ -28,13 +28,15 @@ public final class Processor: WorkerFailureCallback {
     static var processedCounter = AtomicCounter<Int>(0)
     static var failureCounter = AtomicCounter<Int>(0)
 
+    let dispatchQueue: DispatchQueue
+    private var looper: DispatchWorkItem!
+    
     let fetcher: Fetcher
     let router: Routable
-    let dipsatchQueue: DispatchQueue
     weak var delegate: ProcessorLifecycleDelegate!
 
-    var down: Bool = false
-    var done: Bool = false
+    let down = AtomicProperty<Bool>(false)
+    let done = AtomicProperty<Bool>(false)
 
     init(fetcher: Fetcher,
          router: Routable,
@@ -42,28 +44,47 @@ public final class Processor: WorkerFailureCallback {
          delegate: ProcessorLifecycleDelegate) {
         self.fetcher = fetcher
         self.router = router
-        self.dipsatchQueue = dispatchQueue
+        self.dispatchQueue = dispatchQueue
         self.delegate = delegate
     }
 
     func start () {
-        dipsatchQueue.async { self.run() }
+        looper = DispatchWorkItem { [weak self] in
+            self?.run()
+        }
+        dispatchQueue.async(execute: looper)
     }
 
     func run() {
-        while !done {
+        while !done.value {
             do {
                 try processOne()
-            } catch Manager.Control.shutdown {
-                break
             } catch {
                 // handle error at didFailed
             }
         }
     }
     
-    func terminate() {
-        fatalError("not implemented yet")
+    func kill(_ wait: Bool = false) {
+        done.value = true
+        guard looper.isCancelled != true else { return }
+
+        // cancel and waiting
+        // TODO: investigate what cancel() raise a error
+        looper.cancel()
+        if wait {
+            looper.wait()
+        }
+    }
+    
+    func terminate(_ wait: Bool = false) {
+        done.value = true
+        guard looper.isCancelled != true else { return }
+        
+        // just waiting
+        if wait {
+            looper.wait()
+        }
     }
 
     func processOne() throws {

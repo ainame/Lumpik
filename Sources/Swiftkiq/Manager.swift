@@ -16,10 +16,6 @@ protocol ProcessorLifecycleDelegate: class {
 }
 
 public class Manager: ProcessorLifecycleDelegate {
-    enum Control: Error {
-        case shutdown
-    }
-    
     let concurrency: Int
     let queues: [Queue]
     let strategy: Fetcher.Type
