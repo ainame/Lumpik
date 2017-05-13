@@ -1,6 +1,7 @@
 import Foundation
 import Swiftkiq
 
+LoggerInitializer.initialize()
 let router = Router()
 let options = LaunchOptions(
     concurrency: 25,
@@ -10,7 +11,6 @@ let options = LaunchOptions(
 )
 
 let launcher = Launcher(options: options)
-launcher.run()
-while true {
-    sleep(1)
-}
+
+let commandLine = CLI(launcher: launcher)
+commandLine.start()

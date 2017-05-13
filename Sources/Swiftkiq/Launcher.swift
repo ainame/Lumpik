@@ -9,6 +9,7 @@
 import Foundation
 import Dispatch
 import Daemon
+import Signals
 
 public struct LaunchOptions {
     let concurrency: Int
@@ -16,28 +17,31 @@ public struct LaunchOptions {
     let strategy: Fetcher.Type
     let router: Routable
     let daemonize: Bool
+    let timeout: TimeInterval
 
     public init(concurrency: Int = 25, queues: [Queue],
                 strategy: Fetcher.Type = BasicFetcher.self,
                 router: Routable,
-                daemonize: Bool = false) {
+                daemonize: Bool = false,
+                timeout: TimeInterval = 8.0) {
         self.concurrency = concurrency
         self.queues = queues
         self.strategy = strategy
         self.router = router
         self.daemonize = daemonize
+        self.timeout = timeout
     }
 }
 
 public class Launcher {
     let options: LaunchOptions
-    var isStopping: Bool { return done }
+    var isStopping: Bool { return done.value }
 
     private let manager: Manager
     private let poller: Poller
     private let heart: Heart
     private let heartbeatQueue = DispatchQueue(label: "tokyo.ainame.swiftkiq.launcher.heartbeat")
-    private var done: Bool = false
+    private let done = AtomicProperty<Bool>(false)
 
     required public init(options: LaunchOptions) {
         self.options = options
@@ -47,10 +51,6 @@ public class Launcher {
                                router: options.router)
         self.poller = Poller()
         self.heart = Heart(concurrency: options.concurrency, queues: options.queues)
-        
-        if !LoggerInitializer.isInitialized {
-            LoggerInitializer.initialize()
-        }
     }
 
     public func run() {
@@ -58,9 +58,29 @@ public class Launcher {
             Daemon.daemonize()
         }
         
+        if !LoggerInitializer.isInitialized {
+            LoggerInitializer.initialize()
+        }
+        
+        
         self.startHeartbeat()
         self.manager.start()
         self.poller.start()
+    }
+    
+    public func stop() {
+        quiet()
+
+        let deadline = Date().addingTimeInterval(options.timeout)
+        manager.stop(deadline: deadline)
+        
+        clearHeatbeat()
+    }
+    
+    public func quiet() {
+        done.value = true
+        manager.quiet()
+        poller.terminate()
     }
     
     func startHeartbeat() {
@@ -77,6 +97,10 @@ public class Launcher {
     }
     
     func heartbeat() throws {
-        heart.beat(done: done)
+        heart.beat(done: done.value)
+    }
+    
+    func clearHeatbeat() {
+        logger.warning("TOOD: implement clearHeatbeat, but no problem currently")
     }
 }

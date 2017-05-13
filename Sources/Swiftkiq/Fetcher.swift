@@ -11,6 +11,7 @@ import Foundation
 public protocol Fetcher: class {
     init(queues: [Queue])
     func retriveWork() throws -> UnitOfWork?
+    func bulkRequeue(_ jobs: [UnitOfWork]) throws
 }
 
 final class BasicFetcher: Fetcher {
@@ -36,5 +37,18 @@ final class BasicFetcher: Fetcher {
             a[j] = ai
         }
         return a
+    }
+    
+    func bulkRequeue(_ jobs: [UnitOfWork]) throws {
+        let store = SwiftkiqClient.current.store
+        let pipeline = store.pipelined()
+        let encoder = JsonConverter.default
+        
+        jobs.forEach { job in
+            let payload = encoder.serialize(job.job)
+            try! pipeline.addCommand("RPUSH", params: [job.queue.key, payload])
+        }
+        
+        try pipeline.execute()
     }
 }

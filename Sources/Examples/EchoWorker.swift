@@ -1,3 +1,4 @@
+import Foundation
 import Swiftkiq
 
 class EchoWorker: Worker {
@@ -19,5 +20,6 @@ class EchoWorker: Worker {
 
     func perform(_ args: Args) throws {
         print(args.message)
+        sleep(3)
     }
 }

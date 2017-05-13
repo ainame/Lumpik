@@ -44,7 +44,7 @@ public class Poller {
                     let serialized = converter.serialize(job)
                     if try client.store.remove([serialized], from: jobSet) > 0 {
                         try client.enqueue(job, to: Queue(queue))
-                        logger.error("enqueued \(jobSet): \(job["jid"])")
+                        logger.error("enqueued \(jobSet): \(String(describing: job["jid"]))")
                     }
                 }
             } catch {
