@@ -22,7 +22,9 @@ final class BasicFetcher: Fetcher {
     }
 
     func retriveWork() throws -> UnitOfWork? {
-        return try SwiftkiqClient.current.store.dequeue(randomSortedQueues())
+        return try SwiftkiqClient.connectionPool { conn in
+            try conn.dequeue(randomSortedQueues())
+        }
     }
     
     func randomSortedQueues () -> [Queue] {
@@ -40,15 +42,16 @@ final class BasicFetcher: Fetcher {
     }
     
     func bulkRequeue(_ jobs: [UnitOfWork]) throws {
-        let store = SwiftkiqClient.current.store
-        let pipeline = store.pipelined()
-        let encoder = JsonConverter.default
+        _ = try SwiftkiqClient.connectionPool { conn in
+            let pipeline = conn.pipelined()
+            let encoder = JsonConverter.default
         
-        jobs.forEach { job in
-            let payload = encoder.serialize(job.job)
-            try! pipeline.addCommand("RPUSH", params: [job.queue.key, payload])
+            jobs.forEach { job in
+                let payload = encoder.serialize(job.job)
+                try! pipeline.addCommand("RPUSH", params: [job.queue.key, payload])
+            }
+        
+            try pipeline.execute()
         }
-        
-        try pipeline.execute()
     }
 }

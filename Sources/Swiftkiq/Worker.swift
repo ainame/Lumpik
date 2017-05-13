@@ -43,6 +43,6 @@ extension Worker {
     }
 
     public static func performAsync(_ args: Args, on queue: Queue = Self.defaultQueue) throws {
-        try SwiftkiqClient.current.enqueue(class: self, args: args, to: queue)
+        try SwiftkiqClient.enqueue(class: self, args: args, to: queue)
     }
 }

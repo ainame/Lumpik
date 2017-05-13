@@ -33,22 +33,23 @@ public class Poller {
         done = true
     }
 
-    func enqueue () {
+    func enqueue () throws {
         logger.debug("poll... at \(Date().timeIntervalSince1970)")
-        let client = SwiftkiqClient.current
-        for jobSet in [RetrySet(), ScheduledSet()] {
-            do {
-                let now = Date().timeIntervalSince1970
-                while let job = try client.store.range(min: .infinityNegative, max: .value(now), from: jobSet, offset: 0, count: 1).first {
-                    guard let queue = job["queue"] as? String else { continue }
-                    let serialized = converter.serialize(job)
-                    if try client.store.remove([serialized], from: jobSet) > 0 {
-                        try client.enqueue(job, to: Queue(queue))
-                        logger.error("enqueued \(jobSet): \(String(describing: job["jid"]))")
+        _ = try SwiftkiqClient.connectionPool { conn in
+            for jobSet in [RetrySet(), ScheduledSet()] {
+                do {
+                    let now = Date().timeIntervalSince1970
+                    while let job = try conn.range(min: .infinityNegative, max: .value(now), from: jobSet, offset: 0, count: 1).first {
+                        guard let queue = job["queue"] as? String else { continue }
+                        let serialized = converter.serialize(job)
+                        if try conn.remove([serialized], from: jobSet) > 0 {
+                            try SwiftkiqClient.enqueue(job, to: Queue(queue))
+                            logger.error("enqueued \(jobSet): \(String(describing: job["jid"]))")
+                        }
                     }
+                } catch {
+                    logger.error("poller error: \(error)")
                 }
-            } catch {
-                logger.error("poller error: \(error)")
             }
         }
     }
@@ -57,7 +58,7 @@ public class Poller {
         initialWait()
 
         while !done {
-            enqueue()
+            try? enqueue()
             wait()
         }
     }

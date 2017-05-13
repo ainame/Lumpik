@@ -95,7 +95,11 @@ public final class Processor: WorkerFailureCallback {
         if let work = try fetcher.retriveWork() {
             job = work
             defer { job = nil }
-            try process(work)
+            if done.value {
+                try work.requeue()
+            } else {
+                try process(work)
+            }
         }
     }
 
@@ -143,7 +147,9 @@ public final class Processor: WorkerFailureCallback {
             let delay = Delay.next(for: worker, by: current)
             let retryAt = Date().timeIntervalSince1970 + Double(delay)
             logger.debug("retry after \(delay) sec")
-            try! SwiftkiqClient.current.store.add(newJob, with: .value(retryAt), to: RetrySet())
+            _ = try! SwiftkiqClient.connectionPool { conn in
+                try! conn.add(newJob, with: .value(retryAt), to: RetrySet())
+            }
         } else {
             // TODO: retries_exhausted
         }

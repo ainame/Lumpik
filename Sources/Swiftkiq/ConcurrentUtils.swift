@@ -9,12 +9,26 @@
 import Foundation
 
 final class Mutex {
-    private let lock = NSLock()
+    private let _lock = NSLock()
 
+    func lock() {
+        _lock.lock()
+    }
+    
+    func unlock() {
+        _lock.unlock()
+    }
+    
     func synchronize<T>(_ block: () -> T) -> T {
-        lock.lock()
-        defer { lock.unlock() }
+        _lock.lock()
+        defer { _lock.unlock() }
         return block()
+    }
+    
+    func synchronize<T>(_ block: () throws -> T) rethrows -> T {
+        _lock.lock()
+        defer { _lock.unlock() }
+        return try block()
     }
 }
 
