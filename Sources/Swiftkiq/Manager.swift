@@ -60,26 +60,16 @@ public class Manager: ProcessorLifecycleDelegate {
         // fire event quite
     }
 
-    // hack for quicker development / testing environment #2774
-    // PAUSE_TIME = STDOUT.tty? ? 0.1 : 0.5
-    static private let pauseTime: UInt32 = 500
+    static private let pauseTime: useconds_t = 500000
     
     func stop() {
         quiet()
         // fire event shutdown
-        sleep(Manager.pauseTime)
+        usleep(Manager.pauseTime)
         guard !processors.isEmpty else { return }
         
         logger.info("Pausing to allow workers to finish...")
-        
-        // remaining = deadline - Time.now
-        // while remaining > PAUSE_TIME
-        // return if @workers.empty?
-        // sleep PAUSE_TIME
-        // remaining = deadline - Time.now
-        // end
-        // return if @workers.empty?
-        
+
         hardShutdown()
     }
     
