@@ -9,6 +9,7 @@ redis.pipelined do |r|
     r.lpush("queue:default", value)
   end
 
+  r.del("queue:other")
   50_000.times do |i|
     value = "{\"jid\": \"#{SecureRandom.uuid}\",\"class\":\"EchoWorker\",\"args\":{\"message\":\"#{i}\"},\"retry\":1,\"queue\":\"other\"}"
     r.lpush("queue:other", value)
