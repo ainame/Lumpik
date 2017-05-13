@@ -60,9 +60,8 @@ public class Manager: ProcessorLifecycleDelegate {
         // fire event quite
     }
 
-    static private let pauseTime: useconds_t = 500000
-    
-    func stop() {
+    static private let pauseTime: useconds_t = 50000 // 0.5sec
+    func stop(deadline: Date) {
         quiet()
         // fire event shutdown
         usleep(Manager.pauseTime)
@@ -70,8 +69,13 @@ public class Manager: ProcessorLifecycleDelegate {
         
         logger.info("Pausing to allow workers to finish...")
         
-        // TODO: waiting for deadline
-
+        let remainingTime = { useconds_t((deadline.timeIntervalSince1970 - Date().timeIntervalSince1970) * 100000) }
+        while remainingTime() > Manager.pauseTime {
+            guard !processors.isEmpty else { return }
+            usleep(Manager.pauseTime)
+        }
+        guard !processors.isEmpty else { return }
+        
         hardShutdown()
     }
     

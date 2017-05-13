@@ -17,16 +17,19 @@ public struct LaunchOptions {
     let strategy: Fetcher.Type
     let router: Routable
     let daemonize: Bool
+    let timeout: TimeInterval
 
     public init(concurrency: Int = 25, queues: [Queue],
                 strategy: Fetcher.Type = BasicFetcher.self,
                 router: Routable,
-                daemonize: Bool = false) {
+                daemonize: Bool = false,
+                timeout: TimeInterval = 8.0) {
         self.concurrency = concurrency
         self.queues = queues
         self.strategy = strategy
         self.router = router
         self.daemonize = daemonize
+        self.timeout = timeout
     }
 }
 
@@ -66,9 +69,10 @@ public class Launcher {
     }
     
     public func stop() {
-        // deadline = ... + timeout
         quiet()
-        manager.stop() // with timeout
+        
+        let deadline = Date().addingTimeInterval(options.timeout)
+        manager.stop(deadline: deadline)
         
         // bulk_requeue
         // clear_heatbeat()
