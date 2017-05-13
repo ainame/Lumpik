@@ -70,12 +70,11 @@ public class Launcher {
     
     public func stop() {
         quiet()
-        
+
         let deadline = Date().addingTimeInterval(options.timeout)
         manager.stop(deadline: deadline)
         
-        // bulk_requeue
-        // clear_heatbeat()
+        clearHeatbeat()
     }
     
     public func quiet() {
@@ -99,5 +98,9 @@ public class Launcher {
     
     func heartbeat() throws {
         heart.beat(done: done.value)
+    }
+    
+    func clearHeatbeat() {
+        logger.warning("TOOD: implement clearHeatbeat, but no problem currently")
     }
 }
