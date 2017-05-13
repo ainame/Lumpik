@@ -17,7 +17,7 @@ protocol ConnectablePool {
     associatedtype Connection: Connectable
     
     func borrow() throws -> Connection
-    func takeback(_ connection: Connection)
+    func checkin(_ connection: Connection)
     func with<T>(handler: (Connection) -> (T)) throws -> T
     func with<T>(handler: (Connection) throws -> (T)) throws -> T
 }
@@ -41,8 +41,8 @@ struct RedisConnection: Connectable {
     }
 }
 
-class ConnectionPool: ConnectablePool {
-    typealias Connection = RedisConnection
+class ConnectionPool<T: Connectable>: ConnectablePool {
+    typealias Connection = T
     
     let maxCapacity: Int
     private var pool = [Connection]()
@@ -82,7 +82,7 @@ class ConnectionPool: ConnectablePool {
         }
     }
     
-    func takeback(_ connection: Connection) {
+    func checkin(_ connection: Connection) {
         mutex.synchronize {
             precondition(pool.count < maxCapacity)
             pool.append(connection)
@@ -92,13 +92,13 @@ class ConnectionPool: ConnectablePool {
     
     func with<T>(handler: (Connection) -> (T)) throws -> T {
         let conn = try borrow()
-        defer { takeback(conn) }
+        defer { checkin(conn) }
         return handler(conn)
     }
     
     func with<T>(handler: (Connection) throws -> (T)) throws -> T {
         let conn = try borrow()
-        defer { takeback(conn) }
+        defer { checkin(conn) }
         return try handler(conn)
     }
 }

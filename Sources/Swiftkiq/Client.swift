@@ -10,7 +10,7 @@ import Foundation
 import Dispatch
 
 public struct SwiftkiqClient {
-    private static let _connectionPool = ConnectionPool(maxCapactiy: 5)
+    private static let _connectionPool = ConnectionPool<RedisConnection>(maxCapactiy: 5)
 
     public static func enqueue<W: Worker, A: Argument>(`class`: W.Type, args: A, retry: Int = W.defaultRetry, to queue: Queue = W.defaultQueue) throws {
         _ = try SwiftkiqClient.connectionPool { conn in

@@ -16,7 +16,7 @@ public protocol WorkerFailureCallback {
 public final class Processor: WorkerFailureCallback {
     private static let mutex = Mutex()
     private static var _workerState = [Jid: WorkerState]()
-    
+
     static var workerStates: [Jid: WorkerState] {
         return mutex.synchronize { return _workerState }
     }
@@ -30,7 +30,7 @@ public final class Processor: WorkerFailureCallback {
 
     let dispatchQueue: DispatchQueue
     private var looper: DispatchWorkItem!
-    
+
     // property
     let index: Int
     let fetcher: Fetcher
@@ -72,7 +72,7 @@ public final class Processor: WorkerFailureCallback {
             delegate.died(processor: self, reason: error.localizedDescription)
         }
     }
-    
+
     func kill(_ wait: Bool = false) {
         done.value = true
         guard looper != nil, looper.isCancelled != true else { return }
@@ -84,11 +84,11 @@ public final class Processor: WorkerFailureCallback {
             looper.wait()
         }
     }
-    
+
     func terminate(_ wait: Bool = false) {
         done.value = true
         guard looper != nil, looper.isCancelled != true else { return }
-        
+
         // just waiting
         if wait {
             looper.wait()
