@@ -72,8 +72,8 @@ class ConnectionPool<T: Connectable>: ConnectablePool {
         switch result {
         case .success:
             mutex.lock()
+            defer { mutex.unlock() }
             if let conn = pool.popLast() {
-                mutex.unlock()
                 return conn
             }
             fatalError("can't find connection item from pool")
