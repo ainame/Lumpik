@@ -63,9 +63,10 @@ public final class Processor: WorkerFailureCallback {
             do {
                 try processOne()
             } catch {
-                // handle error at didFailed
+                delegate.died(processor: self, reason: error.localizedDescription)
             }
         }
+        delegate.stopped(processor: self)
     }
     
     func kill(_ wait: Bool = false) {
@@ -73,8 +74,8 @@ public final class Processor: WorkerFailureCallback {
         guard looper.isCancelled != true else { return }
 
         // cancel and waiting
-        // TODO: investigate what cancel() raise a error
         looper.cancel()
+        delegate.stopped(processor: self)
         if wait {
             looper.wait()
         }
