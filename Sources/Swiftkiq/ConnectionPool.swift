@@ -72,8 +72,7 @@ class ConnectionPool: ConnectablePool {
         switch result {
         case .success:
             mutex.lock()
-            if let conn = pool.first {
-                pool.removeFirst()
+            if let conn = pool.popLast() {
                 mutex.unlock()
                 return conn
             }
