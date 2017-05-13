@@ -69,12 +69,32 @@ public class Manager: ProcessorLifecycleDelegate {
         guard !processors.isEmpty else { return }
         
         logger.info("Pausing to allow workers to finish...")
+        
+        // TODO: waiting for deadline
 
         hardShutdown()
     }
     
     func hardShutdown() {
-        fatalError("not implemented yet")
+        var copied: [Processor]? = nil
+        mutex.synchronize {
+            copied = processors
+        }
+        
+        if let cleanup = copied, cleanup.count > 0 {
+            let jobs = cleanup.flatMap { $0.job }
+            logger.warning("Terminating \(cleanup.count) busy worker threads" )
+            logger.warning("Work still in progress \(jobs)")
+            
+            // try to requeueing
+            // TODO: make this reliable
+            try? strategy.init(queues: queues).bulkRequeue(jobs)
+        }
+        
+        // really killing them
+        copied!.forEach { processor in
+            processor.kill()
+        }
     }
     
     func stopped(processor: Processor) {

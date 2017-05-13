@@ -63,13 +63,15 @@ public struct CLI {
             stopHandler?()
         }
         
-        Signals.trap(signal: .user(1)) { signal in
+        Signals.trap(signal: .user(Int(SIGUSR1))) { signal in
             logger.info("signal user1: \(signal)")
             quietHandler?()
         }
         
-        Signals.trap(signal: .user(2)) { signal in
+        Signals.trap(signal: .user(Int(SIGUSR2))) { signal in
             logger.info("signal user2: \(signal)")
+            // TODO: re-open logfile
+            fatalError("not implemented signal handling of USR2")
         }
     }
 }

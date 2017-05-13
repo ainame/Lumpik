@@ -31,12 +31,15 @@ public final class Processor: WorkerFailureCallback {
     let dispatchQueue: DispatchQueue
     private var looper: DispatchWorkItem!
     
+    // property
     let fetcher: Fetcher
     let router: Routable
+    var job: UnitOfWork?
     weak var delegate: ProcessorLifecycleDelegate!
 
-    let down = AtomicProperty<Bool>(false)
-    let done = AtomicProperty<Bool>(false)
+    // flags to control
+    private let down = AtomicProperty<Bool>(false)
+    private let done = AtomicProperty<Bool>(false)
 
     init(fetcher: Fetcher,
          router: Routable,
@@ -89,6 +92,8 @@ public final class Processor: WorkerFailureCallback {
 
     func processOne() throws {
         if let work = try fetcher.retriveWork() {
+            job = work
+            defer { job = nil }
             try process(work)
         }
     }
