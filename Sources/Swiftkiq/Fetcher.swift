@@ -31,7 +31,7 @@ final class BasicFetcher: Fetcher {
         var a = queues
         let n = a.count
         for i in 0..<n {
-            let ai = a[i]
+            let ai: Queue = a[i]
             let j = Int(Compat.random(n))
             if i != j {
                 a[i] = a[j]

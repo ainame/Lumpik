@@ -36,12 +36,12 @@ public struct PipelineTransaction: Transaction {
     public func execute() throws -> [RespObject] {
         let responses = try pipeline.execute()
 
-        let errors = try responses.flatMap {
-            try($0.respType == .Array ? $0.toArray() : [$0])
-        }.filter {
-            $0.respType == .Error
-        }.map {
-            try $0.toError()
+        let errors = try responses.flatMap { (resp: RespObject) in
+            try(resp.respType == .Array ? resp.toArray() : [resp])
+        }.filter { (resp: RespObject) in
+            resp.respType == .Error
+        }.map { (resp: RespObject) in
+            try resp.toError()
         }
         if let error = errors.first {
             throw error
