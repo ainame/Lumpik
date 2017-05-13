@@ -9,6 +9,10 @@
 import Foundation
 import Signals
 
+// Signals captured context as a C function
+fileprivate var stopHandler: (()->())? = nil
+fileprivate var quietHandler: (()->())? = nil
+
 public struct CLI {
     private let launcher: Launcher
     
@@ -36,27 +40,32 @@ public struct CLI {
         RunLoop.main.run()
     }
     
-    private func stop() {
-        launcher.stop()
-    }
-    
-    private func quiet() {
-        launcher.quiet()
-    }
-    
     private func registerSignalHandler() {
+        stopHandler = {
+            logger.info("Shudding down...")
+            self.launcher.stop()
+            logger.info("Good bye!")
+            exit(0)
+        }
+        
+        quietHandler = {
+            logger.info("No longer accepting new work...")
+            self.launcher.quiet()
+        }
+        
         Signals.trap(signal: .int) { signal in
             logger.info("signal int: \(signal)")
-            exit(1)
+            stopHandler?()
         }
         
         Signals.trap(signal: .term) { signal in
             logger.info("signal term: \(signal)")
-            exit(1)
+            stopHandler?()
         }
         
         Signals.trap(signal: .user(1)) { signal in
             logger.info("signal user1: \(signal)")
+            quietHandler?()
         }
         
         Signals.trap(signal: .user(2)) { signal in
