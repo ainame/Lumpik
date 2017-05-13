@@ -32,6 +32,7 @@ public final class Processor: WorkerFailureCallback {
     private var looper: DispatchWorkItem!
     
     // property
+    let index: Int
     let fetcher: Fetcher
     let router: Routable
     var job: UnitOfWork?
@@ -41,10 +42,12 @@ public final class Processor: WorkerFailureCallback {
     private let down = AtomicProperty<Bool>(false)
     private let done = AtomicProperty<Bool>(false)
 
-    init(fetcher: Fetcher,
+    init(index: Int,
+         fetcher: Fetcher,
          router: Routable,
          dispatchQueue: DispatchQueue,
          delegate: ProcessorLifecycleDelegate) {
+        self.index = index
         self.fetcher = fetcher
         self.router = router
         self.dispatchQueue = dispatchQueue
@@ -59,19 +62,20 @@ public final class Processor: WorkerFailureCallback {
     }
 
     func run() {
-        while !done.value {
-            do {
+        do {
+            while !done.value {
                 try processOne()
-            } catch {
-                delegate.died(processor: self, reason: error.localizedDescription)
             }
+            delegate.stopped(processor: self)
+        } catch {
+            logger.error("\(error)")
+            delegate.died(processor: self, reason: error.localizedDescription)
         }
-        delegate.stopped(processor: self)
     }
     
     func kill(_ wait: Bool = false) {
         done.value = true
-        guard looper.isCancelled != true else { return }
+        guard looper != nil, looper.isCancelled != true else { return }
 
         // cancel and waiting
         looper.cancel()
@@ -83,7 +87,7 @@ public final class Processor: WorkerFailureCallback {
     
     func terminate(_ wait: Bool = false) {
         done.value = true
-        guard looper.isCancelled != true else { return }
+        guard looper != nil, looper.isCancelled != true else { return }
         
         // just waiting
         if wait {
@@ -156,5 +160,11 @@ public final class Processor: WorkerFailureCallback {
 
         // do not throw error in heare
         // because this is only delegate
+    }
+}
+
+extension Processor: CustomStringConvertible {
+    public var description: String {
+        return "<Processor label=\"\(dispatchQueue.label)\" job=\"\(String(describing: job))\")>"
     }
 }
