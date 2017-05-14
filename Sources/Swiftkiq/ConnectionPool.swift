@@ -8,12 +8,12 @@
 
 import Foundation
 
-protocol Connectable {
+public protocol Connectable {
     static func makeConnection() throws -> Self
     func releaseConnection() throws
 }
 
-protocol ConnectablePool {
+public protocol ConnectablePool {
     associatedtype Connection: Connectable
     
     func borrow() throws -> Connection
@@ -26,23 +26,9 @@ enum ConnectablePoolError: Error {
     case timeout
 }
 
-struct RedisConnection: Connectable {
-    var connection: Storable
-    
-    init(connection: Storable) {
-        self.connection = connection
-    }
-    
-    static func makeConnection() throws -> RedisConnection {
-        return RedisConnection(connection: RedisStore.makeStore())
-    }
-    
-    func releaseConnection() throws {
-    }
-}
 
-class ConnectionPool<T: Connectable>: ConnectablePool {
-    typealias Connection = T
+public class ConnectionPool<T: Connectable>: ConnectablePool {
+    public typealias Connection = T
     
     let maxCapacity: Int
     private var pool = [Connection]()
@@ -67,7 +53,7 @@ class ConnectionPool<T: Connectable>: ConnectablePool {
         }
     }
     
-    func borrow() throws -> Connection {
+    public func borrow() throws -> Connection {
         let result = semaphore.wait(timeout: DispatchTime.now() + .seconds(1))
         switch result {
         case .success:
@@ -82,7 +68,7 @@ class ConnectionPool<T: Connectable>: ConnectablePool {
         }
     }
     
-    func checkin(_ connection: Connection) {
+    public func checkin(_ connection: Connection) {
         mutex.synchronize {
             precondition(pool.count < maxCapacity)
             pool.append(connection)
@@ -90,13 +76,13 @@ class ConnectionPool<T: Connectable>: ConnectablePool {
         semaphore.signal()
     }
     
-    func with<T>(handler: (Connection) -> (T)) throws -> T {
+    public func with<T>(handler: (Connection) -> (T)) throws -> T {
         let conn = try borrow()
         defer { checkin(conn) }
         return handler(conn)
     }
     
-    func with<T>(handler: (Connection) throws -> (T)) throws -> T {
+    public func with<T>(handler: (Connection) throws -> (T)) throws -> T {
         let conn = try borrow()
         defer { checkin(conn) }
         return try handler(conn)

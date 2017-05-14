@@ -55,10 +55,17 @@ final public class RedisStore: Storable {
     typealias Redis = Redbird
     static var defaultConfig = RedisConfig()
 
-    public static func makeStore() -> Storable {
+    public static func makeStore() -> RedisStore {
         return try! RedisStore(host: defaultConfig.host, port: UInt16(defaultConfig.port))
     }
 
+    public static func makeConnection() throws -> RedisStore {
+        return try RedisStore(host: defaultConfig.host, port: UInt16(defaultConfig.port))
+    }
+    
+    public func releaseConnection() throws {
+    }
+    
     let host: String
     let port: UInt16
     let timeout: Int = 2
