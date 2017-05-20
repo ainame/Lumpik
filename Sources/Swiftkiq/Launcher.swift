@@ -18,18 +18,21 @@ public struct LaunchOptions {
     let router: Routable
     let daemonize: Bool
     let timeout: TimeInterval
+    let connectionPool: Int
 
     public init(concurrency: Int = 25, queues: [Queue],
                 strategy: Fetcher.Type = BasicFetcher.self,
                 router: Routable,
                 daemonize: Bool = false,
-                timeout: TimeInterval = 8.0) {
+                timeout: TimeInterval = 8.0,
+                connectionPool: Int = 5) {
         self.concurrency = concurrency
         self.queues = queues
         self.strategy = strategy
         self.router = router
         self.daemonize = daemonize
         self.timeout = timeout
+        self.connectionPool = connectionPool
     }
 }
 
@@ -43,7 +46,12 @@ public class Launcher {
     private let heartbeatQueue = DispatchQueue(label: "tokyo.ainame.swiftkiq.launcher.heartbeat")
     private let done = AtomicProperty<Bool>(false)
 
-    required public init(options: LaunchOptions) {
+    public static func makeLauncher(options: LaunchOptions) -> Launcher {
+        Application.launchOptions = options
+        return Launcher(options: options)
+    }
+    
+    private init(options: LaunchOptions) {
         self.options = options
         self.manager = Manager(concurrency: options.concurrency,
                                queues: options.queues,

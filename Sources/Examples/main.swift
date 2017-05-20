@@ -10,7 +10,7 @@ let options = LaunchOptions(
     daemonize: false
 )
 
-let launcher = Launcher(options: options)
+let launcher = Launcher.makeLauncher(options: options)
 
 let commandLine = CLI(launcher: launcher)
 commandLine.start()
