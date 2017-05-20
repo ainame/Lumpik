@@ -51,19 +51,19 @@ public struct PipelineTransaction: Transaction {
     }
 }
 
-final public class RedisStore: Storable {
+final class RedisStore: Storable {
     typealias Redis = Redbird
     static var defaultConfig = RedisConfig()
 
-    public static func makeStore() -> RedisStore {
+    static func makeStore() -> RedisStore {
         return try! RedisStore(host: defaultConfig.host, port: UInt16(defaultConfig.port))
     }
 
-    public static func makeConnection() throws -> RedisStore {
+    static func makeConnection() throws -> RedisStore {
         return try RedisStore(host: defaultConfig.host, port: UInt16(defaultConfig.port))
     }
     
-    public func releaseConnection() throws {
+    func releaseConnection() throws {
     }
     
     let host: String
@@ -79,12 +79,12 @@ final public class RedisStore: Storable {
         self.redis = try Redbird(config: RedbirdConfig(address: host, port: port, password: nil))
     }
 
-    public func pipelined() -> Transaction {
+    func pipelined() -> Transaction {
         return PipelineTransaction(pipeline: redis.pipeline())
     }
 
     @discardableResult
-    public func clear<K: StoreKeyConvertible>(_ key: K) throws -> Int {
+    func clear<K: StoreKeyConvertible>(_ key: K) throws -> Int {
         let response = try redis.command("DEL", params: [key.key])
 
         guard response.respType != .Error else { throw try! response.toError() }
@@ -95,7 +95,7 @@ final public class RedisStore: Storable {
 }
 
 extension RedisStore: ValueStorable {
-    public func get<K: StoreKeyConvertible>(_ key: K) throws -> String? {
+    func get<K: StoreKeyConvertible>(_ key: K) throws -> String? {
         let response = try redis.command("GET", params: [key.key])
 
         guard response.respType != .Error else { throw try! response.toError() }
@@ -104,7 +104,7 @@ extension RedisStore: ValueStorable {
         return try! response.toMaybeString()
     }
 
-    public func set<K: StoreKeyConvertible>(_ key: K, value: String) throws -> Int {
+    func set<K: StoreKeyConvertible>(_ key: K, value: String) throws -> Int {
         let response = try redis.command("SET", params: [key.key, value])
 
         guard response.respType != .Error else { throw try! response.toError() }
@@ -113,7 +113,7 @@ extension RedisStore: ValueStorable {
         return try! response.toInt()
     }
 
-    public func increment<K: StoreKeyConvertible>(_ key: K, by count: Int = 1) throws -> Int {
+    func increment<K: StoreKeyConvertible>(_ key: K, by count: Int = 1) throws -> Int {
         let response = try redis.command("INCRBY", params: [key.key, String(count)])
 
         guard response.respType != .Error else { throw try! response.toError() }
@@ -125,7 +125,7 @@ extension RedisStore: ValueStorable {
 
 extension RedisStore: ListStorable {
     @discardableResult
-    public func enqueue(_ job: [String: Any], to queue: Queue) throws -> Int {
+    func enqueue(_ job: [String: Any], to queue: Queue) throws -> Int {
         let string = JsonConverter.default.serialize(job)
         let response = try redis.command("LPUSH", params: [queue.key, string])
         guard response.respType != .Error else { throw try! response.toError() }
@@ -134,7 +134,7 @@ extension RedisStore: ListStorable {
         return try! response.toInt()
     }
 
-    public func dequeue(_ queues: [Queue]) throws -> UnitOfWork? {
+    func dequeue(_ queues: [Queue]) throws -> UnitOfWork? {
         var params = queues.map { $0.key }
         params.append(String(timeout))
 
@@ -155,7 +155,7 @@ extension RedisStore: ListStorable {
 }
 
 extension RedisStore: SetStorable {
-    public func add(_ member: [String: Any], to set: Set) throws -> Int {
+    func add(_ member: [String: Any], to set: Set) throws -> Int {
         let string = converter.serialize(member)
         let response = try redis.command("SADD", params: [set.key, string])
 
@@ -165,7 +165,7 @@ extension RedisStore: SetStorable {
         return try! response.toInt()
     }
 
-    public func remove(_ members: [String], from set: Set) throws -> Int {
+    func remove(_ members: [String], from set: Set) throws -> Int {
         var params = [set.key]
         members.forEach { params.append($0) }
 
@@ -177,7 +177,7 @@ extension RedisStore: SetStorable {
         return try! response.toInt()
     }
 
-    public func members(_ set: Set) throws -> [String] {
+    func members(_ set: Set) throws -> [String] {
         let response = try redis.command("SMEMBERS", params: [set.key])
 
         guard response.respType != .Error else { throw try! response.toError() }
@@ -199,7 +199,7 @@ extension RedisStore: SetStorable {
 
 extension RedisStore: SortedSetStorable {
     @discardableResult
-    public func add(_ member: [String: Any], with score: SortedSetScore, to sortedSet: SortedSet) throws -> Int {
+    func add(_ member: [String: Any], with score: SortedSetScore, to sortedSet: SortedSet) throws -> Int {
         let string = converter.serialize(member)
         let response = try redis.command("ZADD", params: [sortedSet.key, score.string, string])
 
@@ -220,7 +220,7 @@ extension RedisStore: SortedSetStorable {
         return try! response.toInt()
     }
 
-    public func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, offset: Int, count: Int) throws -> [[String: Any]] {
+    func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, offset: Int, count: Int) throws -> [[String: Any]] {
         let params = [sortedSet.key, min.string, max.string, "LIMIT", String(offset), String(count)]
         let response = try redis.command("ZRANGEBYSCORE", params: params)
         guard response.respType != .Error else { throw try! response.toError() }
@@ -228,7 +228,7 @@ extension RedisStore: SortedSetStorable {
         return try! response.toArray().map { try! $0.toString() }.map { converter.deserialize(dictionary: $0) }
     }
 
-    public func size(_ sortedSet: SortedSet) throws -> Int {
+    func size(_ sortedSet: SortedSet) throws -> Int {
         let response = try redis.command("ZCARD", params: [sortedSet.key])
 
         guard response.respType != .Error else { throw try! response.toError() }
