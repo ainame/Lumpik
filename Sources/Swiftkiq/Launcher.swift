@@ -47,10 +47,9 @@ public class Launcher {
     private let done = AtomicProperty<Bool>(false)
 
     public static func makeLauncher(options: LaunchOptions) -> Launcher {
-        Application.launchOptions = options
         return Launcher(options: options)
     }
-    
+
     private init(options: LaunchOptions) {
         self.options = options
         self.manager = Manager(concurrency: options.concurrency,
@@ -65,32 +64,32 @@ public class Launcher {
         if options.daemonize {
             Daemon.daemonize()
         }
-        
+
         if !LoggerInitializer.isInitialized {
             LoggerInitializer.initialize()
         }
-        
-        
+
+
         self.startHeartbeat()
         self.manager.start()
         self.poller.start()
     }
-    
+
     public func stop() {
         quiet()
 
         let deadline = Date().addingTimeInterval(options.timeout)
         manager.stop(deadline: deadline)
-        
+
         clearHeatbeat()
     }
-    
+
     public func quiet() {
         done.value = true
         manager.quiet()
         poller.terminate()
     }
-    
+
     func startHeartbeat() {
         heartbeatQueue.async { [weak self] in
             while true {
@@ -103,11 +102,11 @@ public class Launcher {
             }
         }
     }
-    
+
     func heartbeat() throws {
         heart.beat(done: done.value)
     }
-    
+
     func clearHeatbeat() {
         logger.warning("TOOD: implement clearHeatbeat, but no problem currently")
     }

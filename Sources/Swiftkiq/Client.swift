@@ -10,7 +10,7 @@ import Foundation
 import Dispatch
 
 public struct SwiftkiqClient {
-    private static let _connectionPool = ConnectionPool<RedisStore>(maxCapactiy: 5)
+    private static let _connectionPool = ConnectionPool<RedisStore>(maxCapacity: 5)
 
     public static func enqueue<W: Worker, A: Argument>(`class`: W.Type, args: A, retry: Int = W.defaultRetry, to queue: Queue = W.defaultQueue) throws {
         _ = try SwiftkiqClient.connectionPool { conn in
@@ -30,13 +30,13 @@ public struct SwiftkiqClient {
         }
     }
     
-    public static func connectionPool<T>(handler: (Storable) -> T) throws -> T {
+    static func connectionPool<T>(handler: (Storable) -> T) throws -> T {
         return try _connectionPool.with { conn in
             handler(conn)
         }
     }
     
-    public static func connectionPool<T>(handler: (Storable) throws -> T) throws -> T {
+    static func connectionPool<T>(handler: (Storable) throws -> T) throws -> T {
         return try _connectionPool.with { conn in
             try handler(conn)
         }
