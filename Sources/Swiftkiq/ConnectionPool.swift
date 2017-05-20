@@ -36,8 +36,8 @@ public class ConnectionPool<T: Connectable>: ConnectablePool {
     private let mutex = Mutex()
     private let semaphore: DispatchSemaphore
     
-    init(maxCapactiy: Int) {
-        self.maxCapacity = maxCapactiy
+    init(maxCapacity: Int) {
+        self.maxCapacity = maxCapacity
         self.semaphore = DispatchSemaphore(value: maxCapacity)
         var count = 0
         while count < maxCapacity {
