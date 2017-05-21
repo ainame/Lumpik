@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Redis
 
 public class Heart {
     lazy var formatter: DateFormatter = {
@@ -40,21 +41,20 @@ public class Heart {
             do {
                 let nowdate = formatter.string(from: Date())
                 let transaction = try conn.pipelined()
-                    .addCommand("MULTI")
-                    .addCommand("INCRBY", params: ["stat:processed", "\(processed)"])
-                    .addCommand("INCRBY", params: ["stat:failed", "\(failed)"])
-                    .addCommand("INCRBY", params: ["stat:processed:\(nowdate)", "\(processed)"])
-                    .addCommand("INCRBY", params: ["stat:failed:\(nowdate)", "\(processed)"])
-                    .addCommand("DEL", params: [workerKey])
+                    .enqueue(Command("MULTI"))
+                    .enqueue(Command("INCRBY"), ["stat:processed", "\(processed)"].map { $0.makeBytes() })
+                    .enqueue(Command("INCRBY"), ["stat:failed", "\(failed)"].map { $0.makeBytes() })
+                    .enqueue(Command("INCRBY"), ["stat:processed:\(nowdate)", "\(processed)"].map { $0.makeBytes() })
+                    .enqueue(Command("INCRBY"), ["stat:failed:\(nowdate)", "\(processed)"].map { $0.makeBytes() })
+                    .enqueue(Command("DEL"), [workerKey])
                 
                 for (jid, workerState) in Processor.workerStates {
-                    try transaction.addCommand("HSET", params: [
-                        workerKey, jid.rawValue,
-                        converter.serialize(workerState.work.job)])
+                    try transaction.enqueue(Command("HSET"),
+                                            [workerKey, jid.rawValue, converter.serialize(workerState.work.job)].map { $0.makeBytes() })
                 }
                 try transaction
-                    .addCommand("EXPIRE", params: [workerKey, String(60)])
-                    .addCommand("EXEC")
+                    .enqueue(Command("EXPIRE"), [workerKey, String(60)].map { $0.makeBytes() })
+                    .enqueue(Command("EXEC"))
                     .execute()
 
                 let processState = Process(
@@ -68,18 +68,18 @@ public class Heart {
                     labels: [""])
                 
                 try conn.pipelined()
-                    .addCommand("MULTI")
-                    .addCommand("SADD", params: ["processes", workerKey])
-                    .addCommand("EXISTS", params: [workerKey])
-                    .addCommand("HMSET", params: [
+                    .enqueue(Command("MULTI"))
+                    .enqueue(Command("SADD"), ["processes", workerKey].map { $0.makeBytes() })
+                    .enqueue(Command("EXISTS"), [workerKey].map { $0.makeBytes() })
+                    .enqueue(Command("HMSET"), [
                         workerKey,
                         "info", processState.json,
                         "busy", "\(Processor.workerStates.count)",
                         "beat", "\(Date().timeIntervalSince1970)",
-                        "quit", "\(done)"])
-                    .addCommand("EXPIRE", params: [workerKey, "60"])
-                    .addCommand("RPOP", params: ["\(workerKey)-signals"])
-                    .addCommand("EXEC")
+                        "quit", "\(done)"].map { $0.makeBytes() })
+                    .enqueue(Command("EXPIRE"), [workerKey, "60"].map { $0.makeBytes() })
+                    .enqueue(Command("RPOP"), ["\(workerKey)-signals"].map { $0.makeBytes() })
+                    .enqueue(Command("EXEC"))
                     .execute()
             } catch let error {
                 logger.error("heartbeat: \(error)")

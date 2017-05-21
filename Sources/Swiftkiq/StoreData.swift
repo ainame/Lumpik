@@ -8,9 +8,10 @@
 
 import Foundation
 import Mapper
+import Bits
 
 public protocol StoreKeyConvertible: RawRepresentable, Equatable, Hashable {
-    var key: String { get }
+    var key: Bytes { get }
 }
 
 public class Queue: StoreKeyConvertible {
@@ -24,8 +25,8 @@ public class Queue: StoreKeyConvertible {
         self.rawValue = rawValue
     }
     
-    public var key: String {
-        return "queue:\(rawValue)"
+    public var key: Bytes {
+        return "queue:\(rawValue)".makeBytes()
     }
 }
 
@@ -40,8 +41,8 @@ public class SortedSet: StoreKeyConvertible {
         self.rawValue = rawValue
     }
     
-    public var key: String {
-        return rawValue
+    public var key: Bytes {
+        return rawValue.makeBytes()
     }
 }
 
@@ -56,8 +57,8 @@ public class Set: StoreKeyConvertible {
         self.rawValue = rawValue
     }
     
-    public var key: String {
-        return rawValue
+    public var key: Bytes {
+        return rawValue.makeBytes()
     }
 }
 

@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Redis
 
 public protocol Fetcher: class {
     init(queues: [Queue])
@@ -48,7 +49,7 @@ final class BasicFetcher: Fetcher {
         
             jobs.forEach { job in
                 let payload = encoder.serialize(job.job)
-                try! pipeline.addCommand("RPUSH", params: [job.queue.key, payload])
+                try! pipeline.enqueue(Command("RPUSH"), [job.queue.key, payload.makeBytes()])
             }
         
             try pipeline.execute()
