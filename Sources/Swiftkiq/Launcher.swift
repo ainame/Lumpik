@@ -82,7 +82,7 @@ public class Launcher {
         let deadline = Date().addingTimeInterval(options.timeout)
         manager.stop(deadline: deadline)
 
-        clearHeatbeat()
+        heart.clear()
     }
 
     public func quiet() {
@@ -105,19 +105,6 @@ public class Launcher {
     }
 
     func heartbeat() throws {
-        heart.beat(done: done.value)
-    }
-
-    func clearHeatbeat() {
-        do {
-            _ = try Application.connectionPool { conn in
-                _ = try conn.pipelined()
-                    .enqueue(Command("SREM"), ["processes".makeBytes(), ProcessIdentityGenerator.identity.rawValue.makeBytes()])
-                    .enqueue(.delete, ["\(ProcessIdentityGenerator.identity):workers".makeBytes()])
-                    .execute()
-            }
-        } catch {
-            // best effort
-        }
+        try heart.beat(done: done.value)
     }
 }
