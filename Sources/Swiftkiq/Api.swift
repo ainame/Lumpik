@@ -17,62 +17,64 @@ public final class ProcessSet: Set {
     @discardableResult
     public static func cleanup() throws -> Int {
         let set = ProcessSet()
-        let store = SwiftkiqClient.current.store
-        let processeKeys: [String] = try store.members(set)
-
-        guard processeKeys.count > 0 else {
-            return 0
-        }
-        
-        let pipeline = store.pipelined()
-        for processKey in processeKeys {
-            try pipeline.addCommand("HGET", params: [processKey, "info"])
-        }
-        let heartbeats = try pipeline.execute().map { try? $0.toString() }
-
-        var pruned = [String]()
-        for (index, beat) in heartbeats.enumerated() {
-            if beat != nil {
-                pruned.append(processeKeys[index])
+        return try Application.connectionPool { conn in
+            let processeKeys: [String] = try conn.members(set)
+            
+            guard processeKeys.count > 0 else {
+                return 0
             }
+            
+            let pipeline = conn.pipelined()
+            for processKey in processeKeys {
+                try pipeline.addCommand("HGET", params: [processKey, "info"])
+            }
+            let heartbeats = try pipeline.execute().map { try? $0.toString() }
+            
+            var pruned = [String]()
+            for (index, beat) in heartbeats.enumerated() {
+                if beat != nil {
+                    pruned.append(processeKeys[index])
+                }
+            }
+            guard pruned.count > 0 else {
+                return 0
+            }
+            return try conn.remove(pruned, from: set)
         }
-        guard pruned.count > 0 else {
-            return 0
-        }
-        return try store.remove(pruned, from: set)
     }
     
     public func each(_ block: (ProcessState) -> ()) throws {
-        let store = SwiftkiqClient.current.store
-        let processeKeys: [String] = try store.members(self).sorted { $0 < $1 }
-        
-        let converter = JsonConverter.default
-        let pipeline = store.pipelined()
-        for processKey in processeKeys {
-            try pipeline.addCommand("HMGET", params: [processKey, "info", "busy", "beat", "quit"])
-        }
-        
-        let responses = try pipeline.execute()
-        let tmp: [[String]] = responses.flatMap { try? $0.toArray() }
-            .map { $0.flatMap { try? $0.toString() } }
-        let filtered = tmp.filter { $0.count == 4 }
-        let processes = filtered.map { (elem: [String]) -> [String: Any?] in
-            let info: [String: Any] = converter.deserialize(dictionary: elem[0])
-            let dict: [String: Any?] = [
-                "info": info,
-                "busy": Int(elem[1]),
-                "beat": Double(elem[2]),
-                "quit": Bool(elem[3])]
-            return dict
-        }
-        let parsedProcesses = ProcessState.from(processes as NSArray) ?? []
-        for process in parsedProcesses {
-            block(process)
+        _ = try Application.connectionPool { conn in
+            let processeKeys: [String] = try conn.members(self).sorted { $0 < $1 }
+            
+            let converter = JsonConverter.default
+            let pipeline = conn.pipelined()
+            for processKey in processeKeys {
+                try pipeline.addCommand("HMGET", params: [processKey, "info", "busy", "beat", "quit"])
+            }
+            
+            let responses = try pipeline.execute()
+            let tmp: [[String]] = responses.flatMap { try? $0.toArray() }
+                .map { $0.flatMap { try? $0.toString() } }
+            let filtered = tmp.filter { $0.count == 4 }
+            let processes = filtered.map { (elem: [String]) -> [String: Any?] in
+                let info: [String: Any] = converter.deserialize(dictionary: elem[0])
+                let dict: [String: Any?] = [
+                    "info": info,
+                    "busy": Int(elem[1]),
+                    "beat": Double(elem[2]),
+                    "quit": Bool(elem[3])]
+                return dict
+            }
+            let parsedProcesses = ProcessState.from(processes as NSArray) ?? []
+            for process in parsedProcesses {
+                block(process)
+            }
         }
     }
     
     public var count: Int {
-        return (try? SwiftkiqClient.current.store.size(self)) ?? 0
+        return ((try? Application.connectionPool { try $0.size(self) }) ?? 0)
     }
 }
 
@@ -93,7 +95,9 @@ public final class RetrySet: JobSet {
 
 extension StoreKeyConvertible {
     public func clear() throws {
-        try SwiftkiqClient.current.store.clear(self)
+        _ = try Application.connectionPool { conn in
+            try conn.clear(self)
+        }
     }
     
     public func 💣() throws {

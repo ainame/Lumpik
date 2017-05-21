@@ -7,14 +7,29 @@
 //
 
 import Foundation
+import Dispatch
 
 final class Mutex {
-    private let lock = NSLock()
-
+    private var _lock = DispatchSemaphore(value: 1)
+    
+    func lock() {
+        _ = _lock.wait(timeout: DispatchTime.distantFuture)
+    }
+    
+    func unlock() {
+        _lock.signal()
+    }
+    
     func synchronize<T>(_ block: () -> T) -> T {
-        lock.lock()
-        defer { lock.unlock() }
+        lock()
+        defer { unlock() }
         return block()
+    }
+    
+    func synchronize<T>(_ block: () throws -> T) rethrows -> T {
+        lock()
+        defer { unlock() }
+        return try block()
     }
 }
 

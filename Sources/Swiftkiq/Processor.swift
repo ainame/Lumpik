@@ -16,7 +16,7 @@ public protocol WorkerFailureCallback {
 public final class Processor: WorkerFailureCallback {
     private static let mutex = Mutex()
     private static var _workerState = [Jid: WorkerState]()
-    
+
     static var workerStates: [Jid: WorkerState] {
         return mutex.synchronize { return _workerState }
     }
@@ -30,8 +30,9 @@ public final class Processor: WorkerFailureCallback {
 
     let dispatchQueue: DispatchQueue
     private var looper: DispatchWorkItem!
-    
+
     // property
+    let index: Int
     let fetcher: Fetcher
     let router: Routable
     var job: UnitOfWork?
@@ -41,10 +42,12 @@ public final class Processor: WorkerFailureCallback {
     private let down = AtomicProperty<Bool>(false)
     private let done = AtomicProperty<Bool>(false)
 
-    init(fetcher: Fetcher,
+    init(index: Int,
+         fetcher: Fetcher,
          router: Routable,
          dispatchQueue: DispatchQueue,
          delegate: ProcessorLifecycleDelegate) {
+        self.index = index
         self.fetcher = fetcher
         self.router = router
         self.dispatchQueue = dispatchQueue
@@ -59,19 +62,20 @@ public final class Processor: WorkerFailureCallback {
     }
 
     func run() {
-        while !done.value {
-            do {
+        do {
+            while !done.value {
                 try processOne()
-            } catch {
-                delegate.died(processor: self, reason: error.localizedDescription)
             }
+            delegate.stopped(processor: self)
+        } catch {
+            logger.error("\(error)")
+            delegate.died(processor: self, reason: error.localizedDescription)
         }
-        delegate.stopped(processor: self)
     }
-    
+
     func kill(_ wait: Bool = false) {
         done.value = true
-        guard looper.isCancelled != true else { return }
+        guard looper != nil, looper.isCancelled != true else { return }
 
         // cancel and waiting
         looper.cancel()
@@ -80,11 +84,11 @@ public final class Processor: WorkerFailureCallback {
             looper.wait()
         }
     }
-    
+
     func terminate(_ wait: Bool = false) {
         done.value = true
-        guard looper.isCancelled != true else { return }
-        
+        guard looper != nil, looper.isCancelled != true else { return }
+
         // just waiting
         if wait {
             looper.wait()
@@ -95,7 +99,11 @@ public final class Processor: WorkerFailureCallback {
         if let work = try fetcher.retriveWork() {
             job = work
             defer { job = nil }
-            try process(work)
+            if done.value {
+                try work.requeue()
+            } else {
+                try process(work)
+            }
         }
     }
 
@@ -143,12 +151,20 @@ public final class Processor: WorkerFailureCallback {
             let delay = Delay.next(for: worker, by: current)
             let retryAt = Date().timeIntervalSince1970 + Double(delay)
             logger.debug("retry after \(delay) sec")
-            try! SwiftkiqClient.current.store.add(newJob, with: .value(retryAt), to: RetrySet())
+            _ = try! Application.connectionPool { conn in
+                try! conn.add(newJob, with: .value(retryAt), to: RetrySet())
+            }
         } else {
             // TODO: retries_exhausted
         }
 
         // do not throw error in heare
         // because this is only delegate
+    }
+}
+
+extension Processor: CustomStringConvertible {
+    public var description: String {
+        return "<Processor label=\"\(dispatchQueue.label)\" job=\"\(String(describing: job))\")>"
     }
 }

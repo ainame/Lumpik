@@ -34,7 +34,7 @@ public class Manager: ProcessorLifecycleDelegate {
     static func makeProcessor(index: Int, queues: [Queue], strategy: Fetcher.Type, router: Routable, delegate: ProcessorLifecycleDelegate) -> Processor {
         let fetcher = strategy.init(queues: queues)
         let dispatchQueue = DispatchQueue(label: "swiftkiq-queue\(index)")
-        return Processor(fetcher: fetcher, router: router, dispatchQueue: dispatchQueue, delegate: delegate)
+        return Processor(index: index, fetcher: fetcher, router: router, dispatchQueue: dispatchQueue, delegate: delegate)
     }
     
     init(concurrency: Int = 25, queues: [Queue], strategy: Fetcher.Type = BasicFetcher.self, router: Routable) {
@@ -111,14 +111,14 @@ public class Manager: ProcessorLifecycleDelegate {
     }
 
     func died(processor: Processor, reason: String) {
-        logger.debug("died: \(processor)")
+        logger.debug("died \(reason) - \(processor)")
         
         mutex.synchronize {
             guard let index = processors.index(where: { $0 === processor }) else { return }
             processors.remove(at: index)
             
             if done.value != true {
-                let processor = Manager.makeProcessor(index: processors.count, queues: queues,
+                let processor = Manager.makeProcessor(index: processor.index, queues: queues,
                                                       strategy: strategy, router: router,
                                                       delegate: self)
                 processors.append(processor)
