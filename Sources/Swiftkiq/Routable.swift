@@ -9,6 +9,10 @@
 import Foundation
 import SwiftyBeaver
 
+public enum RouterError: Error {
+    case notFoundWorker
+}
+
 public protocol Routable {
     func dispatch(_ work: UnitOfWork, errorCallback: WorkerFailureCallback) throws
     func invokeWorker<W: Worker>(workerType: W.Type, work: UnitOfWork, errorCallback: WorkerFailureCallback) throws
