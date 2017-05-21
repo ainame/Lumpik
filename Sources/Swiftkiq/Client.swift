@@ -16,7 +16,7 @@ public struct SwiftkiqClient {
         _ = try Application.connectionPool { conn in
             try conn.enqueue(["jid": JobIdentityGenerator.makeIdentity().rawValue,
                               "class": String(describing: `class`),
-                              "args": args.toDictionary(),
+                              "args": args.toArray(),
                               "retry": retry,
                               "queue": queue.name], to: queue)
         }

@@ -4,12 +4,13 @@ import Swiftkiq
 class EchoWorker: Worker {
     struct Args: Argument {
         public var message: String
-        public func toDictionary() -> [String: Any] {
-            return ["message": message]
+        
+        public func toArray() -> [Any] {
+            return [message]
         }
 
-        static func from(_ dictionary: Dictionary<String, Any>) -> Args {
-            return Args(message: dictionary["message"] as! String)
+        static func from(_ array: [Any]) -> Args {
+            return Args(message: array[0] as! String)
         }
     }
     var jid: Jid?
