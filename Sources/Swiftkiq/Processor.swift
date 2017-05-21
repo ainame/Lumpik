@@ -11,6 +11,7 @@ import Dispatch
 
 public protocol WorkerFailureCallback {
     func didFailed<W : Worker>(worker: W, work: UnitOfWork, error: Error)
+    func didFailed(worker: String, work: UnitOfWork, error: Error)
 }
 
 public final class Processor: WorkerFailureCallback {
@@ -108,19 +109,34 @@ public final class Processor: WorkerFailureCallback {
     }
 
     func process(_ work: UnitOfWork) throws {
-        try router.dispatch(work, errorCallback: self)
+        do {
+            try router.dispatch(work, errorCallback: self)
+        } catch RouterError.notFoundWorker {
+            didFailed(worker: work.workerType, work: work, error: RouterError.notFoundWorker)
+        }
     }
 
     public func didFailed<W : Worker>(worker: W, work: UnitOfWork, error: Error) {
         logger.error("ERROR: \(error) on \(worker)")
-        attemptRetry(worker: worker, work: work, error: error)
+        let maxRetry = worker.retry ?? W.defaultRetry
+        let currentDelay = work.retryCount ?? 0
+        let nextDelay = Delay.next(for: worker, by: currentDelay)
+        attemptRetry(work: work, error: error, maxRetry: maxRetry, delay: nextDelay)
+    }
+    
+    public func didFailed(worker: String, work: UnitOfWork, error: Error) {
+        logger.error("ERROR: \(error) on \(worker)")
+        let maxRetry = 25
+        let currentDelay = work.retryCount ?? 0
+        let nextDelay = Delay.next(by: currentDelay)
+        attemptRetry(work: work, error: error, maxRetry: maxRetry, delay: nextDelay)
     }
 
-    func attemptRetry<W: Worker>(worker: W, work: UnitOfWork, error: Error) {
+    func attemptRetry(work: UnitOfWork, error: Error, maxRetry: Int, delay: Int) {
         var newJob = work.job
-
+        
         newJob["error_message"] = error.localizedDescription
-
+        
         if let retryCount = newJob["retry_count"] as? Int {
             newJob["retried_at"] = Date().timeIntervalSince1970
             newJob["retry_count"] = retryCount + 1
@@ -128,7 +144,7 @@ public final class Processor: WorkerFailureCallback {
             newJob["failed_at"] = Date().timeIntervalSince1970
             newJob["retry_count"] = 0
         }
-
+        
         let backtrace = newJob["backtrace"] ?? false
         switch backtrace {
         case is Bool:
@@ -143,12 +159,10 @@ public final class Processor: WorkerFailureCallback {
         default:
             break
         }
-
-        let max = worker.retry ?? W.defaultRetry
+        
         let current = work.retryCount ?? 0
-        if current < max {
+        if current < maxRetry {
             // TODO: logging
-            let delay = Delay.next(for: worker, by: current)
             let retryAt = Date().timeIntervalSince1970 + Double(delay)
             logger.debug("retry after \(delay) sec")
             _ = try! Application.connectionPool { conn in
@@ -157,7 +171,7 @@ public final class Processor: WorkerFailureCallback {
         } else {
             // TODO: retries_exhausted
         }
-
+        
         // do not throw error in heare
         // because this is only delegate
     }
