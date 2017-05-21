@@ -4,7 +4,7 @@ import Swiftkiq
 class Router: Routable {
     func dispatch(_ work: UnitOfWork, errorCallback: WorkerFailureCallback) throws {
         switch work.workerType {
-        {% for type in types.based.WorkerType %}
+        {% for type in types.based.Worker %}
         case "{{ type.name }}":
             try invokeWorker(workerType: {{ type.name }}.self, work: work, errorCallback: errorCallback)
         {% endfor %}
