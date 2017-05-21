@@ -11,6 +11,5 @@ let options = LaunchOptions(
 )
 
 let launcher = Launcher.makeLauncher(options: options)
-
-let commandLine = CLI(launcher: launcher)
+let commandLine = CLI.makeCLI(launcher: launcher)
 commandLine.start()
