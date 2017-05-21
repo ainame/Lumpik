@@ -10,6 +10,7 @@ import Foundation
 import Dispatch
 import Daemon
 import Signals
+import Redis
 
 public struct LaunchOptions {
     let concurrency: Int
@@ -108,6 +109,15 @@ public class Launcher {
     }
 
     func clearHeatbeat() {
-        logger.warning("TOOD: implement clearHeatbeat, but no problem currently")
+        do {
+            _ = try Application.connectionPool { conn in
+                _ = try conn.pipelined()
+                    .enqueue(Command("SREM"), ["processes".makeBytes(), ProcessIdentityGenerator.identity.rawValue.makeBytes()])
+                    .enqueue(.delete, ["\(ProcessIdentityGenerator.identity):workers".makeBytes()])
+                    .execute()
+            }
+        } catch {
+            // best effort
+        }
     }
 }
