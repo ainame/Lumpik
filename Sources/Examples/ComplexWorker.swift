@@ -13,7 +13,7 @@ class BaseWorker {
     var jid: Jid?
     var queue: Queue? = Queue("default")
     var retry: Int? = 25
-    
+
     required init() {}
 }
 
@@ -22,11 +22,11 @@ final class ComplexWorker: BaseWorker, Worker {
         let userId: Int
         let comment: String
         let data: [String: Any]
-        
+
         public func toArray() -> [Any] {
             return [userId, comment, data]
         }
-        
+
         static func from(_ array: [Any]) -> Args {
             return Args(
                 userId: array[0] as! Int,
@@ -35,9 +35,9 @@ final class ComplexWorker: BaseWorker, Worker {
             )
         }
     }
-    
+
     static var defaultQueue = Queue("complex")
-    
+
     func perform(_ args: Args) throws {
         print("userId: \(args.userId), comment:\(args.comment), data:\(args.data)")
         sleep(3)

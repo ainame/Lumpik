@@ -5,7 +5,11 @@ LoggerInitializer.initialize()
 let router = Router()
 let options = LaunchOptions(
     concurrency: 25,
-    queues: [Queue(rawValue: "default"), Queue(rawValue: "other")],
+    queues: [
+        Queue("default"),
+        Queue("other"),
+        Queue("complex")
+    ],
     router: router,
     daemonize: false,
     connectionPool: 25
