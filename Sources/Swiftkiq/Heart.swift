@@ -29,16 +29,17 @@ public class Heart {
         self.queues = queues
     }
     
-    func beat(done: Bool) {
-        _ = try? Application.connectionPool { conn in
-            let workerKey = "\(ProcessIdentityGenerator.identity):workers"
-            
-            var processed = 0
-            var failed = 0
-            Processor.processedCounter.update { processed = $0; return 0 }
-            Processor.failureCounter.update { failed = $0; return 0 }
-            
-            do {
+    func beat(done: Bool) throws {
+        let processKey = ProcessIdentityGenerator.identity.rawValue
+        let workerKey = "\(processKey):workers"
+        
+        var processed = 0
+        var failed = 0
+        Processor.processedCounter.update { processed = $0; return 0 }
+        Processor.failureCounter.update { failed = $0; return 0 }
+        
+        do {
+            try Application.connectionPool { conn in
                 let nowdate = formatter.string(from: Date())
                 let transaction = try conn.pipelined()
                     .enqueue(Command("MULTI"))
@@ -46,7 +47,7 @@ public class Heart {
                     .enqueue(Command("INCRBY"), ["stat:failed", "\(failed)"].map { $0.makeBytes() })
                     .enqueue(Command("INCRBY"), ["stat:processed:\(nowdate)", "\(processed)"].map { $0.makeBytes() })
                     .enqueue(Command("INCRBY"), ["stat:failed:\(nowdate)", "\(processed)"].map { $0.makeBytes() })
-                    .enqueue(Command("DEL"), [workerKey])
+                    .enqueue(.delete, [workerKey])
                 
                 for (jid, workerState) in Processor.workerStates {
                     try transaction.enqueue(Command("HSET"),
@@ -56,7 +57,7 @@ public class Heart {
                     .enqueue(Command("EXPIRE"), [workerKey, String(60)].map { $0.makeBytes() })
                     .enqueue(Command("EXEC"))
                     .execute()
-
+                
                 let processState = Process(
                     identity: ProcessIdentityGenerator.identity,
                     hostname: ProcessInfo.processInfo.hostName,
@@ -69,23 +70,37 @@ public class Heart {
                 
                 try conn.pipelined()
                     .enqueue(Command("MULTI"))
-                    .enqueue(Command("SADD"), ["processes", workerKey].map { $0.makeBytes() })
-                    .enqueue(Command("EXISTS"), [workerKey].map { $0.makeBytes() })
+                    .enqueue(Command("SADD"), ["processes", processKey].map { $0.makeBytes() })
+                    .enqueue(Command("EXISTS"), [processKey].map { $0.makeBytes() })
                     .enqueue(Command("HMSET"), [
-                        workerKey,
+                        processKey,
                         "info", processState.json,
                         "busy", "\(Processor.workerStates.count)",
                         "beat", "\(Date().timeIntervalSince1970)",
                         "quit", "\(done)"].map { $0.makeBytes() })
-                    .enqueue(Command("EXPIRE"), [workerKey, "60"].map { $0.makeBytes() })
-                    .enqueue(Command("RPOP"), ["\(workerKey)-signals"].map { $0.makeBytes() })
+                    .enqueue(Command("EXPIRE"), [processKey, "60"].map { $0.makeBytes() })
+                    .enqueue(Command("RPOP"), ["\(processKey)-signals"].map { $0.makeBytes() })
                     .enqueue(Command("EXEC"))
                     .execute()
-            } catch let error {
-                logger.error("heartbeat: \(error)")
-                Processor.processedCounter.increment(by: processed)
-                Processor.failureCounter.increment(by: failed)
             }
+        } catch let error {
+            logger.error("heartbeat: \(error), \(error.localizedDescription)")
+            Processor.processedCounter.increment(by: processed)
+            Processor.failureCounter.increment(by: failed)
+        }
+    }
+    
+    func clear() {
+        do {
+            logger.debug("clear heartbeat!")
+            _ = try Application.connectionPool { conn in
+                _ = try conn.pipelined()
+                    .enqueue(Command("SREM"), ["processes".makeBytes(), ProcessIdentityGenerator.identity.rawValue.makeBytes()])
+                    .enqueue(.delete, ["\(ProcessIdentityGenerator.identity):workers".makeBytes()])
+                    .execute()
+            }
+        } catch {
+            // best effort
         }
     }
 }

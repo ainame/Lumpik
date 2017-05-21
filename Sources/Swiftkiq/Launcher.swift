@@ -10,6 +10,7 @@ import Foundation
 import Dispatch
 import Daemon
 import Signals
+import Redis
 
 public struct LaunchOptions {
     let concurrency: Int
@@ -81,7 +82,7 @@ public class Launcher {
         let deadline = Date().addingTimeInterval(options.timeout)
         manager.stop(deadline: deadline)
 
-        clearHeatbeat()
+        heart.clear()
     }
 
     public func quiet() {
@@ -104,10 +105,6 @@ public class Launcher {
     }
 
     func heartbeat() throws {
-        heart.beat(done: done.value)
-    }
-
-    func clearHeatbeat() {
-        logger.warning("TOOD: implement clearHeatbeat, but no problem currently")
+        try heart.beat(done: done.value)
     }
 }
