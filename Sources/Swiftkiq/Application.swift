@@ -24,13 +24,13 @@ struct Application {
 
 // MARK: connection pool
 extension Application {
-    static func connectionPool<T>(handler: (Storable) -> T) throws -> T {
+    static func connectionPool<T>(handler: (RedisStore) -> T) throws -> T {
         return try self.default.connectionPool.with { conn in
             handler(conn)
         }
     }
     
-    static func connectionPool<T>(handler: (Storable) throws -> T) throws -> T {
+    static func connectionPool<T>(handler: (RedisStore) throws -> T) throws -> T {
         return try self.default.connectionPool.with { conn in
             try handler(conn)
         }

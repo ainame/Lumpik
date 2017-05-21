@@ -8,6 +8,7 @@
 
 import Foundation
 import Mapper
+import Redis
 
 public final class ProcessSet: Set {
     public convenience init() {
@@ -26,9 +27,9 @@ public final class ProcessSet: Set {
             
             let pipeline = conn.pipelined()
             for processKey in processeKeys {
-                try pipeline.addCommand("HGET", params: [processKey, "info"])
+                try pipeline.enqueue(Command("HGET"), [processKey.makeBytes(), "info".makeBytes()])
             }
-            let heartbeats = try pipeline.execute().map { try? $0.toString() }
+            let heartbeats = try pipeline.execute().map { $0!.string }
             
             var pruned = [String]()
             for (index, beat) in heartbeats.enumerated() {
@@ -50,12 +51,11 @@ public final class ProcessSet: Set {
             let converter = JsonConverter.default
             let pipeline = conn.pipelined()
             for processKey in processeKeys {
-                try pipeline.addCommand("HMGET", params: [processKey, "info", "busy", "beat", "quit"])
+                try pipeline.enqueue(Command("HMGET"), [processKey, "info", "busy", "beat", "quit"].map { $0.makeBytes() })
             }
             
             let responses = try pipeline.execute()
-            let tmp: [[String]] = responses.flatMap { try? $0.toArray() }
-                .map { $0.flatMap { try? $0.toString() } }
+            let tmp: [[String]] = responses.flatMap { $0!.array!.map { $0!.string! } }
             let filtered = tmp.filter { $0.count == 4 }
             let processes = filtered.map { (elem: [String]) -> [String: Any?] in
                 let info: [String: Any] = converter.deserialize(dictionary: elem[0])
