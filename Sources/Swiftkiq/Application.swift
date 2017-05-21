@@ -25,7 +25,7 @@ struct Application {
     // we have to pool size's margin for poller or heartbeat
     private static var connectionPoolSizeMargin: Int = 5
     
-    static func initialize(launchOptions: LaunchOptions, mode: Mode = .client) {
+    static func initialize(mode: Mode = .client, connectionPoolSize: Int) {
         guard self.default == nil else {
             fatalError("don't call Application#initialize twice")
         }
@@ -33,7 +33,7 @@ struct Application {
         self.default = Application()
         self.default.mode = mode
         self.default.connectionPool = ConnectionPool<RedisStore>(
-            maxCapacity: self.default.isServerMode ? (launchOptions.connectionPool + connectionPoolSizeMargin) : connectionPoolSizeMargin
+            maxCapacity: self.default.isServerMode ? (connectionPoolSize + connectionPoolSizeMargin) : connectionPoolSizeMargin
         )
     }
 }
