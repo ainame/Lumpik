@@ -16,8 +16,10 @@ fileprivate var quietHandler: (()->())? = nil
 public struct CLI {
     private let launcher: Launcher
 
-    public static func makeCLI(launcher: Launcher) -> CLI {
-        Application.initialize(mode: .server, connectionPoolSize: launcher.options.connectionPool)
+    public static func makeCLI(_ launchOptions: LaunchOptions) -> CLI {
+        Application.initialize(mode: .server, connectionPoolSize: launchOptions.connectionPool)
+        LoggerInitializer.initialize(loglevel: launchOptions.loglevel, logfile: launchOptions.logfile)
+        let launcher = Launcher.makeLauncher(options: launchOptions)
         return CLI(launcher: launcher)
     }
 
