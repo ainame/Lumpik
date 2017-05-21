@@ -7,7 +7,8 @@ let options = LaunchOptions(
     concurrency: 25,
     queues: [Queue(rawValue: "default"), Queue(rawValue: "other")],
     router: router,
-    daemonize: false
+    daemonize: false,
+    connectionPool: 25
 )
 
 let launcher = Launcher.makeLauncher(options: options)
