@@ -13,7 +13,7 @@ struct Application {
     var connectionPool: ConnectionPool<RedisStore>!
     
     static func initialize(launchOptions: LaunchOptions) {
-        guard self.default != nil else {
+        guard self.default == nil else {
             fatalError("don't call Application#initialize twice")
         }
         

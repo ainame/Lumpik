@@ -17,6 +17,7 @@ public struct CLI {
     private let launcher: Launcher
 
     public static func makeCLI(launcher: Launcher) -> CLI {
+        Application.initialize(launchOptions: launcher.options)
         return CLI(launcher: launcher)
     }
 
