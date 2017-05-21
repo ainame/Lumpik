@@ -9,7 +9,7 @@ class Router: Routable {
             try invokeWorker(workerType: {{ type.name }}.self, work: work, errorCallback: errorCallback)
         {% endfor %}
         default:
-            break
+            throw RouterError.notFoundWorker
         }
     }
 }

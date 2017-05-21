@@ -13,7 +13,7 @@ class Router: Routable {
         case "EchoWorker":
             try invokeWorker(workerType: EchoWorker.self, work: work, errorCallback: errorCallback)
         default:
-            break
+            throw RouterError.notFoundWorker
         }
     }
 }
