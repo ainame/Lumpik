@@ -29,7 +29,7 @@ public class Heart {
     }
     
     func beat(done: Bool) {
-        _ = try? SwiftkiqClient.connectionPool { conn in
+        _ = try? Application.connectionPool { conn in
             let workerKey = "\(ProcessIdentityGenerator.identity):workers"
             
             var processed = 0

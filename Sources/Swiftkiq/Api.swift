@@ -17,7 +17,7 @@ public final class ProcessSet: Set {
     @discardableResult
     public static func cleanup() throws -> Int {
         let set = ProcessSet()
-        return try SwiftkiqClient.connectionPool { conn in
+        return try Application.connectionPool { conn in
             let processeKeys: [String] = try conn.members(set)
             
             guard processeKeys.count > 0 else {
@@ -44,7 +44,7 @@ public final class ProcessSet: Set {
     }
     
     public func each(_ block: (ProcessState) -> ()) throws {
-        _ = try SwiftkiqClient.connectionPool { conn in
+        _ = try Application.connectionPool { conn in
             let processeKeys: [String] = try conn.members(self).sorted { $0 < $1 }
             
             let converter = JsonConverter.default
@@ -74,7 +74,7 @@ public final class ProcessSet: Set {
     }
     
     public var count: Int {
-        return ((try? SwiftkiqClient.connectionPool { try $0.size(self) }) ?? 0)
+        return ((try? Application.connectionPool { try $0.size(self) }) ?? 0)
     }
 }
 
@@ -95,7 +95,7 @@ public final class RetrySet: JobSet {
 
 extension StoreKeyConvertible {
     public func clear() throws {
-        _ = try SwiftkiqClient.connectionPool { conn in
+        _ = try Application.connectionPool { conn in
             try conn.clear(self)
         }
     }

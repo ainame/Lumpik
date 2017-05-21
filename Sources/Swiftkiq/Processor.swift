@@ -151,7 +151,7 @@ public final class Processor: WorkerFailureCallback {
             let delay = Delay.next(for: worker, by: current)
             let retryAt = Date().timeIntervalSince1970 + Double(delay)
             logger.debug("retry after \(delay) sec")
-            _ = try! SwiftkiqClient.connectionPool { conn in
+            _ = try! Application.connectionPool { conn in
                 try! conn.add(newJob, with: .value(retryAt), to: RetrySet())
             }
         } else {

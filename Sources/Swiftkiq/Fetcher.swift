@@ -22,7 +22,7 @@ final class BasicFetcher: Fetcher {
     }
 
     func retriveWork() throws -> UnitOfWork? {
-        return try SwiftkiqClient.connectionPool { conn in
+        return try Application.connectionPool { conn in
             try conn.dequeue(randomSortedQueues())
         }
     }
@@ -42,7 +42,7 @@ final class BasicFetcher: Fetcher {
     }
     
     func bulkRequeue(_ jobs: [UnitOfWork]) throws {
-        _ = try SwiftkiqClient.connectionPool { conn in
+        _ = try Application.connectionPool { conn in
             let pipeline = conn.pipelined()
             let encoder = JsonConverter.default
         

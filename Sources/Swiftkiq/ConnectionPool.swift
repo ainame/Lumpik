@@ -26,13 +26,12 @@ enum ConnectablePoolError: Error {
     case timeout
 }
 
-
 public class ConnectionPool<T: Connectable>: ConnectablePool {
     public typealias Connection = T
     
     let maxCapacity: Int
-    private var pool = [Connection]()
     
+    private var pool = [Connection]()
     private let mutex = Mutex()
     private let semaphore: DispatchSemaphore
     

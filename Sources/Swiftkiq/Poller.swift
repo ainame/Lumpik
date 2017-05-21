@@ -35,7 +35,7 @@ public class Poller {
 
     func enqueue () throws {
         logger.debug("poll... at \(Date().timeIntervalSince1970)")
-        _ = try SwiftkiqClient.connectionPool { conn in
+        _ = try Application.connectionPool { conn in
             for jobSet in [RetrySet(), ScheduledSet()] {
                 do {
                     let now = Date().timeIntervalSince1970
