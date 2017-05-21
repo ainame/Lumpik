@@ -17,7 +17,7 @@ public struct UnitOfWork {
     
     public var workerType: String { return job["class"]! as! String }
     
-    public var args: [String: Any] { return job["args"]! as! [String: Any] }
+    public var args: [Any] { return job["args"]! as! [Any] }
     
     public var retry: Int { return Int(job["retry"]! as! UInt) }
     

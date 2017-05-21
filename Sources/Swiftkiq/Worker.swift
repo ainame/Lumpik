@@ -9,8 +9,8 @@
 import Foundation
 
 public protocol Argument {
-    func toDictionary() -> [String: Any]
-    static func from(_ dictionary: [String: Any]) -> Self
+    func toArray() -> [Any]
+    static func from(_ array: [Any]) -> Self
 }
 
 public protocol Worker {
