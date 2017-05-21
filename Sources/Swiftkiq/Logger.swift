@@ -31,6 +31,7 @@ public struct LoggerInitializer {
     public static var format = "[$DYYYY-MM-dd HH:mm:ss.SSS$d]$L: $M"
 
     public static func initialize(loglevel: Loglevel = .debug, logfile: URL? = nil) {
+        defer { isInitialized = true }
         guard isInitialized == false else {
             logger.warning("already initialized logger")
             return
@@ -43,10 +44,8 @@ public struct LoggerInitializer {
         } else {
             logger.addDestination(configureDestination(ConsoleDestination(), loglevel))
         }
-
-        isInitialized = true
     }
-    
+
     private static func configureDestination<T: BaseDestination>(_ dest: T, _ loglevel: Loglevel) -> T {
         dest.minLevel = loglevel.converted
         dest.format = self.format
