@@ -68,6 +68,10 @@ public final class Processor: WorkerFailureCallback {
                 try processOne()
             }
             delegate.stopped(processor: self)
+        } catch ConnectablePoolError.timeout {
+            // currently just die, swift's concurrency cause this problem
+            // TODO: add original awesome logic not to waste a resource
+            delegate.died(processor: self, reason: ConnectablePoolError.timeout.localizedDescription)
         } catch {
             logger.error("\(error)")
             delegate.died(processor: self, reason: error.localizedDescription)

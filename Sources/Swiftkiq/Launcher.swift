@@ -13,34 +13,16 @@ import Signals
 import Redis
 
 public struct LaunchOptions {
-    let concurrency: Int
-    let queues: [Queue]
-    let strategy: Fetcher.Type
-    let router: Routable
-    let daemonize: Bool
-    let timeout: TimeInterval
-    let connectionPool: Int
-    let loglevel: LoggerInitializer.Loglevel
-    let logfile: URL?
-
-    public init(concurrency: Int = 25, queues: [Queue],
-                strategy: Fetcher.Type = BasicFetcher.self,
-                router: Routable,
-                daemonize: Bool = false,
-                timeout: TimeInterval = 8.0,
-                connectionPool: Int = 5,
-                loglevel: LoggerInitializer.Loglevel = .debug,
-                logfile: URL? = nil) {
-        self.concurrency = concurrency
-        self.queues = queues
-        self.strategy = strategy
-        self.router = router
-        self.daemonize = daemonize
-        self.timeout = timeout
-        self.connectionPool = connectionPool
-        self.loglevel = loglevel
-        self.logfile = logfile
-    }
+    var concurrency: Int = 25
+    var queues: [Queue] = [Queue("default")]
+    var strategy: Fetcher.Type = BasicFetcher.self
+    var daemonize: Bool = false
+    var timeout: TimeInterval = 8.0
+    var connectionPool: Int = 5
+    var loglevel: LoggerInitializer.Loglevel = .debug
+    var logfile: URL? = nil
+    var pidfile: URL? = nil
+    var router: Routable!
 }
 
 public class Launcher {

@@ -111,17 +111,18 @@ public class Manager: ProcessorLifecycleDelegate {
     }
 
     func died(processor: Processor, reason: String) {
-        logger.debug("died \(reason) - \(processor)")
+        // logger.debug("died \(reason) - \(processor)")
         
         mutex.synchronize {
             guard let index = processors.index(where: { $0 === processor }) else { return }
             processors.remove(at: index)
             
             if done.value != true {
-                let processor = Manager.makeProcessor(index: processor.index, queues: queues,
+                let newProcessor = Manager.makeProcessor(index: processor.index, queues: queues,
                                                       strategy: strategy, router: router,
                                                       delegate: self)
-                processors.append(processor)
+                processors.append(newProcessor)
+                newProcessor.start()
             }
         }
     }
