@@ -53,12 +53,10 @@ public class Launcher {
         if options.daemonize {
             Daemon.daemonize()
         }
-
-        if !LoggerInitializer.isInitialized {
-            LoggerInitializer.initialize()
-        }
-
-
+        
+        LoggerInitializer.initialize(loglevel: options.loglevel, logfile: options.logfile)
+        logger.info("start swiftkiq pid=\(ProcessInfo.processInfo.processIdentifier)")
+        
         self.startHeartbeat()
         self.manager.start()
         self.poller.start()

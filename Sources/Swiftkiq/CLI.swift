@@ -53,7 +53,6 @@ public struct CLI {
     
     public static func makeCLI(_ launchOptions: LaunchOptions) -> CLI {
         Application.initialize(mode: .server, connectionPoolSize: launchOptions.connectionPool)
-        LoggerInitializer.initialize(loglevel: launchOptions.loglevel, logfile: launchOptions.logfile)
         let launcher = Launcher.makeLauncher(options: launchOptions)
         return CLI(launcher: launcher)
     }
@@ -63,12 +62,6 @@ public struct CLI {
     }
 
     public func start() {
-        guard LoggerInitializer.isInitialized else {
-            LoggerInitializer.initialize()
-            return start()
-        }
-
-        logger.info("start swiftkiq pid=\(ProcessInfo.processInfo.processIdentifier)")
         registerSignalHandler()
         run()
         wait()

@@ -14,7 +14,7 @@ public protocol StoreKeyConvertible: RawRepresentable, Equatable, Hashable {
     var key: Bytes { get }
 }
 
-public class Queue: StoreKeyConvertible {
+public class Queue: StoreKeyConvertible, CustomStringConvertible {
     public let rawValue: String
 
     public convenience init(_ rawValue: String) {
@@ -27,6 +27,10 @@ public class Queue: StoreKeyConvertible {
     
     public var key: Bytes {
         return "queue:\(rawValue)".makeBytes()
+    }
+    
+    public var description: String {
+        return rawValue
     }
 }
 
