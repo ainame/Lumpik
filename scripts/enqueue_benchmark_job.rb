@@ -4,14 +4,14 @@ require 'redis'
 redis = Redis.new(host: "127.0.0.1", port: 6379)
 redis.pipelined do |r|
   r.del("queue:default")
-  50_000.times do |i|
+  100_000.times do |i|
     value = "{\"jid\": \"#{SecureRandom.uuid}\",\"class\":\"EchoWorker\",\"args\":[\"#{i}\"],\"retry\":1,\"queue\":\"default\"}"
     r.lpush("queue:default", value)
   end
 
   r.del("queue:other")
-  50_000.times do |i|
-    value = "{\"jid\": \"#{SecureRandom.uuid}\",\"class\":\"EchoWorker\",\"args\":[\"#{i}\"],\"retry\":1,\"queue\":\"other\"}"
-    r.lpush("queue:other", value)
-  end
+  #50_000.times do |i|
+  #  value = "{\"jid\": \"#{SecureRandom.uuid}\",\"class\":\"EchoWorker\",\"args\":[\"#{i}\"],\"retry\":1,\"queue\":\"other\"}"
+  #  r.lpush("queue:other", value)
+  #end
 end
