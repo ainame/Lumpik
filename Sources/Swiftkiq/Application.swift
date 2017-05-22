@@ -20,10 +20,7 @@ struct Application {
     private var mode: Mode!
     
     public private(set) var connectionPool: ConnectionPool<RedisStore>!
-
-    
-    // we have to pool size's margin for poller or heartbeat
-    private static var connectionPoolSizeMargin: Int = 5
+    public private(set) var connectionPoolForInternal: ConnectionPool<RedisStore>!
     
     static func initialize(mode: Mode = .client, connectionPoolSize: Int) {
         guard self.default == nil else {
@@ -32,9 +29,12 @@ struct Application {
 
         self.default = Application()
         self.default.mode = mode
-        self.default.connectionPool = ConnectionPool<RedisStore>(
-            maxCapacity: self.default.isServerMode ? (connectionPoolSize + connectionPoolSizeMargin) : connectionPoolSizeMargin
-        )
+        self.default.connectionPool = ConnectionPool<RedisStore>(maxCapacity: connectionPoolSize)
+        
+        // for heartbeat/poller
+        if mode == .server {
+            self.default.connectionPoolForInternal = ConnectionPool<RedisStore>(maxCapacity: 2)
+        }
     }
 }
 
@@ -50,6 +50,20 @@ extension Application {
     @discardableResult
     static func connectionPool<T>(handler: (RedisStore) throws -> T) throws -> T {
         return try self.default.connectionPool.with { conn in
+            try handler(conn)
+        }
+    }
+    
+    @discardableResult
+    static func connectionPoolForInternal<T>(handler: (RedisStore) -> T) throws -> T {
+        return try self.default.connectionPoolForInternal.with { conn in
+            handler(conn)
+        }
+    }
+    
+    @discardableResult
+    static func connectionPoolForInternal<T>(handler: (RedisStore) throws -> T) throws -> T {
+        return try self.default.connectionPoolForInternal.with { conn in
             try handler(conn)
         }
     }
