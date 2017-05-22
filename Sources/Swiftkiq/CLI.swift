@@ -68,7 +68,11 @@ public struct CLI {
     }
 
     private func run() {
-        launcher.run()
+        do {
+            try launcher.run()
+        } catch {
+            logger.error("Can't launch - \(error)")
+        }
     }
 
     private func wait() {

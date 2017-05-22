@@ -49,17 +49,19 @@ public class Launcher {
         self.heart = Heart(concurrency: options.concurrency, queues: options.queues)
     }
 
-    public func run() {
+    public func run() throws {
         if options.daemonize {
             Daemon.daemonize()
         }
         
         LoggerInitializer.initialize(loglevel: options.loglevel, logfile: options.logfile)
-        logger.info("start swiftkiq pid=\(ProcessInfo.processInfo.processIdentifier)")
         
-        self.startHeartbeat()
-        self.manager.start()
-        self.poller.start()
+        logger.info("start swiftkiq pid=\(ProcessInfo.processInfo.processIdentifier)")
+        try writePidfile()
+        
+        startHeartbeat()
+        manager.start()
+        poller.start()
     }
 
     public func stop() {
@@ -92,5 +94,11 @@ public class Launcher {
 
     func heartbeat() throws {
         try heart.beat(done: done.value)
+    }
+    
+    func writePidfile() throws {
+        guard let pidfile = options.pidfile else { return }
+        let data = "\(ProcessInfo.processInfo.processIdentifier)".data(using: .utf8)
+        FileManager.default.createFile(atPath: pidfile.path, contents: data, attributes: nil)
     }
 }
