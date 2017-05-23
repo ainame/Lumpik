@@ -45,6 +45,7 @@ public class Manager: ProcessorLifecycleDelegate {
     }
 
     func start() {
+        logger.info("Starting workers for queues: \(queues)")
         processors.forEach { processor in
             processor.start()
         }
@@ -102,7 +103,7 @@ public class Manager: ProcessorLifecycleDelegate {
     }
     
     func stopped(processor: Processor) {
-        logger.debug("stopped: \(processor)")
+        logger.debug("Stopped: \(processor)")
         
         mutex.synchronize {
             guard let index = processors.index(where: { $0 === processor }) else { return }

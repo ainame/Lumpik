@@ -17,31 +17,34 @@ fileprivate var quietHandler: (()->())? = nil
 public struct CLI {
     private let launcher: Launcher
     
-    public static func parseOptions(closure: @escaping (LaunchOptions) -> ()) {
+    public static func parseOptions(base launchOptions: LaunchOptions = LaunchOptions(), closure: @escaping (LaunchOptions) -> ()) {
         command(
             VariadicOption<String>("queue", ["default"], description: "queue name"),
             Option<Int>("concurrency", 25, description: "the number of threads you want"),
-            Option<String>("pid", "", description: "path of the pid file"),
-            Option<String>("log", "", description: "path of the log file")
-        ) { queues, concurrency, pid, log in
-            var launchOptions = LaunchOptions()
-            launchOptions.queues = queues.map { Queue($0) }
-            launchOptions.concurrency = concurrency
+            Option<String>("pidfile", "", description: "path of the pid file"),
+            Option<String>("logfile", "", description: "path of the log file"),
+            Flag("daemon", description: "daemonize process", default: false)
+        ) { queues, concurrency, pidfile, logfile, daemon in
+            var newLaunchOptions = launchOptions
             
-            if pid != "" {
-                launchOptions.pidfile = URL(fileURLWithPath: pid)
+            newLaunchOptions.queues = queues.map { Queue($0) }
+            newLaunchOptions.concurrency = concurrency
+            newLaunchOptions.daemonize = daemon
+            
+            if pidfile != "" {
+                newLaunchOptions.pidfile = URL(fileURLWithPath: pidfile)
             }
 
-            if log != "" {
-                launchOptions.logfile = URL(fileURLWithPath: log)
+            if logfile != "" {
+                newLaunchOptions.logfile = URL(fileURLWithPath: logfile)
             }
 
-            closure(launchOptions)
+            closure(newLaunchOptions)
         }.run()
     }
     
-    public static func start(router: Routable) {
-        parseOptions { options in
+    public static func start(router: Routable, launchOptions: LaunchOptions = LaunchOptions()) {
+        parseOptions(base: launchOptions) { options in
             var newOptions = options
             newOptions.router = router
             makeCLI(newOptions).start()
@@ -50,7 +53,6 @@ public struct CLI {
     
     public static func makeCLI(_ launchOptions: LaunchOptions) -> CLI {
         Application.initialize(mode: .server, connectionPoolSize: launchOptions.connectionPool)
-        LoggerInitializer.initialize(loglevel: launchOptions.loglevel, logfile: launchOptions.logfile)
         let launcher = Launcher.makeLauncher(options: launchOptions)
         return CLI(launcher: launcher)
     }
@@ -60,19 +62,17 @@ public struct CLI {
     }
 
     public func start() {
-        guard LoggerInitializer.isInitialized else {
-            LoggerInitializer.initialize()
-            return start()
-        }
-
-        logger.info("start swiftkiq pid=\(ProcessInfo.processInfo.processIdentifier)")
         registerSignalHandler()
         run()
         wait()
     }
 
     private func run() {
-        launcher.run()
+        do {
+            try launcher.run()
+        } catch {
+            logger.error("Can't launch - \(error)")
+        }
     }
 
     private func wait() {
