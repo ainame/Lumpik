@@ -6,15 +6,14 @@ Swiftkiq is the job queue system for general purpose.
 
 ## Examples
 
-please host local redis-server
+Please host local redis-server at firtst.
 
 ```
-$ brew install redis
 $ git clone https://github.com/ainame/Swiftkiq.git
-$ cd Swiftkiq/Examples
+$ cd Swiftkiq
+$ vi Package.swift // edit comments to enable example project
 $ swift build
-$ redis-sever &
-$ ./.build/debug/swiftkiq_example
+$ ./.build/debug/Examples
 ```
 
 ## Acknowledgement

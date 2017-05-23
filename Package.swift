@@ -4,6 +4,7 @@ let package = Package(
     name: "Swiftkiq",
     targets: [
     	Target(name: "Swiftkiq"),
+        // uncomment if you want to build example
         // Target(name: "Examples", dependencies: ["Swiftkiq"]),
     ],
     dependencies: [
@@ -15,6 +16,7 @@ let package = Package(
         .Package(url: "https://github.com/kylef/Commander.git", majorVersion: 0),
     ],
     exclude: [
+        // comment out if you want to build example
         "Sources/Examples",
     ]
 )
