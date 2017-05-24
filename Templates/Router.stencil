@@ -5,7 +5,7 @@ class Router: Routable {
     func dispatch(_ work: UnitOfWork, errorCallback: WorkerFailureCallback) throws {
         switch work.workerType {
         {% for type in types.based.Worker %}
-        case String(describing: {{ type.name }}):
+        case String(describing: {{ type.name }}.self):
             try invokeWorker(workerType: {{ type.name }}.self, work: work, errorCallback: errorCallback)
         {% endfor %}
         default:
@@ -13,3 +13,32 @@ class Router: Routable {
         }
     }
 }
+
+{% for type in types.based.Worker %}
+extension {{ type.name }}.Args {
+    func toArray() -> [Any] {
+        return [
+            {% for argType in type.containedTypes %}
+            {% if argType.name|contains:"Args" %}
+            {% for prop in argType.storedVariables %}
+            {{ prop.name }},
+            {% endfor %}
+            {% endif %}
+            {% endfor %}
+        ]
+    }
+
+    static func from(_ array: [Any]) -> {{ type.name }}.Args {
+        // NOTE: currently stencil template engine can not provide counter with starting 0
+        return {{ type.name }}.Args(
+            {% for argType in type.containedTypes %}
+            {% if argType.name|contains:"Args" %}
+            {% for prop in argType.storedVariables %}
+            {{ prop.name }}: array[{{ forloop.counter }} - 1] as! {{ prop.typeName }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+            {% endif %}
+            {% endfor %}
+        )
+    }
+}
+{% endfor %}

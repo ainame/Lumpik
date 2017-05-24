@@ -17,3 +17,36 @@ class Router: Routable {
         }
     }
 }
+
+extension ComplexWorker.Args {
+    func toArray() -> [Any] {
+        return [
+            userId,
+            comment,
+            data,
+        ]
+    }
+
+    static func from(_ array: [Any]) -> ComplexWorker.Args {
+        // NOTE: currently stencil template engine can not provide counter with starting 0
+        return ComplexWorker.Args(
+            userId: array[1 - 1] as! Int,
+            comment: array[2 - 1] as! String,
+            data: array[3 - 1] as! [String: Any]
+        )
+    }
+}
+extension EchoWorker.Args {
+    func toArray() -> [Any] {
+        return [
+            message,
+        ]
+    }
+
+    static func from(_ array: [Any]) -> EchoWorker.Args {
+        // NOTE: currently stencil template engine can not provide counter with starting 0
+        return EchoWorker.Args(
+            message: array[1 - 1] as! String
+        )
+    }
+}

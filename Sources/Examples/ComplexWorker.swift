@@ -22,18 +22,6 @@ final class ComplexWorker: BaseWorker, Worker {
         let userId: Int
         let comment: String
         let data: [String: Any]
-
-        public func toArray() -> [Any] {
-            return [userId, comment, data]
-        }
-
-        static func from(_ array: [Any]) -> Args {
-            return Args(
-                userId: array[0] as! Int,
-                comment: array[1] as! String,
-                data: array[2] as! [String: Any]
-            )
-        }
     }
 
     static var defaultQueue = Queue("complex")
