@@ -78,6 +78,12 @@
       "reason": null,
       "repositoryURL": "https://github.com/SwiftyBeaver/SwiftyBeaver.git",
       "version": "1.2.2"
+    },
+    {
+      "package": "Yams",
+      "reason": null,
+      "repositoryURL": "https://github.com/jpsim/Yams.git",
+      "version": "0.3.2"
     }
   ],
   "version": 1

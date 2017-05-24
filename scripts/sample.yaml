@@ -1,0 +1,6 @@
+---
+concurrency: 5
+pidfile: swiftkiq.pid
+queues:
+  - default
+  - other
