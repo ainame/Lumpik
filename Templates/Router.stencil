@@ -29,6 +29,7 @@ extension {{ type.name }}.Args {
     }
 
     static func from(_ array: [Any]) -> {{ type.name }}.Args {
+        // NOTE: currently stencil template engine can not provide counter with starting 0
         return {{ type.name }}.Args(
             {% for argType in type.containedTypes %}
             {% if argType.name|contains:"Args" %}
