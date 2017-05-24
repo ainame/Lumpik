@@ -17,3 +17,34 @@ class Router: Routable {
         }
     }
 }
+
+extension ComplexWorker.Args {
+    public func toArray() -> [Any] {
+        return [
+            userId,
+            comment,
+            data,
+        ]
+    }
+
+    static func from(_ array: [Any]) -> ComplexWorker.Args {
+        return ComplexWorker.Args(
+            userId: array[1 - 1] as! Int,
+            comment: array[2 - 1] as! String,
+            data: array[3 - 1] as! [String: Any]
+        )
+    }
+}
+extension EchoWorker.Args {
+    public func toArray() -> [Any] {
+        return [
+            message,
+        ]
+    }
+
+    static func from(_ array: [Any]) -> EchoWorker.Args {
+        return EchoWorker.Args(
+            message: array[1 - 1] as! String
+        )
+    }
+}
