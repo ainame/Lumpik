@@ -16,7 +16,7 @@ class Router: Routable {
 
 {% for type in types.based.Worker %}
 extension {{ type.name }}.Args {
-    public func toArray() -> [Any] {
+    func toArray() -> [Any] {
         return [
             {% for argType in type.containedTypes %}
             {% if argType.name|contains:"Args" %}
