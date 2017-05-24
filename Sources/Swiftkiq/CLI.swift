@@ -41,7 +41,7 @@ public struct CLI {
         run()
         wait()
     }
-    
+
     private func run() {
         do {
             try launcher.run()
@@ -91,8 +91,8 @@ public struct CLI {
 }
 
 extension CLI {
-    private static func loadConfig(atPath path: String) -> LaunchOptions {
-        guard path != "" else { return LaunchOptions() }
+    private static func loadConfig(atPath path: String) -> [String: Any] {
+        guard path != "" else { return [String: Any]() }
 
         let yamlData = FileManager.default.contents(atPath: path)
         guard yamlData != nil,
@@ -100,9 +100,9 @@ extension CLI {
             let yaml = try? Yams.load(yaml: string) else {
                 fatalError("can't load the yaml file - \(path)")
         }
-        return LaunchOptions.makeLaunchOptions(yaml as! [String: Any])
+        return yaml as! [String: Any]
     }
-    
+
     // yaml options can override cli arguments
     public static func parseOptions(base launchOptions: LaunchOptions = LaunchOptions(), closure: @escaping (LaunchOptions) -> ()) {
         command(
@@ -116,38 +116,50 @@ extension CLI {
             Option<String>("loglevel", "", description: "loglevel verbose, info, debug, warning, error")
         ) { config, queues, concurrency, pool, daemon, pidfile, logfile, loglevel in
             // init an options instance from cli arguments
-            var cli = LaunchOptions()
+            var cli = launchOptions
+
             cli.concurrency = concurrency
             cli.queues = queues.map { Queue($0) }
             cli.connectionPool = pool
             cli.daemonize = daemon
-            
             if pidfile != "" {
                 cli.pidfile = URL(fileURLWithPath: pidfile)
             }
-            
             if logfile != "" {
                 cli.logfile = URL(fileURLWithPath: logfile)
             }
-            
             if loglevel != "" {
                 cli.loglevel = LoggerInitializer.Loglevel(rawValue: loglevel)!
             }
-            
+
             // load config from yaml
             let yaml = loadConfig(atPath: config)
-            
+
             // just copy
             var merged = cli
-            
+
             // merge yaml config into cli config
-            merged.queues = yaml.queues
-            merged.concurrency = yaml.concurrency
-            merged.connectionPool = yaml.connectionPool
-            merged.daemonize = yaml.daemonize
-            merged.pidfile = yaml.pidfile
-            merged.logfile = yaml.logfile
-            merged.loglevel = yaml.loglevel
+            if let yamlQueues = yaml["queue"] as? [String] {
+                merged.queues = yamlQueues.map { Queue($0) }
+            }
+            if let yamlConcurrency = yaml["concurrency"] as? Int {
+                merged.concurrency = yamlConcurrency
+            }
+            if let yamlConnectionPool = yaml["connectionPool"] as? Int {
+                merged.connectionPool = yamlConnectionPool
+            }
+            if let yamlDaemonize = yaml["daemonize"] as? Bool {
+                merged.daemonize = yamlDaemonize
+            }
+            if let yamlPidfile = yaml["pidfile"] as? String {
+                merged.pidfile = URL(fileURLWithPath: yamlPidfile)
+            }
+            if let yamlLogfile = yaml["logfile"] as? String {
+                merged.logfile = URL(fileURLWithPath: yamlLogfile)
+            }
+            if let yamlLoglevel = yaml["loglevel"] as? String {
+                merged.loglevel = LoggerInitializer.Loglevel(rawValue: yamlLoglevel)!
+            }
 
             closure(merged)
         }.run()
