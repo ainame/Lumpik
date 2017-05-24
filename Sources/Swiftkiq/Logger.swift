@@ -12,15 +12,30 @@ import SwiftyBeaver
 let logger = SwiftyBeaver.self
 
 public struct LoggerInitializer {
-    public enum Loglevel: Int {
-        case verbose = 0
-        case debug = 1
-        case info = 2
-        case warning = 3
-        case error = 4
+    public enum Loglevel: String {
+        case verbose
+        case debug
+        case info
+        case warning
+        case error
 
         fileprivate var converted: SwiftyBeaver.Level {
-            return SwiftyBeaver.Level(rawValue: self.rawValue)!
+            return SwiftyBeaver.Level(rawValue: self.number)!
+        }
+        
+        var number: Int {
+            switch self {
+            case .verbose:
+                return 0
+            case .debug:
+                return 1
+            case .info:
+                return 2
+            case .warning:
+                return 3
+            case .error:
+                return 4
+            }
         }
     }
 

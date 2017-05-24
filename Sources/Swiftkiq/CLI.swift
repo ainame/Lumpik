@@ -9,6 +9,7 @@
 import Foundation
 import Signals
 import Commander
+import Yams
 
 // Signals captured context as a C function
 fileprivate var stopHandler: (()->())? = nil
@@ -16,33 +17,7 @@ fileprivate var quietHandler: (()->())? = nil
 
 public struct CLI {
     private let launcher: Launcher
-    
-    public static func parseOptions(base launchOptions: LaunchOptions = LaunchOptions(), closure: @escaping (LaunchOptions) -> ()) {
-        command(
-            VariadicOption<String>("queue", ["default"], description: "queue name"),
-            Option<Int>("concurrency", 25, description: "the number of threads you want"),
-            Option<String>("pidfile", "", description: "path of the pid file"),
-            Option<String>("logfile", "", description: "path of the log file"),
-            Flag("daemon", description: "daemonize process", default: false)
-        ) { queues, concurrency, pidfile, logfile, daemon in
-            var newLaunchOptions = launchOptions
-            
-            newLaunchOptions.queues = queues.map { Queue($0) }
-            newLaunchOptions.concurrency = concurrency
-            newLaunchOptions.daemonize = daemon
-            
-            if pidfile != "" {
-                newLaunchOptions.pidfile = URL(fileURLWithPath: pidfile)
-            }
 
-            if logfile != "" {
-                newLaunchOptions.logfile = URL(fileURLWithPath: logfile)
-            }
-
-            closure(newLaunchOptions)
-        }.run()
-    }
-    
     public static func start(router: Routable, launchOptions: LaunchOptions = LaunchOptions()) {
         parseOptions(base: launchOptions) { options in
             var newOptions = options
@@ -50,13 +25,13 @@ public struct CLI {
             makeCLI(newOptions).start()
         }
     }
-    
+
     public static func makeCLI(_ launchOptions: LaunchOptions) -> CLI {
         Application.initialize(mode: .server, connectionPoolSize: launchOptions.connectionPool)
         let launcher = Launcher.makeLauncher(options: launchOptions)
         return CLI(launcher: launcher)
     }
-    
+
     private init(launcher: Launcher) {
         self.launcher = launcher
     }
@@ -66,7 +41,7 @@ public struct CLI {
         run()
         wait()
     }
-
+    
     private func run() {
         do {
             try launcher.run()
@@ -112,5 +87,69 @@ public struct CLI {
             // TODO: re-open logfile
             fatalError("not implemented signal handling of USR2")
         }
+    }
+}
+
+extension CLI {
+    private static func loadConfig(atPath path: String) -> LaunchOptions {
+        guard path != "" else { return LaunchOptions() }
+
+        let yamlData = FileManager.default.contents(atPath: path)
+        guard yamlData != nil,
+            let string = yamlData?.makeString(),
+            let yaml = try? Yams.load(yaml: string) else {
+                fatalError("can't load the yaml file - \(path)")
+        }
+        return LaunchOptions.makeLaunchOptions(yaml as! [String: Any])
+    }
+    
+    // yaml options can override cli arguments
+    public static func parseOptions(base launchOptions: LaunchOptions = LaunchOptions(), closure: @escaping (LaunchOptions) -> ()) {
+        command(
+            Option<String>("config", "", description: "path of the config yaml file"),
+            VariadicOption<String>("queue", ["default"], description: "queue name"),
+            Option<Int>("concurrency", 25, description: "the number of threads you want"),
+            Option<Int>("pool", 5, description: "the number of connection pools you want"),
+            Flag("daemon", description: "daemonize process", default: false),
+            Option<String>("pidfile", "", description: "path of the pid file"),
+            Option<String>("logfile", "", description: "path of the log file"),
+            Option<String>("loglevel", "", description: "loglevel verbose, info, debug, warning, error")
+        ) { config, queues, concurrency, pool, daemon, pidfile, logfile, loglevel in
+            // init an options instance from cli arguments
+            var cli = LaunchOptions()
+            cli.concurrency = concurrency
+            cli.queues = queues.map { Queue($0) }
+            cli.connectionPool = pool
+            cli.daemonize = daemon
+            
+            if pidfile != "" {
+                cli.pidfile = URL(fileURLWithPath: pidfile)
+            }
+            
+            if logfile != "" {
+                cli.logfile = URL(fileURLWithPath: logfile)
+            }
+            
+            if loglevel != "" {
+                cli.loglevel = LoggerInitializer.Loglevel(rawValue: loglevel)!
+            }
+            
+            // load config from yaml
+            let yaml = loadConfig(atPath: config)
+            
+            // just copy
+            var merged = cli
+            
+            // merge yaml config into cli config
+            merged.queues = yaml.queues
+            merged.concurrency = yaml.concurrency
+            merged.connectionPool = yaml.connectionPool
+            merged.daemonize = yaml.daemonize
+            merged.pidfile = yaml.pidfile
+            merged.logfile = yaml.logfile
+            merged.loglevel = yaml.loglevel
+
+            closure(merged)
+        }.run()
     }
 }
