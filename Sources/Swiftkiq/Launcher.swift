@@ -23,36 +23,6 @@ public struct LaunchOptions {
     var logfile: URL? = nil
     var pidfile: URL? = nil
     var router: Routable!
-    
-    static func makeLaunchOptions(_ dictionary: [String: Any]) -> LaunchOptions {
-        var launchOptions = LaunchOptions()
-        
-        if let concurrency = dictionary["concurrency"]  as? Int {
-            launchOptions.concurrency = concurrency
-        }
-        
-        if let connectionPool = dictionary["connectionPool"]  as? Int {
-            launchOptions.connectionPool = connectionPool
-        }
-
-        if let queues = dictionary["queues"] as? [String] {
-            launchOptions.queues = queues.map { Queue($0) }
-        }
-        
-        if let pidfile = dictionary["pidfile"] as? String {
-            launchOptions.pidfile = URL(fileURLWithPath: pidfile)
-        }
-        
-        if let logfile = dictionary["logfile"] as? String {
-            launchOptions.logfile = URL(fileURLWithPath: logfile)
-        }
-
-        if let loglevel = dictionary["loglevel"] as? String {
-            launchOptions.loglevel = LoggerInitializer.Loglevel(rawValue: loglevel)!
-        }
-        
-        return launchOptions
-    }
 }
 
 public class Launcher {
