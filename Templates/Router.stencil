@@ -15,7 +15,7 @@ class Router: Routable {
 }
 
 {% for type in types.based.Worker %}
-extension {{ type.name }}.Args {
+extension {{ type.containedTypes.implementing.Argument.first.name }} {
     func toArray() -> [Any] {
         return [
             {% for prop in type.containedTypes.implementing.Argument.first.storedVariables %}
