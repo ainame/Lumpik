@@ -18,25 +18,17 @@ class Router: Routable {
 extension {{ type.name }}.Args {
     func toArray() -> [Any] {
         return [
-            {% for argType in type.containedTypes %}
-            {% if argType.name|contains:"Args" %}
-            {% for prop in argType.storedVariables %}
+            {% for prop in type.containedTypes.implementing.Argument.first.storedVariables %}
             {{ prop.name }},
-            {% endfor %}
-            {% endif %}
             {% endfor %}
         ]
     }
 
-    static func from(_ array: [Any]) -> {{ type.name }}.Args {
+    static func from(_ array: [Any]) -> {{ type.containedTypes.implementing.Argument.first.name }} {
         // NOTE: currently stencil template engine can not provide counter with starting 0
-        return {{ type.name }}.Args(
-            {% for argType in type.containedTypes %}
-            {% if argType.name|contains:"Args" %}
-            {% for prop in argType.storedVariables %}
+        return {{ type.containedTypes.implementing.Argument.first.name }}(
+            {% for prop in type.containedTypes.implementing.Argument.first.storedVariables %}
             {{ prop.name }}: array[{{ forloop.counter }} - 1] as! {{ prop.typeName }}{% if not forloop.last %},{% endif %}
-            {% endfor %}
-            {% endif %}
             {% endfor %}
         )
     }
