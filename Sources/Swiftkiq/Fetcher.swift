@@ -47,9 +47,9 @@ final class BasicFetcher: Fetcher {
             let pipeline = conn.pipelined()
             let encoder = JsonConverter.default
         
-            jobs.forEach { job in
+            for job in jobs {
                 let payload = encoder.serialize(job.job)
-                try! pipeline.enqueue(Command("RPUSH"), [job.queue.key, payload.makeBytes()])
+                try pipeline.enqueue(Command("RPUSH"), [job.queue.key, payload.makeBytes()])
             }
         
             try pipeline.execute()

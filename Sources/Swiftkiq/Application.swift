@@ -30,7 +30,7 @@ struct Application {
         self.default = Application()
         self.default.mode = mode
         self.default.connectionPool = ConnectionPool<RedisStore>(maxCapacity: connectionPoolSize)
-        
+
         // for heartbeat/poller
         if mode == .server {
             self.default.connectionPoolForInternal = ConnectionPool<RedisStore>(maxCapacity: 2)

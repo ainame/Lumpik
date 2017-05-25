@@ -47,8 +47,8 @@ public struct RedisConfig {
 final class RedisStore: Connectable {
     static var defaultConfig = RedisConfig()
 
-    static func makeStore() -> RedisStore {
-        return try! RedisStore(host: defaultConfig.host, port: UInt16(defaultConfig.port))
+    static func makeStore() throws -> RedisStore {
+        return try RedisStore(host: defaultConfig.host, port: UInt16(defaultConfig.port))
     }
 
     static func makeConnection() throws -> RedisStore {

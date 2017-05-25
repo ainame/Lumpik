@@ -67,13 +67,13 @@ public class Set: StoreKeyConvertible {
 }
 
 extension SortedSet {
-    public var size: Int {
-        return try! Application.connectionPool { try! $0.size(self) }
+    public func count() throws -> Int {
+        return try Application.connectionPool { try $0.size(self) }
     }
 }
 
 extension Set {
-    public var size: Int {
-        return try! Application.connectionPool { try! $0.size(self) }
+    public func count() throws -> Int {
+        return try Application.connectionPool { try $0.size(self) }
     }
 }

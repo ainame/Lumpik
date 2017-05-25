@@ -34,16 +34,11 @@ public class ConnectionPool<T: Connectable>: ConnectablePool {
     private var pool = [Connection]()
     private let mutex = Mutex()
     private let semaphore: DispatchSemaphore
+    private let poolCounter = AtomicCounter<Int>(0)
     
     init(maxCapacity: Int) {
         self.maxCapacity = maxCapacity
         self.semaphore = DispatchSemaphore(value: maxCapacity)
-        var count = 0
-        while count < maxCapacity {
-            let conn = try! Connection.makeConnection()
-            pool.append(conn)
-            count += 1
-        }
     }
     
     deinit {
@@ -53,6 +48,17 @@ public class ConnectionPool<T: Connectable>: ConnectablePool {
     }
     
     public func borrow() throws -> Connection {
+        // double check locking
+        if poolCounter.value < maxCapacity {
+            try mutex.synchronize {
+                if poolCounter.value < maxCapacity {
+                    let conn = try Connection.makeConnection()
+                    pool.append(conn)
+                    poolCounter.increment()
+                }
+            }
+        }
+        
         let result = semaphore.wait(timeout: DispatchTime.now() + .seconds(1))
         switch result {
         case .success:
