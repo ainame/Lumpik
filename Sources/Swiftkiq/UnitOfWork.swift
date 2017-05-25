@@ -19,7 +19,17 @@ public struct UnitOfWork {
     
     public var args: [Any] { return job["args"]! as! [Any] }
     
-    public var retry: Int { return Int(job["retry"]! as! UInt) }
+    // this behavior follow sidekiq's one
+    public var retry: Int {
+        switch job["retry"] {
+        case _ as Bool:
+            return 25
+        case let x as UInt:
+            return Int(x)
+        default:
+            return 25
+        }
+    }
     
     public var retryCount: Int? {
         guard let retryCount = job["retry_count"] as? Int else { return nil }
