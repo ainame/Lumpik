@@ -10,8 +10,8 @@ import Foundation
 import Dispatch
 
 public protocol WorkerFailureCallback {
-    func didFailed<W : Worker>(worker: W, work: UnitOfWork, error: Error)
-    func didFailed(worker: String, work: UnitOfWork, error: Error)
+    func didFailed<W : Worker>(worker: W, work: UnitOfWork, error: Error) throws
+    func didFailed(worker: String, work: UnitOfWork, error: Error) throws
 }
 
 public final class Processor: WorkerFailureCallback {
@@ -116,27 +116,27 @@ public final class Processor: WorkerFailureCallback {
         do {
             try router.dispatch(work, errorCallback: self)
         } catch RouterError.notFoundWorker {
-            didFailed(worker: work.workerType, work: work, error: RouterError.notFoundWorker)
+            try didFailed(worker: work.workerType, work: work, error: RouterError.notFoundWorker)
         }
     }
 
-    public func didFailed<W : Worker>(worker: W, work: UnitOfWork, error: Error) {
+    public func didFailed<W : Worker>(worker: W, work: UnitOfWork, error: Error) throws {
         logger.error("ERROR: \(error) on \(worker)")
         let maxRetry = worker.retry ?? W.defaultRetry
         let currentDelay = work.retryCount ?? 0
         let nextDelay = Delay.next(for: worker, by: currentDelay)
-        attemptRetry(work: work, error: error, maxRetry: maxRetry, delay: nextDelay)
+        try attemptRetry(work: work, error: error, maxRetry: maxRetry, delay: nextDelay)
     }
     
-    public func didFailed(worker: String, work: UnitOfWork, error: Error) {
+    public func didFailed(worker: String, work: UnitOfWork, error: Error) throws {
         logger.error("ERROR: \(error) on \(worker)")
         let maxRetry = 25
         let currentDelay = work.retryCount ?? 0
         let nextDelay = Delay.next(by: currentDelay)
-        attemptRetry(work: work, error: error, maxRetry: maxRetry, delay: nextDelay)
+        try attemptRetry(work: work, error: error, maxRetry: maxRetry, delay: nextDelay)
     }
 
-    func attemptRetry(work: UnitOfWork, error: Error, maxRetry: Int, delay: Int) {
+    func attemptRetry(work: UnitOfWork, error: Error, maxRetry: Int, delay: Int) throws {
         var newJob = work.job
         
         newJob["error_message"] = error.localizedDescription
@@ -169,8 +169,8 @@ public final class Processor: WorkerFailureCallback {
             // TODO: logging
             let retryAt = Date().timeIntervalSince1970 + Double(delay)
             logger.debug("retry after \(delay) sec")
-            _ = try! Application.connectionPool { conn in
-                try! conn.add(newJob, with: .value(retryAt), to: RetrySet())
+            _ = try Application.connectionPool { conn in
+                try conn.add(newJob, with: .value(retryAt), to: RetrySet())
             }
         } else {
             // TODO: retries_exhausted
