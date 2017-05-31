@@ -41,7 +41,7 @@ public class Poller {
                     let now = Date().timeIntervalSince1970
                     while let job = try conn.range(min: .infinityNegative, max: .value(now), from: jobSet, offset: 0, count: 1).first {
                         guard let queue = job["queue"] as? String else { continue }
-                        let serialized = converter.serialize(job)
+                        let serialized = try converter.serialize(job)
                         if try conn.remove([serialized], from: jobSet) > 0 {
                             try SwiftkiqClient.enqueue(job, to: Queue(queue))
                             logger.error("enqueued \(jobSet): \(String(describing: job["jid"]))")

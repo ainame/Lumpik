@@ -106,7 +106,7 @@ extension RedisStore {
 extension RedisStore {
     @discardableResult
     func enqueue(_ job: [String: Any], to queue: Queue) throws -> Int {
-        let string = JsonConverter.default.serialize(job)
+        let string = try JsonConverter.default.serialize(job)
         let response = try redis.command(Command("LPUSH"), [queue.key, string.makeBytes()])
         return response!.int!
     }
@@ -121,7 +121,7 @@ extension RedisStore {
         }
 
         let jsonString = array[1]!.string!
-        let parsedJson = converter.deserialize(dictionary: jsonString)
+        let parsedJson = try converter.deserialize(dictionary: jsonString)
         let queue = Queue(parsedJson["queue"]! as! String)
         return UnitOfWork(queue: queue, job: parsedJson)
     }
@@ -129,7 +129,7 @@ extension RedisStore {
 
 extension RedisStore {
     func add(_ member: [String: Any], to set: Set) throws -> Int {
-        let string = converter.serialize(member)
+        let string = try converter.serialize(member)
         let response = try redis.command(Command("SADD"), [set.key, string.makeBytes()])
         return response!.int!
     }
@@ -157,7 +157,7 @@ extension RedisStore {
 extension RedisStore {
     @discardableResult
     func add(_ member: [String: Any], with score: SortedSetScore, to sortedSet: SortedSet) throws -> Int {
-        let string = converter.serialize(member)
+        let string = try converter.serialize(member)
         let response = try redis.command(Command("ZADD"), [sortedSet.key, score.string.makeBytes(), string.makeBytes()])
         return response!.int!
     }
@@ -172,7 +172,7 @@ extension RedisStore {
     func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, offset: Int, count: Int) throws -> [[String: Any]] {
         let params = [sortedSet.key, min.string.makeBytes(), max.string.makeBytes(), "LIMIT".makeBytes(), String(offset).makeBytes(), String(count).makeBytes()]
         let response = try redis.command(Command("ZRANGEBYSCORE"), params)
-        return response!.array!.flatMap { $0!.string }.map { converter.deserialize(dictionary: $0) }
+        return try response!.array!.flatMap { $0!.string }.map { try converter.deserialize(dictionary: $0) }
     }
 
     func size(_ sortedSet: SortedSet) throws -> Int {

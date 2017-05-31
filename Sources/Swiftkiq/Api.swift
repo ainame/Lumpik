@@ -57,8 +57,8 @@ public final class ProcessSet: Set {
             let responses = try pipeline.execute()
             let tmp: [[String]] = responses.flatMap { $0!.array!.map { $0!.string! } }
             let filtered = tmp.filter { $0.count == 4 }
-            let processes = filtered.map { (elem: [String]) -> [String: Any?] in
-                let info: [String: Any] = converter.deserialize(dictionary: elem[0])
+            let processes = try filtered.map { (elem: [String]) throws -> [String: Any?] in
+                let info: [String: Any] = try converter.deserialize(dictionary: elem[0])
                 let dict: [String: Any?] = [
                     "info": info,
                     "busy": Int(elem[1]),

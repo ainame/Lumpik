@@ -23,6 +23,7 @@ extension JsonConvertible {
     }
     
     public var json: String {
-        return Self.converter.serialize(asDictionary)
+        // trust asDictionary and converter obj
+        return try! Self.converter.serialize(asDictionary)
     }
 }

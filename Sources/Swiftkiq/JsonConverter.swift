@@ -9,13 +9,13 @@
 import Foundation
 
 protocol Converter {
-    func serialize(_ dictionary: [String: Any]) -> String
+    func serialize(_ dictionary: [String: Any]) throws -> String
     
-    func serialize(_ array: [Any]) -> String
+    func serialize(_ array: [Any]) throws -> String
     
-    func deserialize(dictionary rawValue: String) -> [String: Any]
+    func deserialize(dictionary rawValue: String) throws -> [String: Any]
     
-    func deserialize(array rawValue: String) -> [Any]
+    func deserialize(array rawValue: String) throws -> [Any]
 }
 
 public final class JsonConverter: Converter {
@@ -32,25 +32,25 @@ public final class JsonConverter: Converter {
         self.readOption = readOption
     }
     
-    func serialize(_ dictionary: [String: Any]) -> String {
-        let data = try! JSONSerialization.data(withJSONObject: dictionary, options: writeOption)
+    func serialize(_ dictionary: [String: Any]) throws -> String {
+        let data = try JSONSerialization.data(withJSONObject: dictionary, options: writeOption)
         return String(bytes: data, encoding: .utf8)!
     }
     
-    func serialize(_ array: [Any]) -> String {
-        let data = try! JSONSerialization.data(withJSONObject: array, options: writeOption)
+    func serialize(_ array: [Any]) throws -> String {
+        let data = try JSONSerialization.data(withJSONObject: array, options: writeOption)
         return String(bytes: data, encoding: .utf8)!
     }
     
-    func deserialize(dictionary rawValue: String) -> [String: Any] {
+    func deserialize(dictionary rawValue: String) throws -> [String: Any] {
         let data = rawValue.data(using: .utf8)!
-        let json = try! JSONSerialization.jsonObject(with: data, options: readOption)
+        let json = try JSONSerialization.jsonObject(with: data, options: readOption)
         return json as! [String: Any]
     }
     
-    func deserialize(array rawValue: String) -> [Any] {
+    func deserialize(array rawValue: String) throws -> [Any] {
         let data = rawValue.data(using: .utf8)!
-        let json = try! JSONSerialization.jsonObject(with: data, options: readOption)
+        let json = try JSONSerialization.jsonObject(with: data, options: readOption)
         return json as! [Any]
     }
 }
