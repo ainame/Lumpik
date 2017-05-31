@@ -61,7 +61,8 @@ final class RedisStore: Connectable {
     let host: String
     let port: UInt16
     let password: String?
-    let timeout: Int = 2
+    let dequeueTimeout = 2
+    let defaultTimeout = 8.0
 
     fileprivate let redis: Redis.TCPClient
     fileprivate let converter: Converter = JsonConverter.default
@@ -71,6 +72,7 @@ final class RedisStore: Connectable {
         self.port = port
         self.password = password
         self.redis = try Redis.TCPClient(hostname: host, port: port, password: password)
+        try self.redis.stream.setTimeout(defaultTimeout)
     }
 
     func pipelined() -> Redis.Pipeline<TCPInternetSocket> {
@@ -111,7 +113,7 @@ extension RedisStore {
 
     func dequeue(_ queues: [Queue]) throws -> UnitOfWork? {
         var params = queues.map { $0.key }
-        params.append(String(timeout).makeBytes())
+        params.append(String(dequeueTimeout).makeBytes())
 
         let response = try redis.command(Command("BRPOP"), params)
         guard let array = response?.array else {
