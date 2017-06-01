@@ -12,7 +12,7 @@ class EchoWorker: Worker {
     required init() {}
 
     func perform(_ args: Args) throws {
-        // print(args.message)
-        // sleep(3)
+        print(args.message)
+        sleep(3)
     }
 }
