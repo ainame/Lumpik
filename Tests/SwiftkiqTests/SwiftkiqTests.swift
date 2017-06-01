@@ -1,42 +1,60 @@
 import XCTest
 import Foundation
+import Redis
 @testable import Swiftkiq
 
 // need redis-server for host: '127.0.0.1', port: 6379
 class SwiftkiqTests: XCTestCase {
-
-    override func setUp() {
-        try! Queue("default").clear()
+    static var allTests : [(String, (SwiftkiqTests) -> () throws -> Void)] {
+        return [
+            ("testExample", testExample),
+            ("testFetcher", testFetcher),
+            ("testRedis", testRedis),
+            ("testRedisEmptyDequeue", testRedisEmptyDequeue),
+            ("testTransaction", testTransaction),
+        ]
     }
+
 
     final class EchoMessageWorker: Worker {
         struct Args: Argument {
             let message: String
-            func toDictionary() -> [String : Any] {
-                return [
-                    "message": message
-                ]
+            
+            func toArray() -> [Any] {
+                return [message]
             }
-
-            static func from(_ dictionary: Dictionary<String, Any>) -> Args {
+            
+            static func from(_ array: [Any]) -> Args {
                 return Args(
-                    message: dictionary["message"]! as! String
+                    message: array[0] as! String
                 )
             }
         }
-
+        
         var jid: Jid?
         var queue: Queue?
         var retry: Int?
-
+        
+        static var defaultQueue = Queue("test")
+        
         func perform(_ args: Args) {
             print(args.message)
         }
     }
 
-    func testExample() {
-        try! EchoMessageWorker.performAsync(.init(message: "Hello, World!"))
-        XCTAssertNotNil(try! SwiftkiqClient.current.store.dequeue([Queue("default")]))
+    let pool = SingleConnectionPool()
+
+    override func setUp() {
+        SwiftkiqClient.connectionPool = AnyConnectablePool(pool)
+        // try! Queue("test").clear()
+    }
+
+    func testExample() throws {
+        try EchoMessageWorker.performAsync(.init(message: "Hello, World!"))
+        _ = try pool.with { conn in
+            let result = try conn.dequeue([Queue("test")])
+            XCTAssertNotNil(result)
+        }
     }
 
     func testFetcher() {
@@ -45,58 +63,58 @@ class SwiftkiqTests: XCTestCase {
         XCTAssertNotNil(fetcher.randomSortedQueues())
     }
 
-    func testRedis() {
-        try! SwiftkiqClient.current.store.enqueue(["hoge": 1, "queue": "default"], to: Queue("default"))
-        do {
-            let work = try SwiftkiqClient.current.store.dequeue([Queue("default")])
-            XCTAssertNotNil(work)
-        } catch(let error) {
-            print(error)
-            XCTFail()
+    func testRedis() throws {
+        _ = try pool.with { conn in
+            try conn.enqueue(["hoge": 1, "queue": "default"], to: Queue("default"))
+            do {
+                let work = try conn.dequeue([Queue("default")])
+                XCTAssertNotNil(work)
+            } catch(let error) {
+                print(error)
+                XCTFail()
+            }
         }
     }
 
-    func testRedisEmptyDequeue() {
-        do {
-            let work = try SwiftkiqClient.current.store.dequeue([Queue("default")])
-            XCTAssertNil(work)
-        } catch(let error) {
-            print(error)
-            XCTFail()
+    func testRedisEmptyDequeue() throws {
+        _ = try pool.with { conn in
+            do {
+                let work = try conn.dequeue([Queue("default")])
+                XCTAssertNil(work)
+            } catch(let error) {
+                print(error)
+                XCTFail()
+            }
         }
     }
 
-    func testTransaction() {
-        do {
-            let results1 = try SwiftkiqClient.current.store.pipelined()
-                .addCommand("MULTI")
-                .addCommand("SET", params: ["default", "1"])
-                .addCommand("INCR", params: ["default"])
-                .addCommand("INCR", params: ["default"])
-                .addCommand("EXEC")
-                .execute()
-            XCTAssertNotNil(results1)
-        } catch(let error) {
-            print(error)
-            XCTFail()
-        }
-        
-        do {
-            _ = try SwiftkiqClient.current.store.pipelined()
-                .addCommand("MULTI")
-                .addCommand("SET", params: ["default", "1", "2"])
-                .addCommand("INCR", params: ["default", "absc"])
-                .addCommand("EXEC")
-                .execute()
-            XCTFail("this case will failure")
-        } catch {
-            XCTAssertNotNil(error)
-        }
-    }
+    func testTransaction() throws {
+        _ = try pool.with { conn in
+            do {
+                // will success
+                let responses = try conn.pipelined()
+                    .enqueue(Command("MULTI"))
+                    .enqueue(Command("SET"), ["default", "1"])
+                    .enqueue(Command("INCR"), ["default"])
+                    .enqueue(Command("INCR"), ["default"])
+                    .enqueue(Command("EXEC"))
+                    .execute()
+                
+                let verified = RedisStore.verify(pipelinedResponses: responses)
+                XCTAssertTrue(verified.errors.isEmpty)
+            }
 
-    static var allTests : [(String, (SwiftkiqTests) -> () throws -> Void)] {
-        return [
-            ("testExample", testExample),
-        ]
+            do {
+                let responses = try conn.pipelined()
+                    .enqueue(Command("MULTI"))
+                    .enqueue(Command("SET"), ["default", "1", "2"])
+                    .enqueue(Command("INCR"), ["default", "absc"]) // will fail
+                    .enqueue(Command("EXEC"))
+                    .execute()
+                
+                let verified = RedisStore.verify(pipelinedResponses: responses)
+                XCTAssertFalse(verified.errors.isEmpty)
+            }
+        }
     }
 }

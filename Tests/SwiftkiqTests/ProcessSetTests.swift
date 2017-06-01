@@ -11,12 +11,35 @@ import Foundation
 import Dispatch
 @testable import Swiftkiq
 
+// do not use with other thread
+final class SingleConnectionPool: ConnectablePool {
+    var redis: RedisStore
+    
+    init() {
+        redis = try! RedisStore(host: "localhost", port: 6379)
+    }
+
+    func borrow() throws -> RedisStore {
+        return redis
+    }
+    func checkin(_ connection: RedisStore) {
+        //
+    }
+}
+
 class ProcessSetTests: XCTestCase {
+    static var allTests : [(String, (ProcessSetTests) -> () throws -> Void)] {
+        return [
+            ("testExample", testExample),
+        ]
+    }
     
     override func setUp() {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
-        try! ProcessSet.cleanup()
+        let pool = SingleConnectionPool()
+        ProcessSet.connectionPool = AnyConnectablePool<RedisStore>(pool)
+        Heart.connectionPoolForInternal = AnyConnectablePool<RedisStore>(pool)
     }
     
     override func tearDown() {
@@ -33,11 +56,10 @@ class ProcessSetTests: XCTestCase {
         XCTAssertNotNil(process)
                 
         let heart = Heart(concurrency: 25, queues: [Queue("default")])
-        heart.beat(done: false)
+        try heart.beat(done: false)
         try ProcessSet().each { process in
             print(process)
             XCTAssertNotNil(process)
         }
     }
-
 }
