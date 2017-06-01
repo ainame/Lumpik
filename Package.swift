@@ -6,6 +6,7 @@ let package = Package(
     	Target(name: "Swiftkiq"),
         // uncomment if you want to build example
         // Target(name: "Examples", dependencies: ["Swiftkiq"]),
+        // Target(name: "Benchmark", dependencies: ["Swiftkiq"]),
     ],
     dependencies: [
         .Package(url: "https://github.com/vapor/redis.git", majorVersion: 2),
@@ -19,5 +20,6 @@ let package = Package(
     exclude: [
         // comment out if you want to build example
         "Sources/Examples",
+        "Sources/Benchmark",
     ]
 )
