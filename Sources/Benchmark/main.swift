@@ -13,7 +13,7 @@ q.async {
     while true {
         do {
             let count = try queue.count()
-            print("\(queue): \(count)")
+            Swiftkiq.logger.error("\(queue): \(count)")
             usleep(200000)
             if count == 0 {
                 break
@@ -24,7 +24,8 @@ q.async {
     
     let duration = Date().timeIntervalSince(start)
     let throughput = 100000 / duration
-    print("Done in \(duration): \(throughput) jobs/sec")
+    Swiftkiq.logger.error("Done in \(duration): \(throughput) jobs/sec")
+    usleep(100000)
     exit(0)
 }
 

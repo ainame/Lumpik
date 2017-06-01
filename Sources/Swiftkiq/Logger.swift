@@ -9,7 +9,7 @@
 import Foundation
 import SwiftyBeaver
 
-let logger = SwiftyBeaver.self
+public let logger = SwiftyBeaver.self
 
 public struct LoggerInitializer {
     public enum Loglevel: String {
