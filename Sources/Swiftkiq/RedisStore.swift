@@ -121,6 +121,11 @@ extension RedisStore {
         let queue = Queue(parsedJson["queue"]! as! String)
         return UnitOfWork(queue: queue, job: parsedJson)
     }
+    
+    func size(_ queue: Queue) throws -> Int {
+        let response = try redis.command(Command("LLEN"), [queue.key])
+        return response!.int!
+    }
 }
 
 extension RedisStore {
