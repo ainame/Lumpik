@@ -10,10 +10,10 @@ import Foundation
 import Dispatch
 
 public struct SwiftkiqClient {
-    private static let _connectionPool = ConnectionPool<RedisStore>(maxCapacity: 5)
+    static var connectionPool = AnyConnectablePool(Application.default.connectionPool)
 
     public static func enqueue<W: Worker, A: Argument>(`class`: W.Type, args: A, retry: Int = W.defaultRetry, to queue: Queue = W.defaultQueue) throws {
-        _ = try Application.connectionPool { conn in
+        _ = try connectionPool.with { conn in
             try conn.enqueue(["jid": JobIdentityGenerator.makeIdentity().rawValue,
                               "class": String(describing: `class`),
                               "args": args.toArray(),
@@ -25,7 +25,7 @@ public struct SwiftkiqClient {
     public static func enqueue(_ job: [String: Any], to queue: Queue = Queue("default")) throws {
         var newJob = job
         newJob["jid"] = (job["jid"] != nil) ? job["jid"] : JobIdentityGenerator.makeIdentity().rawValue
-        _ = try Application.connectionPool { conn in
+        _ = try connectionPool.with { conn in
             try conn.enqueue(newJob, to: queue)
         }
     }

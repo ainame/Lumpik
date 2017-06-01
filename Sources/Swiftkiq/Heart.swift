@@ -10,6 +10,8 @@ import Foundation
 import Redis
 
 public class Heart {
+    static var connectionPoolForInternal = AnyConnectablePool<RedisStore>(Application.default.connectionPoolForInternal)
+
     lazy var formatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
@@ -39,7 +41,7 @@ public class Heart {
         Processor.failureCounter.update { failed = $0; return 0 }
         
         do {
-            try Application.connectionPoolForInternal { conn in
+            try Heart.connectionPoolForInternal.with { conn in
                 let nowdate = formatter.string(from: Date())
                 let transaction = try conn.pipelined()
                     .enqueue(Command("MULTI"))
@@ -93,7 +95,7 @@ public class Heart {
     func clear() {
         do {
             logger.debug("clear heartbeat!")
-            _ = try Application.connectionPoolForInternal { conn in
+            _ = try Heart.connectionPoolForInternal.with { conn in
                 _ = try conn.pipelined()
                     .enqueue(Command("SREM"), ["processes".makeBytes(), ProcessIdentityGenerator.identity.rawValue.makeBytes()])
                     .enqueue(.delete, ["\(ProcessIdentityGenerator.identity):workers".makeBytes()])

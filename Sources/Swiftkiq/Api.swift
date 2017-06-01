@@ -11,6 +11,8 @@ import Mapper
 import Redis
 
 public final class ProcessSet: Set {
+    static var connectionPool = AnyConnectablePool<RedisStore>(Application.default.connectionPool)
+
     public convenience init() {
         self.init(rawValue: "processes")
     }
@@ -18,7 +20,7 @@ public final class ProcessSet: Set {
     @discardableResult
     public static func cleanup() throws -> Int {
         let set = ProcessSet()
-        return try Application.connectionPool { conn in
+        return try connectionPool.with { conn in
             let processeKeys: [String] = try conn.members(set)
             
             guard processeKeys.count > 0 else {
@@ -29,10 +31,10 @@ public final class ProcessSet: Set {
             for processKey in processeKeys {
                 try pipeline.enqueue(Command("HGET"), [processKey.makeBytes(), "info".makeBytes()])
             }
-            let heartbeats = try pipeline.execute().map { $0!.string }
+            let heartbeats = try pipeline.execute().map { $0?.string }
             
             var pruned = [String]()
-            for (index, beat) in heartbeats.enumerated() {
+            for (index, beat) in heartbeats.enumerated() where beat != nil {
                 if beat != nil {
                     pruned.append(processeKeys[index])
                 }
@@ -45,7 +47,7 @@ public final class ProcessSet: Set {
     }
     
     public func each(_ block: (ProcessState) -> ()) throws {
-        _ = try Application.connectionPool { conn in
+        _ = try ProcessSet.connectionPool.with { conn in
             let processeKeys: [String] = try conn.members(self).sorted { $0 < $1 }
             
             let converter = JsonConverter.default
@@ -55,7 +57,7 @@ public final class ProcessSet: Set {
             }
             
             let responses = try pipeline.execute()
-            let tmp: [[String]] = responses.flatMap { $0!.array!.map { $0!.string! } }
+            let tmp: [[String]] = responses.flatMap { $0?.array?.flatMap { $0?.string } }
             let filtered = tmp.filter { $0.count == 4 }
             let processes = try filtered.map { (elem: [String]) throws -> [String: Any?] in
                 let info: [String: Any] = try converter.deserialize(dictionary: elem[0])
@@ -74,7 +76,7 @@ public final class ProcessSet: Set {
     }
     
     public var count: Int {
-        return ((try? Application.connectionPool { try $0.size(self) }) ?? 0)
+        return ((try? ProcessSet.connectionPool.with { try $0.size(self) }) ?? 0)
     }
 }
 
