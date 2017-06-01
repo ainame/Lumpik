@@ -12,6 +12,12 @@ import Dispatch
 @testable import Swiftkiq
 
 class ProcessTests: XCTestCase {
+    static var allTests : [(String, (ProcessTests) -> () throws -> Void)] {
+        return [
+            ("testExample", testExample),
+            ("testFetcher", testIndentity),
+        ]
+    }
     
     override func setUp() {
         super.setUp()

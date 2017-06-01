@@ -14,20 +14,22 @@ struct Application {
         case client
     }
     
-    static var `default`: Application!
+    static var `default` = Application()
+    private static var isInitialized = false
     
     public var isServerMode: Bool { return mode == .server }
-    private var mode: Mode!
+    private var mode: Mode = .client
     
-    public private(set) var connectionPool: ConnectionPool<RedisStore>!
-    public private(set) var connectionPoolForInternal: ConnectionPool<RedisStore>!
+    public private(set) var connectionPool = ConnectionPool<RedisStore>(maxCapacity: 0)
+    public private(set) var connectionPoolForInternal = ConnectionPool<RedisStore>(maxCapacity: 0)
     
     static func initialize(mode: Mode = .client, connectionPoolSize: Int) {
-        guard self.default == nil else {
-            fatalError("don't call Application#initialize twice")
+        guard isInitialized != true else {
+            fatalError("don't call initialize method twice")
         }
-
-        self.default = Application()
+        
+        defer { isInitialized = true }
+        
         self.default.mode = mode
         self.default.connectionPool = ConnectionPool<RedisStore>(maxCapacity: connectionPoolSize)
 

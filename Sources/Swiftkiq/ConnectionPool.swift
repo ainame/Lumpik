@@ -80,7 +80,9 @@ public class ConnectionPool<T: Connectable>: ConnectablePool {
         }
         semaphore.signal()
     }
-    
+}
+
+extension ConnectablePool {
     public func with<T>(handler: (Connection) -> (T)) throws -> T {
         let conn = try borrow()
         defer { checkin(conn) }
@@ -92,4 +94,23 @@ public class ConnectionPool<T: Connectable>: ConnectablePool {
         defer { checkin(conn) }
         return try handler(conn)
     }
+}
+
+struct AnyConnectablePool<T: Connectable>: ConnectablePool {
+    let _borrow: () throws -> T
+    let _checkin: (T) -> ()
+
+    init<CP: ConnectablePool>(_ connectionPool: CP) where CP.Connection == T {
+        self._borrow = connectionPool.borrow
+        self._checkin = connectionPool.checkin
+    }
+    
+    func borrow() throws -> T {
+        return try _borrow()
+    }
+    
+    func checkin(_ connection: T) {
+        _checkin(connection)
+    }
+
 }
