@@ -4,11 +4,12 @@ import Swiftkiq
 var options = LaunchOptions()
 options.connectionPool = 25
 let router = Router()
+LoggerInitializer.initialize(loglevel: .error, logfile: nil)
 
 let q = DispatchQueue(label: "benchmark")
+let start = Date()
 q.async {
     let queue = Queue("default")
-    let start = Date()
     while true {
         do {
             let count = try queue.count()
@@ -27,5 +28,4 @@ q.async {
     exit(0)
 }
 
-LoggerInitializer.initialize(loglevel: .error, logfile: nil)
 CLI.start(router: router, launchOptions: options)
