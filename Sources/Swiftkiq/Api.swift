@@ -94,15 +94,3 @@ public final class RetrySet: JobSet {
         self.init(rawValue: "retry")
     }
 }
-
-extension StoreKeyConvertible {
-    public func clear() throws {
-        _ = try Application.connectionPool { conn in
-            try conn.clear(self)
-        }
-    }
-    
-    public func 💣() throws {
-        try clear()
-    }
-}

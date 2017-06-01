@@ -14,6 +14,18 @@ public protocol StoreKeyConvertible: RawRepresentable, Equatable, Hashable {
     var key: Bytes { get }
 }
 
+extension StoreKeyConvertible {
+    public func clear() throws {
+        _ = try Application.connectionPoolForInternal { conn in
+            try conn.clear(self)
+        }
+    }
+    
+    public func 💣() throws {
+        try clear()
+    }
+}
+
 public class Queue: StoreKeyConvertible, CustomStringConvertible {
     public let rawValue: String
 
@@ -66,14 +78,20 @@ public class Set: StoreKeyConvertible {
     }
 }
 
+extension Queue {
+    public func count() throws -> Int {
+        return try Application.connectionPoolForInternal { try $0.size(self) }
+    }
+}
+
 extension SortedSet {
     public func count() throws -> Int {
-        return try Application.connectionPool { try $0.size(self) }
+        return try Application.connectionPoolForInternal { try $0.size(self) }
     }
 }
 
 extension Set {
     public func count() throws -> Int {
-        return try Application.connectionPool { try $0.size(self) }
+        return try Application.connectionPoolForInternal { try $0.size(self) }
     }
 }
