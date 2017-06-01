@@ -13,16 +13,19 @@ import Signals
 import Redis
 
 public struct LaunchOptions {
-    var concurrency: Int = 25
-    var queues: [Queue] = [Queue("default")]
-    var strategy: Fetcher.Type = BasicFetcher.self
-    var daemonize: Bool = false
-    var timeout: TimeInterval = 8.0
-    var connectionPool: Int = 5
-    var loglevel: LoggerInitializer.Loglevel = .debug
-    var logfile: URL? = nil
-    var pidfile: URL? = nil
-    var router: Routable!
+    public var concurrency: Int = 25
+    public var queues: [Queue] = [Queue("default")]
+    public var strategy: Fetcher.Type = BasicFetcher.self
+    public var daemonize: Bool = false
+    public var timeout: TimeInterval = 8.0
+    public var connectionPool: Int = 5
+    public var loglevel: LoggerInitializer.Loglevel = .debug
+    public var logfile: URL? = nil
+    public var pidfile: URL? = nil
+    public var router: Routable!
+    
+    public init() {
+    }
 }
 
 public class Launcher {
