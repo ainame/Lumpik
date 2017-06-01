@@ -74,11 +74,7 @@ final class RedisStore: Connectable {
         self.redis = try Redis.TCPClient(hostname: host, port: port, password: password)
         try self.redis.stream.setTimeout(defaultTimeout)
     }
-
-    func pipelined() -> Redis.Pipeline<TCPInternetSocket> {
-        return redis.makePipeline()
-    }
-
+    
     @discardableResult
     func clear<K: StoreKeyConvertible>(_ key: K) throws -> Int {
         let response = try redis.command(.delete, [key.key])
@@ -178,5 +174,32 @@ extension RedisStore {
     func size(_ sortedSet: SortedSet) throws -> Int {
         let response = try redis.command(Command("ZCARD"), [sortedSet.key])
         return response!.int!
+    }
+}
+
+extension RedisStore {
+    func pipelined() -> Redis.Pipeline<TCPInternetSocket> {
+        return redis.makePipeline()
+    }
+    
+    static func verify(pipelinedResponses: [Redis.Data?]) -> (successes: [Redis.Data?], errors: [Error]) {
+        // workaround swift3's bug
+        var successes = Array<Redis.Data?>()
+        var errors = [Error]()
+        
+        for response in pipelinedResponses {
+            if let response = response {
+                switch response {
+                case .error(let error):
+                    errors.append(error)
+                default:
+                    successes.append(response)
+                }
+            } else {
+                successes.append(response)
+            }
+        }
+        
+        return (successes: successes, errors: errors)
     }
 }
