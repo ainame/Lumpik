@@ -4,16 +4,26 @@
 
 Swiftkiq is the job queue system for general purpose.
 
+## Features
+
+* can consume your all of CPU-cores on 1 process
+* can create a worker which has type-safe argument
+* can deploy your app as a binary file
+
 ## Examples
 
+see [https://github.com/ainame/Swiftkiq/tree/master/Sources/Examples/](https://github.com/ainame/Swiftkiq/tree/master/Sources/Examples/)
+
+## Benchmark
+
 Please host local redis-server at firtst.
+Do 100,000 no-op jobs, and measure throughput.
 
 ```
 $ git clone https://github.com/ainame/Swiftkiq.git
 $ cd Swiftkiq
-$ vi Package.swift // edit comments to enable example project
-$ swift build
-$ ./.build/debug/Examples
+$ gem install redis
+$ scripts/load.sh
 ```
 
 ## Acknowledgement
