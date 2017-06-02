@@ -24,7 +24,6 @@ public final class Processor: RouterDelegate {
     static var processedCounter = AtomicCounter<Int>(0)
     static var failureCounter = AtomicCounter<Int>(0)
 
-    let tid: Tid
     let dispatchQueue: DispatchQueue
     private var looper: DispatchWorkItem!
 
@@ -49,7 +48,6 @@ public final class Processor: RouterDelegate {
         self.router = router
         self.dispatchQueue = dispatchQueue
         self.delegate = delegate
-        self.tid = ThreadIdentityGenerator.makeIdentity(from: dispatchQueue)
     }
 
     func start () {
@@ -116,8 +114,10 @@ public final class Processor: RouterDelegate {
             try didFailed(worker: work.workerType, work: work, error: RouterError.notFoundWorker)
         }
     }
-
+    
+    
     public func stats<W: Worker>(worker: W, work: UnitOfWork, block: () throws -> ()) throws {
+        let tid = ThreadIdentityGenerator.makeIdentity()
         Processor.updateState(WorkerState(work: work, runAt: Date()), for: tid)
         defer {
             Processor.updateState(nil, for: tid)
