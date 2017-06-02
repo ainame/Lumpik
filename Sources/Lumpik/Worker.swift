@@ -1,6 +1,6 @@
 //
 //  Worker.swift
-//  Swiftkiq
+//  Lumpik
 //
 //  Created by Namai Satoshi on 2017/02/26.
 //
@@ -43,6 +43,6 @@ extension Worker {
     }
 
     public static func performAsync(_ args: Args, on queue: Queue = Self.defaultQueue) throws {
-        try SwiftkiqClient.enqueue(class: self, args: args, to: queue)
+        try LumpikClient.enqueue(class: self, args: args, to: queue)
     }
 }

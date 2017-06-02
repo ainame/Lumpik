@@ -1,6 +1,6 @@
 //
 //  ProcessTests.swift
-//  Swiftkiq
+//  Lumpik
 //
 //  Created by Namai Satoshi on 2017/03/07.
 //
@@ -9,7 +9,7 @@
 import XCTest
 import Foundation
 import Dispatch
-@testable import Swiftkiq
+@testable import Lumpik
 
 class ProcessTests: XCTestCase {
     static var allTests : [(String, (ProcessTests) -> () throws -> Void)] {
@@ -34,7 +34,7 @@ class ProcessTests: XCTestCase {
         let data = string.data(using: .utf8)!
         let json = try JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions())
         let dict = json as! NSDictionary
-        let process = Swiftkiq.Process.from(dict)
+        let process = Lumpik.Process.from(dict)
         XCTAssertNotNil(process)
     }
     

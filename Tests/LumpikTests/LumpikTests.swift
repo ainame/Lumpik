@@ -1,11 +1,11 @@
 import XCTest
 import Foundation
 import Redis
-@testable import Swiftkiq
+@testable import Lumpik
 
 // need redis-server for host: '127.0.0.1', port: 6379
-class SwiftkiqTests: XCTestCase {
-    static var allTests : [(String, (SwiftkiqTests) -> () throws -> Void)] {
+class LumpikTests: XCTestCase {
+    static var allTests : [(String, (LumpikTests) -> () throws -> Void)] {
         return [
             ("testExample", testExample),
             ("testFetcher", testFetcher),
@@ -45,7 +45,7 @@ class SwiftkiqTests: XCTestCase {
     let pool = SingleConnectionPool()
 
     override func setUp() {
-        SwiftkiqClient.connectionPool = AnyConnectablePool(pool)
+        LumpikClient.connectionPool = AnyConnectablePool(pool)
         // try! Queue("test").clear()
     }
 

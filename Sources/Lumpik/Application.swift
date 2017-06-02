@@ -1,6 +1,6 @@
 //
 //  Application.swift
-//  Swiftkiq
+//  Lumpik
 //
 //  Created by Namai Satoshi on 2017/05/15.
 //

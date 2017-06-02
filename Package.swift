@@ -1,12 +1,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "Swiftkiq",
+    name: "Lumpik",
     targets: [
-    	Target(name: "Swiftkiq"),
+    	Target(name: "Lumpik"),
         // uncomment if you want to build example
-        // Target(name: "Examples", dependencies: ["Swiftkiq"]),
-        // Target(name: "Benchmark", dependencies: ["Swiftkiq"]),
+        // Target(name: "Examples", dependencies: ["Lumpik"]),
+        // Target(name: "Benchmark", dependencies: ["Lumpik"]),
     ],
     dependencies: [
         .Package(url: "https://github.com/vapor/redis.git", majorVersion: 2),

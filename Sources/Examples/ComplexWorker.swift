@@ -1,13 +1,13 @@
 //
 //  ComplexWorker.swift
-//  Swiftkiq
+//  Lumpik
 //
 //  Created by Namai Satoshi on 2017/05/21.
 //
 //
 
 import Foundation
-import Swiftkiq
+import Lumpik
 
 class BaseWorker {
     var jid: Jid?

@@ -1,5 +1,5 @@
 import Foundation
-import Swiftkiq
+import Lumpik
 
 class EchoWorker: Worker {
     enum EchoWorkerError: Error {

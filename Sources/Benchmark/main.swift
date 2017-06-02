@@ -1,5 +1,5 @@
 import Foundation
-import Swiftkiq
+import Lumpik
 
 var options = LaunchOptions()
 options.connectionPool = 25
@@ -13,7 +13,7 @@ q.async {
     while true {
         do {
             let count = try queue.count()
-            Swiftkiq.logger.error("\(queue): \(count)")
+            Lumpik.logger.error("\(queue): \(count)")
             usleep(200000)
             if count == 0 {
                 break
@@ -24,7 +24,7 @@ q.async {
     
     let duration = Date().timeIntervalSince(start)
     let throughput = 100000 / duration
-    Swiftkiq.logger.error("Done in \(duration): \(throughput) jobs/sec")
+    Lumpik.logger.error("Done in \(duration): \(throughput) jobs/sec")
     usleep(100000)
     exit(0)
 }

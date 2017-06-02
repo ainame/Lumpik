@@ -1,8 +1,8 @@
-# Swiftkiq
+# Lumpik
 
 ## Summary
 
-Swiftkiq is the job queue system for general purpose.
+Lumpik is the job queue system for general purpose.
 
 ## Features
 
@@ -12,7 +12,7 @@ Swiftkiq is the job queue system for general purpose.
 
 ## Examples
 
-see [https://github.com/ainame/Swiftkiq/tree/master/Sources/Examples/](https://github.com/ainame/Swiftkiq/tree/master/Sources/Examples/)
+see [https://github.com/ainame/Lumpik/tree/master/Sources/Examples/](https://github.com/ainame/Lumpik/tree/master/Sources/Examples/)
 
 ## Benchmark
 
@@ -20,8 +20,8 @@ Please host local redis-server at firtst.
 Do 100,000 no-op jobs, and measure throughput.
 
 ```
-$ git clone https://github.com/ainame/Swiftkiq.git
-$ cd Swiftkiq
+$ git clone https://github.com/ainame/Lumpik.git
+$ cd Lumpik
 $ gem install redis
 $ scripts/load.sh
 ```

@@ -1,6 +1,6 @@
 //
 //  Poller.swift
-//  Swiftkiq
+//  Lumpik
 //
 //  Created by Namai Satoshi on 2017/03/04.
 //
@@ -43,7 +43,7 @@ public class Poller {
                         guard let queue = job["queue"] as? String else { continue }
                         let serialized = try converter.serialize(job)
                         if try conn.remove([serialized], from: jobSet) > 0 {
-                            try SwiftkiqClient.enqueue(job, to: Queue(queue))
+                            try LumpikClient.enqueue(job, to: Queue(queue))
                             logger.error("enqueued \(jobSet): \(String(describing: job["jid"]))")
                         }
                     }

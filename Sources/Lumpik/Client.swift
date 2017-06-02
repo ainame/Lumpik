@@ -1,6 +1,6 @@
 //
 //  Client.swift
-//  Swiftkiq
+//  Lumpik
 //
 //  Created by Namai Satoshi on 2017/02/26.
 //
@@ -9,7 +9,7 @@
 import Foundation
 import Dispatch
 
-public struct SwiftkiqClient {
+public struct LumpikClient {
     static var connectionPool = AnyConnectablePool(Application.default.connectionPool)
 
     public static func enqueue<W: Worker, A: Argument>(`class`: W.Type, args: A, retry: Int = W.defaultRetry, to queue: Queue = W.defaultQueue) throws {

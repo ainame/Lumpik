@@ -1,6 +1,6 @@
 import XCTest
-@testable import SwiftkiqTests
+@testable import LumpikTests
 
 XCTMain([
-     testCase(SwiftkiqTests.allTests),
+     testCase(LumpikTests.allTests),
 ])

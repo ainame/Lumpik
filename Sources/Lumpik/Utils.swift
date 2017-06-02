@@ -1,6 +1,6 @@
 //
 //  Utils.swift
-//  Swiftkiq
+//  Lumpik
 //
 //  Created by Namai Satoshi on 2017/03/05.
 //
