@@ -18,7 +18,9 @@ public struct SwiftkiqClient {
                               "class": String(describing: `class`),
                               "args": args.toArray(),
                               "retry": retry,
-                              "queue": queue.name], to: queue)
+                              "queue": queue.name,
+                              "created_at": Date().timeIntervalSince1970,
+                              "enqueued_at": Date().timeIntervalSince1970 ], to: queue)
         }
     }
     

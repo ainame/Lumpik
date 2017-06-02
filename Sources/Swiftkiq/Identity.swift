@@ -78,9 +78,8 @@ struct ProcessIdentityGenerator {
 }
 
 struct ThreadIdentityGenerator {
-    static func makeIdentity(from queue: DispatchQueue) -> Tid {
-        let tid = "\(ProcessIdentityGenerator.identity)\(queue.label)".data(using: .utf8)!.base64EncodedString()
-        return Tid(tid)!
+    static func makeIdentity() -> Tid {
+        return Tid(String(Thread.current.hashValue, radix: 36))!
     }
 }
 

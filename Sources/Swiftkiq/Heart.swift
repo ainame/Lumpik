@@ -51,9 +51,9 @@ public class Heart {
                     .enqueue(Command("INCRBY"), ["stat:failed:\(nowdate)", "\(processed)"].map { $0.makeBytes() })
                     .enqueue(.delete, [workerKey])
                 
-                for (jid, workerState) in Processor.workerStates {
+                for (tid, workerState) in Processor.workerStates {
                     try transaction.enqueue(Command("HSET"),
-                                            [workerKey, jid.rawValue, converter.serialize(workerState.work.job)].map { $0.makeBytes() })
+                                            [workerKey, tid.rawValue, converter.serialize(workerState.asDictionary)].map { $0.makeBytes() })
                 }
                 try transaction
                     .enqueue(Command("EXPIRE"), [workerKey, String(60)].map { $0.makeBytes() })

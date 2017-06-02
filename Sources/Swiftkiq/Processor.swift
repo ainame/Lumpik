@@ -9,21 +9,16 @@
 import Foundation
 import Dispatch
 
-public protocol WorkerFailureCallback {
-    func didFailed<W : Worker>(worker: W, work: UnitOfWork, error: Error) throws
-    func didFailed(worker: String, work: UnitOfWork, error: Error) throws
-}
-
-public final class Processor: WorkerFailureCallback {
+public final class Processor: RouterDelegate {
     private static let mutex = Mutex()
-    private static var _workerState = [Jid: WorkerState]()
+    private static var _workerState = [Tid: WorkerState]()
 
-    static var workerStates: [Jid: WorkerState] {
+    static var workerStates: [Tid: WorkerState] {
         return mutex.synchronize { return _workerState }
     }
 
-    static func updateState(_ value: WorkerState?, for jid: Jid) {
-        mutex.synchronize { _workerState[jid] = value }
+    static func updateState(_ value: WorkerState?, for tid: Tid) {
+        mutex.synchronize { _workerState[tid] = value }
     }
 
     static var processedCounter = AtomicCounter<Int>(0)
@@ -114,12 +109,29 @@ public final class Processor: WorkerFailureCallback {
 
     func process(_ work: UnitOfWork) throws {
         do {
-            try router.dispatch(work, errorCallback: self)
+            try router.dispatch(work, delegate: self)
         } catch RouterError.notFoundWorker {
             try didFailed(worker: work.workerType, work: work, error: RouterError.notFoundWorker)
         }
     }
-
+    
+    
+    public func stats<W: Worker>(worker: W, work: UnitOfWork, block: () throws -> ()) throws {
+        let tid = ThreadIdentityGenerator.makeIdentity()
+        Processor.updateState(WorkerState(work: work, runAt: Date()), for: tid)
+        defer {
+            Processor.updateState(nil, for: tid)
+            Processor.processedCounter.increment()
+        }
+        
+        do {
+            try block()
+        } catch {
+            Processor.failureCounter.increment()
+            throw error
+        }
+    }
+    
     public func didFailed<W : Worker>(worker: W, work: UnitOfWork, error: Error) throws {
         logger.error("ERROR: \(error) on \(worker)")
         let maxRetry = worker.retry ?? W.defaultRetry
