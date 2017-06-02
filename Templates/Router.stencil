@@ -2,19 +2,19 @@ import Foundation
 import Swiftkiq
 
 class Router: Routable {
-    func dispatch(_ work: UnitOfWork, errorCallback: WorkerFailureCallback) throws {
+    func dispatch(_ work: UnitOfWork, delegate: RouterDelegate) throws {
         switch work.workerType {
         {% for type in types.based.Worker %}
         case String(describing: {{ type.name }}.self):
-            try invokeWorker(workerType: {{ type.name }}.self, work: work, errorCallback: errorCallback)
+            try invokeWorker(workerType: {{ type.name }}.self, work: work, delegate: delegate)
         {% endfor %}
         default:
             throw RouterError.notFoundWorker
         }
     }
 }
-
 {% for type in types.based.Worker %}
+
 extension {{ type.containedTypes.implementing.Argument.first.name }} {
     func toArray() -> [Any] {
         return [
