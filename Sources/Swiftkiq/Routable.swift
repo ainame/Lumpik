@@ -14,12 +14,18 @@ public enum RouterError: Error {
 }
 
 public protocol Routable {
-    func dispatch(_ work: UnitOfWork, errorCallback: WorkerFailureCallback) throws
-    func invokeWorker<W: Worker>(workerType: W.Type, work: UnitOfWork, errorCallback: WorkerFailureCallback) throws
+    func dispatch(_ work: UnitOfWork, delegate: RouterDelegate) throws
+    func invokeWorker<W: Worker>(workerType: W.Type, work: UnitOfWork, delegate: RouterDelegate) throws
+}
+
+public protocol RouterDelegate {
+    func stats<W: Worker>(worker: W, work: UnitOfWork, block: () throws -> ()) throws
+    func didFailed<W : Worker>(worker: W, work: UnitOfWork, error: Error) throws
+    func didFailed(worker: String, work: UnitOfWork, error: Error) throws
 }
 
 extension Routable {
-    public func invokeWorker<W: Worker>(workerType: W.Type, work: UnitOfWork, errorCallback: WorkerFailureCallback) throws {
+    public func invokeWorker<W: Worker>(workerType: W.Type, work: UnitOfWork, delegate: RouterDelegate) throws {
         var worker = workerType.init()
         let argument = workerType.Args.from(work.args)
         worker.jid = work.jid
@@ -34,28 +40,12 @@ extension Routable {
         }
         
         do {
-            try stats(worker: worker, work: work) {
+            try delegate.stats(worker: worker, work: work) {
                 try worker.perform(argument)
             }
         } catch let error {
-            try errorCallback.didFailed(worker: worker, work: work, error: error)
+            try delegate.didFailed(worker: worker, work: work, error: error)
             throw error
         }
     }
-    
-    func stats<W: Worker>(worker: W, work: UnitOfWork, block: () throws -> ()) throws {
-        Processor.updateState(WorkerState(work: work, runAt: Date()), for: work.jid)
-        defer {
-            Processor.updateState(nil, for: work.jid)
-            Processor.processedCounter.increment()
-        }
-        
-        do {
-            try block()
-        } catch {
-            Processor.failureCounter.increment()
-            throw error
-        }
-    }
-
 }
