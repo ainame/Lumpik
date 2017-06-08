@@ -145,7 +145,7 @@ extension RedisStore {
 
     func members(_ set: Set) throws -> [String] {
         let response = try redis.command(Command("SMEMBERS"), [set.key])
-        let members = response!.array!.flatMap { $0!.string! }
+        let members: [String] = response!.array!.flatMap { $0!.string! }
         return members
     }
 
