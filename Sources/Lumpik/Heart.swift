@@ -21,7 +21,7 @@ public class Heart {
         return formatter
     }()
     
-    let converter: Converter = JsonConverter.default
+    let encoder = JSONEncoder()
 
     private let concurrency: Int
     private let queues: [Queue]
@@ -53,7 +53,9 @@ public class Heart {
                 
                 for (tid, workerState) in Processor.workerStates {
                     try transaction.enqueue(Command("HSET"),
-                                            [workerKey, tid.rawValue, converter.serialize(workerState.asDictionary)].map { $0.makeBytes() })
+                                            [workerKey.makeBytes(),
+                                             tid.rawValue.makeBytes(),
+                                             encoder.encode(workerState).makeBytes()])
                 }
                 try transaction
                     .enqueue(Command("EXPIRE"), [workerKey, String(60)].map { $0.makeBytes() })
@@ -76,7 +78,7 @@ public class Heart {
                     .enqueue(Command("EXISTS"), [processKey].map { $0.makeBytes() })
                     .enqueue(Command("HMSET"), [
                         processKey,
-                        "info", processState.json,
+                        "info", try encoder.encode(processState).makeString(),
                         "busy", "\(Processor.workerStates.count)",
                         "beat", "\(Date().timeIntervalSince1970)",
                         "quit", "\(done)"].map { $0.makeBytes() })

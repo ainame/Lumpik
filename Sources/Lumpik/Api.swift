@@ -49,27 +49,22 @@ public final class ProcessSet: Set {
     public func each(_ block: (ProcessState) -> ()) throws {
         _ = try ProcessSet.connectionPool.with { conn in
             let processeKeys: [String] = try conn.members(self).sorted { $0 < $1 }
-            
-            let converter = JsonConverter.default
+            let decoder = JSONDecoder()
             let pipeline = conn.pipelined()
             for processKey in processeKeys {
                 try pipeline.enqueue(Command("HMGET"), [processKey, "info", "busy", "beat", "quit"].map { $0.makeBytes() })
             }
             
             let responses = try pipeline.execute()
-            let tmp: [[String]] = responses.flatMap { $0?.array?.flatMap { $0?.string } }
-            let filtered = tmp.filter { $0.count == 4 }
-            let processes = try filtered.map { (elem: [String]) throws -> [String: Any?] in
-                let info: [String: Any] = try converter.deserialize(dictionary: elem[0])
-                let dict: [String: Any?] = [
-                    "info": info,
-                    "busy": Int(elem[1]),
-                    "beat": Double(elem[2]),
-                    "quit": Bool(elem[3])]
-                return dict
+            let filtered: [[String]] = responses.flatMap { $0 }.flatMap { $0.array!.flatMap { $0?.string } }.filter { $0.count == 4 }
+            let processStates: [ProcessState] = try filtered.map { values in
+                let process: Process = try decoder.decode(Lumpik.Process.self, from: values[0].data(using: .utf8)!)
+                return ProcessState(info: process,
+                                    busy: Int(values[1]),
+                                    beat: Date(timeIntervalSince1970: Double(values[2])!),
+                                    quit: Bool(values[3])!)
             }
-            let parsedProcesses = ProcessState.from(processes as NSArray) ?? []
-            for process in parsedProcesses {
+            for process in processStates {
                 block(process)
             }
         }

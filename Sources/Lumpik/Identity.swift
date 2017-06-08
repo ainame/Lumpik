@@ -9,7 +9,7 @@
 import Foundation
 import Dispatch
 
-public protocol Identity: RawRepresentable, Equatable, Hashable, Comparable, CustomStringConvertible {}
+public protocol Identity: RawRepresentable, Hashable, Comparable, CustomStringConvertible, Codable {}
 
 extension Identity where RawValue == String {
     public var hashValue: Int {

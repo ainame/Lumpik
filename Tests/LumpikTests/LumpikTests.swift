@@ -67,11 +67,11 @@ class LumpikTests: XCTestCase {
         _ = try pool.with { conn in
             try conn.enqueue(["hoge": 1, "queue": "default"], to: Queue("default"))
             do {
-                let work = try conn.dequeue([Queue("default")])
-                XCTAssertNotNil(work)
-            } catch(let error) {
-                print(error)
+                let a = try conn.dequeue([Queue("default")])
                 XCTFail()
+            } catch {
+                print(error)
+                XCTAssertNotNil(error)
             }
         }
     }

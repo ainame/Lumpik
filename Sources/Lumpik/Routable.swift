@@ -27,9 +27,9 @@ public protocol RouterDelegate {
 extension Routable {
     public func invokeWorker<W: Worker>(workerType: W.Type, work: UnitOfWork, delegate: RouterDelegate) throws {
         var worker = workerType.init()
-        let argument = workerType.Args.from(work.args)
+        let argument = try JSONDecoder().decode(W.Args.self, from: work.args)
         worker.jid = work.jid
-        worker.retry = work.retry
+        worker.retry = work.retryLimit
         worker.queue = work.queue
 
         logger.info("jid=\(work.jid) \(work.workerType) start")

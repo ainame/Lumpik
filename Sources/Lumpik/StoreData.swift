@@ -10,7 +10,7 @@ import Foundation
 import Mapper
 import Bits
 
-public protocol StoreKeyConvertible: RawRepresentable, Equatable, Hashable {
+public protocol StoreKeyConvertible: RawRepresentable, Hashable {
     var key: Bytes { get }
 }
 
@@ -26,7 +26,7 @@ extension StoreKeyConvertible {
     }
 }
 
-public class Queue: StoreKeyConvertible, CustomStringConvertible {
+public class Queue: StoreKeyConvertible, CustomStringConvertible, Codable {
     public let rawValue: String
 
     public convenience init(_ rawValue: String) {

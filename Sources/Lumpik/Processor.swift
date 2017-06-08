@@ -149,31 +149,28 @@ public final class Processor: RouterDelegate {
     }
 
     func attemptRetry(work: UnitOfWork, error: Error, maxRetry: Int, delay: Int) throws {
-        var newJob = work.job
+        var newJob = work
         
-        newJob["error_message"] = error.localizedDescription
+        newJob.errorMessage = error.localizedDescription
         
-        if let retryCount = newJob["retry_count"] as? Int {
-            newJob["retried_at"] = Date().timeIntervalSince1970
-            newJob["retry_count"] = retryCount + 1
+        if let retryCount = newJob.retryCount {
+            newJob.retriedAt = Date().timeIntervalSince1970
+            newJob.retryCount = retryCount + 1
         } else {
-            newJob["failed_at"] = Date().timeIntervalSince1970
-            newJob["retry_count"] = 0
+            newJob.failedAt = Date().timeIntervalSince1970
+            newJob.retryCount = 0
         }
         
-        let backtrace = newJob["backtrace"] ?? false
-        switch backtrace {
-        case is Bool:
-            let backtraceBool = backtrace as! Bool
-            if backtraceBool {
-                newJob["error_backtrace"] = Thread.callStackSymbols
+        if let backtrace = newJob.backtrace {
+            switch backtrace {
+            case .on:
+                newJob.errorBacktrace = Thread.callStackSymbols.joined()
+            case .limited(let limit):
+                let all = Thread.callStackSymbols.joined()
+                newJob.errorBacktrace = all.substring(to: all.index(all.startIndex, offsetBy: String.IndexDistance(limit)))
+            default:
+                break
             }
-        case is Int:
-            let backtraceInt = backtrace as! Int
-            let all = Thread.callStackSymbols.joined()
-            newJob["error_backtrace"] = all.substring(to: all.index(all.startIndex, offsetBy: backtraceInt))
-        default:
-            break
         }
         
         let current = work.retryCount ?? 0
