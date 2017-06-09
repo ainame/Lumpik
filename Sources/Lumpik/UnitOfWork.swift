@@ -23,10 +23,10 @@ public struct UnitOfWork: Codable {
     public var failedAt: TimeInterval?
     public var errorMessage: String?
     public var errorBacktrace: String?
-    public let backtrace: ConfigurableBool?
-    public let retry: ConfigurableBool?
+    public let backtrace: ToggleOrLimit?
+    public let retry: ToggleOrLimit?
     
-    public enum ConfigurableBool {
+    public enum ToggleOrLimit {
         case on
         case off
         case limited(UInt)
@@ -70,7 +70,7 @@ extension UnitOfWork {
     }
 }
 
-extension UnitOfWork.ConfigurableBool: Codable {
+extension UnitOfWork.ToggleOrLimit: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         if let boolValue = try? container.decode(Bool.self) {
@@ -79,7 +79,7 @@ extension UnitOfWork.ConfigurableBool: Codable {
             self = .limited(intValue)
         } else {
             throw DecodingError.typeMismatch(
-                UnitOfWork.ConfigurableBool.self, .init(codingPath: [], debugDescription: ""))
+                UnitOfWork.ToggleOrLimit.self, .init(codingPath: [], debugDescription: ""))
         }
     }
     
