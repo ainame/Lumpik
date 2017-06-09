@@ -9,6 +9,8 @@
 import Foundation
 
 public struct UnitOfWork: Codable {
+    static var connectionPoolForInternal = AnyConnectablePool(Application.default.connectionPoolForInternal)
+    
     public let jid: Jid
     public let workerType: String
     public let args: Data
@@ -24,37 +26,10 @@ public struct UnitOfWork: Codable {
     public let backtrace: ConfigurableBool?
     public let retry: ConfigurableBool?
     
-    public func requeue() throws {
-        // TODO
-    }
-    
-    public enum ConfigurableBool: Codable {
+    public enum ConfigurableBool {
         case on
         case off
         case limited(UInt)
-        
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.singleValueContainer()
-            if let boolValue = try? container.decode(Bool.self) {
-                self = boolValue ? .on : .off
-            } else if let intValue = try? container.decode(UInt.self) {
-                self = .limited(intValue)
-            } else {
-                throw DecodingError.typeMismatch(ConfigurableBool.self, .init(codingPath: [], debugDescription: ""))
-            }
-        }
-        
-        public func encode(to encoder: Encoder) throws {
-            var container = encoder.singleValueContainer()
-            switch self {
-            case .on:
-                try container.encode(true)
-            case .off:
-                try container.encode(false)
-            case .limited(let x):
-                try container.encode(x)
-            }
-        }
     }
     
     enum CodingKeys: String, CodingKey {
@@ -73,6 +48,12 @@ public struct UnitOfWork: Codable {
         case backtrace
         case retry
     }
+    
+    public func requeue() throws {
+        try UnitOfWork.connectionPoolForInternal.with { conn in
+            try conn.enqueue(self, to: self.queue)
+        }
+    }
 }
 
 extension UnitOfWork {
@@ -85,6 +66,32 @@ extension UnitOfWork {
             return 0
         case .limited(let x):
             return Int(x)
+        }
+    }
+}
+
+extension UnitOfWork.ConfigurableBool: Codable {
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let boolValue = try? container.decode(Bool.self) {
+            self = boolValue ? .on : .off
+        } else if let intValue = try? container.decode(UInt.self) {
+            self = .limited(intValue)
+        } else {
+            throw DecodingError.typeMismatch(
+                UnitOfWork.ConfigurableBool.self, .init(codingPath: [], debugDescription: ""))
+        }
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .on:
+            try container.encode(true)
+        case .off:
+            try container.encode(false)
+        case .limited(let x):
+            try container.encode(x)
         }
     }
 }
