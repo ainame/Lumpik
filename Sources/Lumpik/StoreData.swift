@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Mapper
 import Bits
 
 public protocol StoreKeyConvertible: RawRepresentable, Hashable {

@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Mapper
 import Redis
 
 public final class ProcessSet: Set {
