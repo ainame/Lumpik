@@ -13,11 +13,11 @@ public struct LumpikClient {
     static var connectionPool = AnyConnectablePool(Application.default.connectionPool)
 
     public static func enqueue<W: Worker, A: Argument>(`class`: W.Type, args: A, retry: Int = W.defaultRetry, to queue: Queue = W.defaultQueue) throws {
-        let encoder = JSONEncoder()
         let now = Date()
+        let data = try JsonConverter.default.serialize(args.toArray()).data(using: .utf8)!
         let work = UnitOfWork(jid: JobIdentityGenerator.makeIdentity(),
                                workerType: String(describing: `class`),
-                               args: try encoder.encode(args),
+                               args: data,
                                queue: queue,
                                createdAt: now.timeIntervalSince1970,
                                enqueuedAt: now.timeIntervalSince1970,

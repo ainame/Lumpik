@@ -8,7 +8,10 @@
 
 import Foundation
 
-public protocol Argument: Codable {}
+public protocol Argument {
+    func toArray() -> [Any]
+    static func from(_ array: [Any]) -> Self?
+}
 
 public protocol Worker {
     associatedtype Args: Argument
