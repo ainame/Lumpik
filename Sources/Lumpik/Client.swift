@@ -14,10 +14,9 @@ public struct LumpikClient {
 
     public static func enqueue<W: Worker, A: Argument>(`class`: W.Type, args: A, retry: Int = W.defaultRetry, to queue: Queue = W.defaultQueue) throws {
         let now = Date()
-        let data = try JsonConverter.default.serialize(args.toArray()).data(using: .utf8)!
         let work = UnitOfWork(jid: JobIdentityGenerator.makeIdentity(),
                                workerType: String(describing: `class`),
-                               args: data,
+                               args: args.toArray(),
                                queue: queue,
                                createdAt: now.timeIntervalSince1970,
                                enqueuedAt: now.timeIntervalSince1970,
@@ -27,7 +26,7 @@ public struct LumpikClient {
             try conn.enqueue(work, to: queue)
         }
     }
-    
+
     public static func enqueue(_ job: [String: Any], to queue: Queue? = nil) throws {
         let newQueue = queue ?? Queue(job["queue"] as! String)
         var newJob = job
@@ -36,7 +35,7 @@ public struct LumpikClient {
             try conn.enqueue(newJob, to: newQueue)
         }
     }
-    
+
     public static func enqueue(_ job: UnitOfWork, to queue: Queue? = nil) throws {
         let newQueue = queue ?? job.queue
         _ = try connectionPool.with { conn in

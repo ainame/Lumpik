@@ -27,8 +27,7 @@ public protocol RouterDelegate {
 
 extension Routable {
     public func invokeWorker<W: Worker>(workerType: W.Type, work: UnitOfWork, delegate: RouterDelegate) throws {
-        let args = try JsonConverter.default.deserialize(array: work.args.makeString())
-        guard let argument = workerType.Args.from(args) else {
+        guard let argument = workerType.Args.from(work.args) else {
             throw RouterError.cantDeserializeArgument
         }
         

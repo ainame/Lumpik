@@ -13,7 +13,7 @@ public struct UnitOfWork: Codable {
     
     public let jid: Jid
     public let workerType: String
-    public let args: Data
+    public let args: [AnyArgumentValue] // AnyValue型を作って全部Stringに保存して取り出す時はcorcerionする
     public let queue: Queue
     public let createdAt: TimeInterval
     public let enqueuedAt: TimeInterval
@@ -32,6 +32,24 @@ public struct UnitOfWork: Codable {
         case limited(UInt)
     }
     
+    public var retryLimit: Int {
+        guard let retry = retry else { return 25 }
+        switch retry {
+        case .on:
+            return 25
+        case .off:
+            return 0
+        case .limited(let x):
+            return Int(x)
+        }
+    }
+    
+    public func requeue() throws {
+        try UnitOfWork.connectionPoolForInternal.with { conn in
+            try conn.enqueue(self, to: self.queue)
+        }
+    }
+    
     enum CodingKeys: String, CodingKey {
         case jid
         case workerType = "class"
@@ -48,27 +66,8 @@ public struct UnitOfWork: Codable {
         case backtrace
         case retry
     }
-    
-    public func requeue() throws {
-        try UnitOfWork.connectionPoolForInternal.with { conn in
-            try conn.enqueue(self, to: self.queue)
-        }
-    }
 }
 
-extension UnitOfWork {
-    var retryLimit: Int {
-        guard let retry = retry else { return 25 }
-        switch retry {
-        case .on:
-            return 25
-        case .off:
-            return 0
-        case .limited(let x):
-            return Int(x)
-        }
-    }
-}
 
 extension UnitOfWork.ToggleOrLimit: Codable {
     public init(from decoder: Decoder) throws {

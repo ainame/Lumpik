@@ -8,9 +8,31 @@
 
 import Foundation
 
-public protocol Argument {
-    func toArray() -> [Any]
-    static func from(_ array: [Any]) -> Self?
+public struct AnyArgumentValue: Codable, CustomStringConvertible {
+    private let representedString: String
+    
+    public init<T>(_ value: T) {
+        representedString = String(describing: value)
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        representedString = try container.decode(String.self)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(representedString)
+    }
+    
+    public var description: String {
+        return representedString
+    }
+}
+
+public protocol Argument: Codable {
+    func toArray() -> [AnyArgumentValue]
+    static func from(_ array: [AnyArgumentValue]) -> Self?
 }
 
 public protocol Worker {
