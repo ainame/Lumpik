@@ -17,18 +17,18 @@ class Router: Routable {
 }
 
 extension EchoWorker.Args {
-    func toArray() -> [Any] {
+    func toArray() -> [AnyArgumentValue] {
         return [
             message,
-        ]
+        ].map { AnyArgumentValue($0) }
     }
 
-    static func from(_ array: [Any]) -> EchoWorker.Args? {
-        guard let message = array[1 - 1] as? String else {
+    static func from(_ array: [AnyArgumentValue]) -> EchoWorker.Args? {
+        // NOTE: currently stencil template engine can not provide counter with starting 0
+        guard let message = String(array[1 - 1].description)  else {
             return nil
         }
 
-        // NOTE: currently stencil template engine can not provide counter with starting 0
         return EchoWorker.Args(
             message: message
         )
