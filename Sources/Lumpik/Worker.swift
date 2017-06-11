@@ -8,6 +8,27 @@
 
 import Foundation
 
+public protocol Worker {
+    associatedtype Args: Argument
+
+    static var defaultQueue: Queue { get }
+    static var defaultRetry: Int { get }
+    static var retryIn: Int? { get }
+
+    var jid: Jid? { get set }
+    var queue: Queue? { get set }
+    var retry: Int? { get set }
+
+    init()
+    static func performAsync(_ args: Args, on queue: Queue) throws
+    func perform(_ args: Args) throws -> ()
+}
+
+public protocol Argument: Codable {
+    func toArray() -> [AnyArgumentValue]
+    static func from(_ array: [AnyArgumentValue]) -> Self?
+}
+
 public struct AnyArgumentValue: Codable, CustomStringConvertible {
     private let representedString: String
     
@@ -28,27 +49,6 @@ public struct AnyArgumentValue: Codable, CustomStringConvertible {
     public var description: String {
         return representedString
     }
-}
-
-public protocol Argument: Codable {
-    func toArray() -> [AnyArgumentValue]
-    static func from(_ array: [AnyArgumentValue]) -> Self?
-}
-
-public protocol Worker {
-    associatedtype Args: Argument
-
-    static var defaultQueue: Queue { get }
-    static var defaultRetry: Int { get }
-    static var retryIn: Int? { get }
-
-    var jid: Jid? { get set }
-    var queue: Queue? { get set }
-    var retry: Int? { get set }
-
-    init()
-    static func performAsync(_ args: Args, on queue: Queue) throws
-    func perform(_ args: Args) throws -> ()
 }
 
 extension Worker {
