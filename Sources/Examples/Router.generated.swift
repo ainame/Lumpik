@@ -27,12 +27,18 @@ extension ComplexWorker.Args {
         ]
     }
 
-    static func from(_ array: [Any]) -> ComplexWorker.Args {
+    static func from(_ array: [Any]) -> ComplexWorker.Args? {
+        guard let userId = array[1 - 1] as? Int,
+            let comment = array[2 - 1] as? String,
+            let data = array[3 - 1] as? [String: Any] else {
+            return nil
+        }
+
         // NOTE: currently stencil template engine can not provide counter with starting 0
         return ComplexWorker.Args(
-            userId: array[1 - 1] as! Int,
-            comment: array[2 - 1] as! String,
-            data: array[3 - 1] as! [String: Any]
+            userId: userId,
+            comment: comment,
+            data: data
         )
     }
 }
@@ -44,10 +50,14 @@ extension EchoWorker.Args {
         ]
     }
 
-    static func from(_ array: [Any]) -> EchoWorker.Args {
+    static func from(_ array: [Any]) -> EchoWorker.Args? {
+        guard let message = array[1 - 1] as? String else {
+            return nil
+        }
+
         // NOTE: currently stencil template engine can not provide counter with starting 0
         return EchoWorker.Args(
-            message: array[1 - 1] as! String
+            message: message
         )
     }
 }

@@ -23,10 +23,14 @@ extension EchoWorker.Args {
         ]
     }
 
-    static func from(_ array: [Any]) -> EchoWorker.Args {
+    static func from(_ array: [Any]) -> EchoWorker.Args? {
+        guard let message = array[1 - 1] as? String else {
+            return nil
+        }
+
         // NOTE: currently stencil template engine can not provide counter with starting 0
         return EchoWorker.Args(
-            message: array[1 - 1] as! String
+            message: message
         )
     }
 }
