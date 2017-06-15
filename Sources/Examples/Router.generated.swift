@@ -19,35 +19,42 @@ class Router: Routable {
 }
 
 extension ComplexWorker.Args {
-    func toArray() -> [Any] {
+    func toArray() -> [AnyArgumentValue] {
         return [
             userId,
             comment,
-            data,
-        ]
+        ].map { AnyArgumentValue($0) }
     }
 
-    static func from(_ array: [Any]) -> ComplexWorker.Args {
+    static func from(_ array: [AnyArgumentValue]) -> ComplexWorker.Args? {
         // NOTE: currently stencil template engine can not provide counter with starting 0
+        guard let userId = Int(array[1 - 1].description) ,
+            let comment = String(array[2 - 1].description)  else {
+            return nil
+        }
+
         return ComplexWorker.Args(
-            userId: array[1 - 1] as! Int,
-            comment: array[2 - 1] as! String,
-            data: array[3 - 1] as! [String: Any]
+            userId: userId,
+            comment: comment
         )
     }
 }
 
 extension EchoWorker.Args {
-    func toArray() -> [Any] {
+    func toArray() -> [AnyArgumentValue] {
         return [
             message,
-        ]
+        ].map { AnyArgumentValue($0) }
     }
 
-    static func from(_ array: [Any]) -> EchoWorker.Args {
+    static func from(_ array: [AnyArgumentValue]) -> EchoWorker.Args? {
         // NOTE: currently stencil template engine can not provide counter with starting 0
+        guard let message = String(array[1 - 1].description)  else {
+            return nil
+        }
+
         return EchoWorker.Args(
-            message: array[1 - 1] as! String
+            message: message
         )
     }
 }

@@ -11,6 +11,7 @@ import SwiftyBeaver
 
 public enum RouterError: Error {
     case notFoundWorker
+    case cantDeserializeArgument
 }
 
 public protocol Routable {
@@ -26,10 +27,13 @@ public protocol RouterDelegate {
 
 extension Routable {
     public func invokeWorker<W: Worker>(workerType: W.Type, work: UnitOfWork, delegate: RouterDelegate) throws {
+        guard let argument = workerType.Args.from(work.args) else {
+            throw RouterError.cantDeserializeArgument
+        }
+        
         var worker = workerType.init()
-        let argument = workerType.Args.from(work.args)
         worker.jid = work.jid
-        worker.retry = work.retry
+        worker.retry = work.retryLimit
         worker.queue = work.queue
 
         logger.info("jid=\(work.jid) \(work.workerType) start")

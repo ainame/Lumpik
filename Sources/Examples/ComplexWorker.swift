@@ -21,13 +21,13 @@ final class ComplexWorker: BaseWorker, Worker {
     struct Args: Argument {
         let userId: Int
         let comment: String
-        let data: [String: Any]
+        // let data: [String: Any]
     }
 
     static var defaultQueue = Queue("complex")
 
     func perform(_ args: Args) throws {
-        print("userId: \(args.userId), comment:\(args.comment), data:\(args.data)")
+        print("userId: \(args.userId), comment:\(args.comment), data:(args.data)")
         sleep(3)
     }
 }

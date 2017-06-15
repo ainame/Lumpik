@@ -9,34 +9,6 @@
 import Foundation
 import Redis
 import Sockets
-import Mapper
-
-enum SortedSetScore {
-case value(Double)
-case infinityPositive
-case infinityNegative
-
-    var string: String {
-        switch self {
-        case .value(let double):
-            return String(double)
-        case .infinityPositive:
-            return "+Inf"
-        case .infinityNegative:
-            return "-Inf"
-        }
-    }
-}
-
-extension StoreKeyConvertible where Self: RawRepresentable, Self.RawValue == String {
-    var name: String {
-        return rawValue
-    }
-
-    public var hashValue: Int {
-        return rawValue.hashValue
-    }
-}
 
 public struct RedisConfig {
     let host: String = "localhost"
@@ -65,8 +37,7 @@ final class RedisStore: Connectable {
     let defaultTimeout = 8.0
 
     fileprivate let redis: Redis.TCPClient
-    fileprivate let converter: Converter = JsonConverter.default
-
+    
     init(host: String, port: UInt16, password: String? = nil) throws {
         self.host = host
         self.port = port
@@ -102,8 +73,15 @@ extension RedisStore {
 extension RedisStore {
     @discardableResult
     func enqueue(_ job: [String: Any], to queue: Queue) throws -> Int {
-        let string = try JsonConverter.default.serialize(job)
-        let response = try redis.command(Command("LPUSH"), [queue.key, string.makeBytes()])
+        let data = try JsonConverter.default.serialize(job)
+        let response = try redis.command(Command("LPUSH"), [queue.key, data.makeBytes()])
+        return response!.int!
+    }
+    
+    @discardableResult
+    func enqueue(_ job: UnitOfWork, to queue: Queue) throws -> Int {
+        let data = try JSONEncoder().encode(job)
+        let response = try redis.command(Command("LPUSH"), [queue.key, data.makeBytes()])
         return response!.int!
     }
 
@@ -115,11 +93,9 @@ extension RedisStore {
         guard let array = response?.array else {
             return nil
         }
-
-        let jsonString = array[1]!.string!
-        let parsedJson = try converter.deserialize(dictionary: jsonString)
-        let queue = Queue(parsedJson["queue"]! as! String)
-        return UnitOfWork(queue: queue, job: parsedJson)
+        
+        let data = Data(array[1]!.bytes!)
+        return try JSONDecoder().decode(UnitOfWork.self, from: data)
     }
     
     func size(_ queue: Queue) throws -> Int {
@@ -130,8 +106,8 @@ extension RedisStore {
 
 extension RedisStore {
     func add(_ member: [String: Any], to set: Set) throws -> Int {
-        let string = try converter.serialize(member)
-        let response = try redis.command(Command("SADD"), [set.key, string.makeBytes()])
+        let data = try JSONEncoder().encode(member)
+        let response = try redis.command(Command("SADD"), [set.key, data.makeBytes()])
         return response!.int!
     }
 
@@ -157,9 +133,9 @@ extension RedisStore {
 
 extension RedisStore {
     @discardableResult
-    func add(_ member: [String: Any], with score: SortedSetScore, to sortedSet: SortedSet) throws -> Int {
-        let string = try converter.serialize(member)
-        let response = try redis.command(Command("ZADD"), [sortedSet.key, score.string.makeBytes(), string.makeBytes()])
+    func add(_ member: UnitOfWork, with score: SortedSetScore, to sortedSet: SortedSet) throws -> Int {
+        let data = try JSONEncoder().encode(member)
+        let response = try redis.command(Command("ZADD"), [sortedSet.key, score.string.makeBytes(), data.makeBytes()])
         return response!.int!
     }
 
@@ -170,10 +146,13 @@ extension RedisStore {
         return response!.int!
     }
 
-    func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, offset: Int, count: Int) throws -> [[String: Any]] {
-        let params = [sortedSet.key, min.string.makeBytes(), max.string.makeBytes(), "LIMIT".makeBytes(), String(offset).makeBytes(), String(count).makeBytes()]
+    func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, offset: Int, count: Int) throws -> [UnitOfWork] {
+        let params = [sortedSet.key, min.string.makeBytes(), max.string.makeBytes(),
+                      "LIMIT".makeBytes(), String(offset).makeBytes(), String(count).makeBytes()]
         let response = try redis.command(Command("ZRANGEBYSCORE"), params)
-        return try response!.array!.flatMap { $0!.string }.map { try converter.deserialize(dictionary: $0) }
+        let decoder = JSONDecoder()
+        return try response!.array!.flatMap { $0!.string }
+            .map { try decoder.decode(UnitOfWork.self, from: Data($0.makeBytes())) }
     }
 
     func size(_ sortedSet: SortedSet) throws -> Int {
@@ -206,5 +185,32 @@ extension RedisStore {
         }
         
         return (successes: successes, errors: errors)
+    }
+}
+
+enum SortedSetScore {
+    case value(Double)
+    case infinityPositive
+    case infinityNegative
+    
+    var string: String {
+        switch self {
+        case .value(let double):
+            return String(double)
+        case .infinityPositive:
+            return "+Inf"
+        case .infinityNegative:
+            return "-Inf"
+        }
+    }
+}
+
+extension StoreKeyConvertible where Self.RawValue == String {
+    var name: String {
+        return rawValue
+    }
+    
+    public var hashValue: Int {
+        return rawValue.hashValue
     }
 }

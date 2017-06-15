@@ -45,10 +45,10 @@ final class BasicFetcher: Fetcher {
     func bulkRequeue(_ jobs: [UnitOfWork]) throws {
         _ = try Application.connectionPool { conn in
             let pipeline = conn.pipelined()
-            let encoder = JsonConverter.default
-        
+            let encoder = JSONEncoder()
+            
             for job in jobs {
-                let payload = try encoder.serialize(job.job)
+                let payload = try encoder.encode(job)
                 try pipeline.enqueue(Command("RPUSH"), [job.queue.key, payload.makeBytes()])
             }
         

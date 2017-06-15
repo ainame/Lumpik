@@ -83,12 +83,14 @@ public class ConnectionPool<T: Connectable>: ConnectablePool {
 }
 
 extension ConnectablePool {
+    @discardableResult
     public func with<T>(handler: (Connection) -> (T)) throws -> T {
         let conn = try borrow()
         defer { checkin(conn) }
         return handler(conn)
     }
     
+    @discardableResult
     public func with<T>(handler: (Connection) throws -> (T)) throws -> T {
         let conn = try borrow()
         defer { checkin(conn) }

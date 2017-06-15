@@ -11,22 +11,6 @@ import Foundation
 import Dispatch
 @testable import Lumpik
 
-// do not use with other thread
-final class SingleConnectionPool: ConnectablePool {
-    var redis: RedisStore
-    
-    init() {
-        redis = try! RedisStore(host: "localhost", port: 6379)
-    }
-
-    func borrow() throws -> RedisStore {
-        return redis
-    }
-    func checkin(_ connection: RedisStore) {
-        //
-    }
-}
-
 class ProcessSetTests: XCTestCase {
     static var allTests : [(String, (ProcessSetTests) -> () throws -> Void)] {
         return [
@@ -50,9 +34,7 @@ class ProcessSetTests: XCTestCase {
     func testExample() throws {
         let string = "{ \"hostname\": \"app-1.example.com\", \"started_at\": 12345678910, \"pid\": 12345, \"tag\": \"myapp\", \"concurrency\": 25, \"labels\": [], \"queues\": [\"default\", \"low\"],\"busy\": 10,\"beat\": 12345678910,\"identity\": \"<unique string identifying the process>\"}"
         let data = string.data(using: .utf8)!
-        let json = try JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions())
-        let dict = json as! NSDictionary
-        let process = Lumpik.Process.from(dict)
+        let process = try JSONDecoder().decode(Lumpik.Process.self, from:data)
         XCTAssertNotNil(process)
                 
         let heart = Heart(concurrency: 25, queues: [Queue("default")])

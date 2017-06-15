@@ -47,15 +47,6 @@
         }
       },
       {
-        "package": "Mapper",
-        "repositoryURL": "https://github.com/lyft/mapper.git",
-        "state": {
-          "branch": null,
-          "revision": "171da732bb825bc75dc6be218de6bf87ad25b271",
-          "version": "6.0.0"
-        }
-      },
-      {
         "package": "Node",
         "repositoryURL": "https://github.com/vapor/node.git",
         "state": {

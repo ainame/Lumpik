@@ -36,15 +36,15 @@ public class Poller {
     func enqueue () throws {
         logger.debug("poll... at \(Date().timeIntervalSince1970)")
         _ = try Application.connectionPoolForInternal { conn in
+            let encoder = JSONEncoder()
             for jobSet in [RetrySet(), ScheduledSet()] {
                 do {
                     let now = Date().timeIntervalSince1970
                     while let job = try conn.range(min: .infinityNegative, max: .value(now), from: jobSet, offset: 0, count: 1).first {
-                        guard let queue = job["queue"] as? String else { continue }
-                        let serialized = try converter.serialize(job)
+                        let serialized = try encoder.encode(job).makeString()
                         if try conn.remove([serialized], from: jobSet) > 0 {
-                            try LumpikClient.enqueue(job, to: Queue(queue))
-                            logger.error("enqueued \(jobSet): \(String(describing: job["jid"]))")
+                            try LumpikClient.enqueue(job, to: job.queue)
+                            logger.error("enqueued \(jobSet): \(String(describing: job.jid))")
                         }
                     }
                 } catch {
