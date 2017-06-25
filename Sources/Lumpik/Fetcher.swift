@@ -16,14 +16,15 @@ public protocol Fetcher: class {
 }
 
 final class BasicFetcher: Fetcher {
+    var connectionPool = AnyConnectablePool(Application.default.connectionPool)
     private let queues: [Queue]
-
+    
     init(queues: [Queue]) {
         self.queues = queues
     }
 
     func retriveWork() throws -> UnitOfWork? {
-        return try Application.connectionPool { conn in
+        return try connectionPool.with { conn in
             try conn.dequeue(randomSortedQueues())
         }
     }
@@ -43,7 +44,7 @@ final class BasicFetcher: Fetcher {
     }
     
     func bulkRequeue(_ jobs: [UnitOfWork]) throws {
-        _ = try Application.connectionPool { conn in
+        _ = try connectionPool.with { conn in
             let pipeline = conn.pipelined()
             let encoder = JSONEncoder()
             

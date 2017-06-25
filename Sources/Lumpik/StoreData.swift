@@ -14,8 +14,12 @@ public protocol StoreKeyConvertible: RawRepresentable, Hashable {
 }
 
 extension StoreKeyConvertible {
+    var connectionPoolForInternal: AnyConnectablePool<RedisStore> {
+        return AnyConnectablePool(Application.default.connectionPoolForInternal)
+    }
+    
     public func clear() throws {
-        _ = try Application.connectionPoolForInternal { conn in
+        _ = try connectionPoolForInternal.with { conn in
             try conn.clear(self)
         }
     }
@@ -79,18 +83,18 @@ public class Set: StoreKeyConvertible {
 
 extension Queue {
     public func count() throws -> Int {
-        return try Application.connectionPoolForInternal { try $0.size(self) }
+        return try connectionPoolForInternal.with { try $0.size(self) }
     }
 }
 
 extension SortedSet {
     public func count() throws -> Int {
-        return try Application.connectionPoolForInternal { try $0.size(self) }
+        return try connectionPoolForInternal.with { try $0.size(self) }
     }
 }
 
 extension Set {
     public func count() throws -> Int {
-        return try Application.connectionPoolForInternal { try $0.size(self) }
+        return try connectionPoolForInternal.with { try $0.size(self) }
     }
 }

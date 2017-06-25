@@ -39,34 +39,3 @@ struct Application {
         }
     }
 }
-
-// MARK: connection pool
-extension Application {
-    @discardableResult
-    static func connectionPool<T>(handler: (RedisStore) -> T) throws -> T {
-        return try self.default.connectionPool.with { conn in
-            handler(conn)
-        }
-    }
-
-    @discardableResult
-    static func connectionPool<T>(handler: (RedisStore) throws -> T) throws -> T {
-        return try self.default.connectionPool.with { conn in
-            try handler(conn)
-        }
-    }
-    
-    @discardableResult
-    static func connectionPoolForInternal<T>(handler: (RedisStore) -> T) throws -> T {
-        return try self.default.connectionPoolForInternal.with { conn in
-            handler(conn)
-        }
-    }
-    
-    @discardableResult
-    static func connectionPoolForInternal<T>(handler: (RedisStore) throws -> T) throws -> T {
-        return try self.default.connectionPoolForInternal.with { conn in
-            try handler(conn)
-        }
-    }
-}
