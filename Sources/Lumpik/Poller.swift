@@ -13,6 +13,8 @@ public class Poller {
     static let initalWait: UInt32 = 10
 
     public let averageScheduledPollInterval: Int
+    
+    var connectionPoolForInternal = AnyConnectablePool(Application.default.connectionPoolForInternal)
 
     private let dispatchQueue = DispatchQueue(label: "tokyo.ainame.swiftkiq.poller")
     private let converter = JsonConverter.default
@@ -35,7 +37,7 @@ public class Poller {
 
     func enqueue () throws {
         logger.debug("poll... at \(Date().timeIntervalSince1970)")
-        _ = try Application.connectionPoolForInternal { conn in
+        _ = try connectionPoolForInternal.with { conn in
             let encoder = JSONEncoder()
             for jobSet in [RetrySet(), ScheduledSet()] {
                 do {

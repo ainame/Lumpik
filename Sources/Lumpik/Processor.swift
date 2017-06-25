@@ -26,7 +26,9 @@ public final class Processor: RouterDelegate {
 
     let dispatchQueue: DispatchQueue
     private var looper: DispatchWorkItem!
-
+    
+    var connectionPool = AnyConnectablePool(Application.default.connectionPool)
+    
     // property
     let index: Int
     let fetcher: Fetcher
@@ -178,7 +180,7 @@ public final class Processor: RouterDelegate {
             // TODO: logging
             let retryAt = Date().timeIntervalSince1970 + Double(delay)
             logger.debug("retry after \(delay) sec")
-            _ = try Application.connectionPool { conn in
+            _ = try connectionPool.with { conn in
                 try conn.add(newJob, with: .value(retryAt), to: RetrySet())
             }
         } else {
