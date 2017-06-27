@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Dispatch
 
 public protocol Connectable {
     static func makeConnection() throws -> Self
