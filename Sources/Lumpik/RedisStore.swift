@@ -11,23 +11,23 @@ import Redis
 import Sockets
 
 public struct RedisConfig {
-    let host: String = "localhost"
-    let port: Int = 6379
-    let password: String? = nil
+    public let host: String = "localhost"
+    public let port: Int = 6379
+    public let password: String? = nil
 }
 
-final class RedisStore: Connectable {
-    static var defaultConfig = RedisConfig()
+public final class RedisStore: Connectable {
+    public static var defaultConfig = RedisConfig()
 
-    static func makeStore() throws -> RedisStore {
+    public static func makeStore() throws -> RedisStore {
         return try RedisStore(host: defaultConfig.host, port: UInt16(defaultConfig.port))
     }
 
-    static func makeConnection() throws -> RedisStore {
+    public static func makeConnection() throws -> RedisStore {
         return try RedisStore(host: defaultConfig.host, port: UInt16(defaultConfig.port))
     }
 
-    func releaseConnection() throws {
+    public func releaseConnection() throws {
     }
 
     let host: String
