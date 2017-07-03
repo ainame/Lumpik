@@ -20,13 +20,13 @@ class LumpikTests: XCTestCase {
         struct Args: Argument {
             let message: String
             
-            func toArray() -> [Any] {
-                return [message]
+            func toArray() -> [AnyArgumentValue] {
+                return [AnyArgumentValue(message)]
             }
             
-            static func from(_ array: [Any]) -> Args {
+            static func from(_ array: [AnyArgumentValue]) -> LumpikTests.EchoMessageWorker.Args? {
                 return Args(
-                    message: array[0] as! String
+                    message: String(array[0].description)
                 )
             }
         }
