@@ -12,7 +12,7 @@ import Dispatch
 public struct LumpikClient {
     static var connectionPool = AnyConnectablePool(Application.default.connectionPool)
 
-    public static func enqueue<W: Worker, A: Argument>(`class`: W.Type, args: A, retry: Int = W.defaultRetry, to queue: Queue = W.defaultQueue) throws {
+    public static func enqueue<W: Worker, A: Argument>(`class`: W.Type, args: A, retry: Int = W.defaultRetry, to queue: Queue = W.defaultQueue, at: TimeInterval? = nil) throws {
         let now = Date()
         let work = UnitOfWork(jid: JobIdentityGenerator.makeIdentity(),
                                workerType: String(describing: `class`),
@@ -22,8 +22,14 @@ public struct LumpikClient {
                                enqueuedAt: now.timeIntervalSince1970,
                                retryCount: nil, retriedAt: nil, retryQueue: nil, failedAt: nil,
                                errorMessage: nil, errorBacktrace: nil, backtrace: nil, retry: nil, dead: nil)
+        
         _ = try connectionPool.with { conn in
-            try conn.enqueue(work, to: queue)
+            if let at = at {
+                let score = SortedSetScore.value(at)
+                try conn.add(work, with: score, to: ScheduledSet())
+            } else {
+                try conn.enqueue(work, to: queue)
+            }
         }
     }
 

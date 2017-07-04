@@ -67,4 +67,22 @@ extension Worker {
     public static func performAsync(_ args: Args, on queue: Queue = Self.defaultQueue) throws {
         try LumpikClient.enqueue(class: self, args: args, to: queue)
     }
+    
+    public static func performIn(_ date: Date, _ args: Args, on queue: Queue = Self.defaultQueue) throws {
+        let interval = date.timeIntervalSince1970
+        try performIn(interval, args, on: queue)
+    }
+    
+    public static func performIn(_ interval: TimeInterval, _ args: Args, on queue: Queue = Self.defaultQueue) throws {
+        let now = Date().timeIntervalSince1970
+        let realInterval = interval < 1000000000 ? now + interval : interval
+        
+        if realInterval <= now {
+            // optimization
+            try LumpikClient.enqueue(class: self, args: args, to: queue)
+        } else {
+            try LumpikClient.enqueue(class: self, args: args, to: queue, at: realInterval)
+        }
+        
+    }
 }
