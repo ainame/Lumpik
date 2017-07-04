@@ -79,7 +79,7 @@ public class JobSet: SortedSet {
 
 public final class ScheduledSet: JobSet {
     public convenience init() {
-        self.init(rawValue: "scheduled")
+        self.init(rawValue: "schedule")
     }
 }
 
