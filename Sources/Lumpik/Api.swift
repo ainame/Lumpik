@@ -88,3 +88,13 @@ public final class RetrySet: JobSet {
         self.init(rawValue: "retry")
     }
 }
+
+public final class DeadSet: JobSet {
+    public static let timeout: Double = 180 * 24 * 60.0 * 60.0 // 6 months
+    public static let maxJobs: Int = 10000
+    
+    public convenience init() {
+        self.init(rawValue: "dead")
+    }
+}
+

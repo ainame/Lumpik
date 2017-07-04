@@ -8,6 +8,7 @@
 
 import Foundation
 import Dispatch
+import Redis
 
 public final class Processor: RouterDelegate {
     private static let mutex = Mutex()
@@ -184,11 +185,32 @@ public final class Processor: RouterDelegate {
                 try conn.add(newJob, with: .value(retryAt), to: RetrySet())
             }
         } else {
-            // TODO: retries_exhausted
+            try retriesExthusted(work: work, error: error)
         }
         
         // do not throw error in heare
         // because this is only delegate
+    }
+    
+    func retriesExthusted(work: UnitOfWork, error: Error) throws {
+        logger.debug("retries exthusted for job")
+        
+        guard let dead = work.dead, dead != false else { return }
+        
+        let payload = try JSONEncoder().encode(work)
+        let now = Date().timeIntervalSince1970
+        let score = SortedSetScore.value(now)
+        let deadSet = DeadSet()
+        let minusInf = SortedSetScore.infinityNegative.string.makeBytes()
+        let toDeleteScore = SortedSetScore.value(now - DeadSet.timeout).string.makeBytes()
+        
+        try connectionPool.with { conn in
+            try conn.pipelined()
+                .enqueue(Command("ZADD"), [deadSet.key, score.string.makeBytes(), payload.makeBytes()])
+                .enqueue(Command("ZREMRANGEBYSCORE"), [deadSet.key, minusInf, toDeleteScore])
+                .enqueue(Command("ZREMRANGEBYRANK"), [deadSet.key, "0".makeBytes(), "\(DeadSet.maxJobs)".makeBytes()])
+                .execute()
+        }
     }
 }
 

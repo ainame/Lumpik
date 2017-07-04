@@ -25,6 +25,7 @@ public struct UnitOfWork: Codable {
     public var errorBacktrace: String?
     public let backtrace: ToggleOrLimit?
     public let retry: ToggleOrLimit?
+    public let dead: Bool?
     
     public enum ToggleOrLimit {
         case on
@@ -65,6 +66,7 @@ public struct UnitOfWork: Codable {
         case errorBacktrace = "error_backtrace"
         case backtrace
         case retry
+        case dead
     }
 }
 

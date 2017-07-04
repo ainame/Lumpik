@@ -21,7 +21,7 @@ public struct LumpikClient {
                                createdAt: now.timeIntervalSince1970,
                                enqueuedAt: now.timeIntervalSince1970,
                                retryCount: nil, retriedAt: nil, retryQueue: nil, failedAt: nil,
-                               errorMessage: nil, errorBacktrace: nil, backtrace: nil, retry: nil)
+                               errorMessage: nil, errorBacktrace: nil, backtrace: nil, retry: nil, dead: nil)
         _ = try connectionPool.with { conn in
             try conn.enqueue(work, to: queue)
         }
