@@ -43,10 +43,10 @@ public class Poller {
                 do {
                     let now = Date().timeIntervalSince1970
                     while let job = try conn.range(min: .infinityNegative, max: .value(now), from: jobSet, offset: 0, count: 1).first {
-                        let serialized = try encoder.encode(job).makeString()
+                        let serialized = try encoder.encode(job).makeString()                
                         if try conn.remove([serialized], from: jobSet) > 0 {
                             try LumpikClient.enqueue(job, to: job.queue)
-                            logger.error("enqueued \(jobSet): \(String(describing: job.jid))")
+                            logger.debug("enqueued \(jobSet): \(String(describing: job.jid))")
                         }
                     }
                 } catch {

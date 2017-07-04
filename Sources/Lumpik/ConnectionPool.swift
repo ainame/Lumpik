@@ -60,7 +60,7 @@ public class ConnectionPool<T: Connectable>: ConnectablePool {
             }
         }
         
-        let result = semaphore.wait(timeout: DispatchTime.now() + .seconds(1))
+        let result = semaphore.wait(timeout: DispatchTime.now() + .seconds(2))
         switch result {
         case .success:
             mutex.lock()

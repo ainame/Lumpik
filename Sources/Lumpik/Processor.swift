@@ -176,11 +176,11 @@ public final class Processor: RouterDelegate {
             }
         }
         
-        let current = work.retryCount ?? 0
+        let current = newJob.retryCount ?? 0
         if current < maxRetry {
             // TODO: logging
             let retryAt = Date().timeIntervalSince1970 + Double(delay)
-            logger.debug("retry after \(delay) sec")
+            logger.debug("retry after \(delay) sec: retryCount=\(current)")
             _ = try connectionPool.with { conn in
                 try conn.add(newJob, with: .value(retryAt), to: RetrySet())
             }
@@ -194,8 +194,10 @@ public final class Processor: RouterDelegate {
     
     func retriesExthusted(work: UnitOfWork, error: Error) throws {
         logger.debug("retries exthusted for job")
-        
-        guard let dead = work.dead, dead != false else { return }
+
+        if let dead = work.dead, dead == false {
+            return
+        }
         
         let payload = try JSONEncoder().encode(work)
         let now = Date().timeIntervalSince1970
@@ -206,10 +208,12 @@ public final class Processor: RouterDelegate {
         
         try connectionPool.with { conn in
             try conn.pipelined()
-                .enqueue(Command("ZADD"), [deadSet.key, score.string.makeBytes(), payload.makeBytes()])
-                .enqueue(Command("ZREMRANGEBYSCORE"), [deadSet.key, minusInf, toDeleteScore])
-                .enqueue(Command("ZREMRANGEBYRANK"), [deadSet.key, "0".makeBytes(), "\(DeadSet.maxJobs)".makeBytes()])
-                .execute()
+              .enqueue(Command("MULTI"))
+              .enqueue(Command("ZADD"), [deadSet.key, score.string.makeBytes(), payload.makeBytes()])
+              .enqueue(Command("ZREMRANGEBYSCORE"), [deadSet.key, minusInf, toDeleteScore])
+              .enqueue(Command("ZREMRANGEBYRANK"), [deadSet.key, "0".makeBytes(), "-\(DeadSet.maxJobs)".makeBytes()])
+              .enqueue(Command("EXEC"))
+              .execute()
         }
     }
 }

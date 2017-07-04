@@ -10,7 +10,7 @@ import Foundation
 import Dispatch
 
 public struct LumpikClient {
-    static var connectionPool = AnyConnectablePool(Application.default.connectionPool)
+    static var connectionPoolForInternal = AnyConnectablePool(Application.default.connectionPoolForInternal)
 
     public static func enqueue<W: Worker, A: Argument>(`class`: W.Type, args: A, retry: Int = W.defaultRetry, to queue: Queue = W.defaultQueue, at: TimeInterval? = nil) throws {
         let now = Date()
@@ -23,7 +23,7 @@ public struct LumpikClient {
                                retryCount: nil, retriedAt: nil, retryQueue: nil, failedAt: nil,
                                errorMessage: nil, errorBacktrace: nil, backtrace: nil, retry: nil, dead: nil)
         
-        _ = try connectionPool.with { conn in
+        _ = try connectionPoolForInternal.with { conn in
             if let at = at {
                 let score = SortedSetScore.value(at)
                 try conn.add(work, with: score, to: ScheduledSet())
@@ -37,14 +37,14 @@ public struct LumpikClient {
         let newQueue = queue ?? Queue(job["queue"] as! String)
         var newJob = job
         newJob["jid"] = (job["jid"] != nil) ? job["jid"] : JobIdentityGenerator.makeIdentity().rawValue
-        _ = try connectionPool.with { conn in
+        _ = try connectionPoolForInternal.with { conn in
             try conn.enqueue(newJob, to: newQueue)
         }
     }
 
     public static func enqueue(_ job: UnitOfWork, to queue: Queue? = nil) throws {
         let newQueue = queue ?? job.queue
-        _ = try connectionPool.with { conn in
+        _ = try connectionPoolForInternal.with { conn in
             try conn.enqueue(job, to: newQueue)
         }
     }
