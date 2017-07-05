@@ -60,18 +60,23 @@ public class ConnectionPool<T: Connectable>: ConnectablePool {
             }
         }
         
-        let result = semaphore.wait(timeout: DispatchTime.now() + .seconds(2))
-        switch result {
-        case .success:
-            mutex.lock()
-            defer { mutex.unlock() }
-            if let conn = pool.popLast() {
-                return conn
+        let deadline = DispatchTime(secondsFromNow: 1.0)
+        repeat {
+            let result = semaphore.wait(timeout: DispatchTime(secondsFromNow: 0.3))
+            switch result {
+            case .success:
+                mutex.lock()
+                defer { mutex.unlock() }
+                if let conn = pool.popLast() {
+                    return conn
+                }
+                fatalError("can't find connection item from pool")
+            case .timedOut:
+                continue
             }
-            fatalError("can't find connection item from pool")
-        case .timedOut:
-            throw ConnectablePoolError.timeout
-        }
+        } while deadline < DispatchTime.now()
+        
+        throw ConnectablePoolError.timeout
     }
     
     public func checkin(_ connection: Connection) {
