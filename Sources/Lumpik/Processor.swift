@@ -71,7 +71,7 @@ public final class Processor: RouterDelegate {
             // TODO: add original awesome logic not to waste a resource
             delegate.died(processor: self, reason: ConnectablePoolError.timeout.localizedDescription)
         } catch {
-            logger.error("\(error)")
+            logger.error("processor: \(error)")
             delegate.died(processor: self, reason: error.localizedDescription)
         }
     }
@@ -163,7 +163,7 @@ public final class Processor: RouterDelegate {
             newJob.failedAt = Date().timeIntervalSince1970
             newJob.retryCount = 0
         }
-        
+
         if let backtrace = newJob.backtrace {
             switch backtrace {
             case .on:
@@ -175,27 +175,27 @@ public final class Processor: RouterDelegate {
                 break
             }
         }
-        
+
         let current = newJob.retryCount ?? 0
         if current < maxRetry {
             // TODO: logging
             let retryAt = Date().timeIntervalSince1970 + Double(delay)
-            logger.debug("retry after \(delay) sec: retryCount=\(current)")
+            logger.debug("retry after \(delay) sec: retry=\(current)/\(maxRetry)")
             _ = try connectionPool.with { conn in
                 try conn.add(newJob, with: .value(retryAt), to: RetrySet())
             }
         } else {
+            logger.debug("retries exthusted for job")
             try retriesExthusted(work: work, error: error)
         }
-        
+
         // do not throw error in heare
         // because this is only delegate
     }
     
     func retriesExthusted(work: UnitOfWork, error: Error) throws {
-        logger.debug("retries exthusted for job")
-
         if let dead = work.dead, dead == false {
+            logger.debug("don't send to morgue")
             return
         }
         
