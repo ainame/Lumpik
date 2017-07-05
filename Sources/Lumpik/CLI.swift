@@ -105,11 +105,12 @@ extension CLI {
 
     // yaml options can override cli arguments
     public static func parseOptions(base launchOptions: LaunchOptions = LaunchOptions(), closure: @escaping (LaunchOptions) -> ()) {
+        let defaultOptions = LaunchOptions()
         command(
             Option<String>("config", "", description: "path of the config yaml file"),
             VariadicOption<String>("queue", ["default"], description: "queue name"),
-            Option<Int>("concurrency", 25, description: "the number of threads you want"),
-            Option<Int>("pool", 5, description: "the number of connection pools you want"),
+            Option<Int>("concurrency", defaultOptions.concurrency, description: "the number of threads you want"),
+            Option<Int>("pool", defaultOptions.connectionPool, description: "the number of connection pools you want"),
             Flag("daemon", description: "daemonize process", default: false),
             Option<String>("pidfile", "", description: "path of the pid file"),
             Option<String>("logfile", "", description: "path of the log file"),

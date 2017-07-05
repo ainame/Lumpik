@@ -31,11 +31,13 @@ struct Application {
         defer { isInitialized = true }
 
         self.default.mode = mode
-        self.default.connectionPool = ConnectionPool<RedisStore>(maxCapacity: connectionPoolSize)
-
+        
         // for heartbeat/poller
         if mode == .server {
+            self.default.connectionPool = ConnectionPool<RedisStore>(maxCapacity: connectionPoolSize)
             self.default.connectionPoolForInternal = ConnectionPool<RedisStore>(maxCapacity: 5)
+        } else {
+            self.default.connectionPool = ConnectionPool<RedisStore>(maxCapacity: 5)
         }
     }
 }

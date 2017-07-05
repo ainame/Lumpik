@@ -18,7 +18,7 @@ public struct LaunchOptions {
     public var strategy: Fetcher.Type = BasicFetcher.self
     public var daemonize: Bool = false
     public var timeout: TimeInterval = 8.0
-    public var connectionPool: Int = 5
+    public var connectionPool: Int = 25
     public var loglevel: LoggerInitializer.Loglevel = .debug
     public var logfile: URL? = nil
     public var pidfile: URL? = nil
