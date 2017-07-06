@@ -16,7 +16,7 @@ public struct UnitOfWork: Codable {
     public let args: [AnyArgumentValue] // AnyValue型を作って全部Stringに保存して取り出す時はcorcerionする
     public let queue: Queue
     public let createdAt: TimeInterval
-    public let enqueuedAt: TimeInterval
+    public let enqueuedAt: TimeInterval?
     public var retryCount: Int?
     public var retriedAt: TimeInterval?
     public var retryQueue: Queue?

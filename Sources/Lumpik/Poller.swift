@@ -38,13 +38,13 @@ public class Poller {
     func enqueue () throws {
         logger.debug("poll... at \(Date().timeIntervalSince1970)")
         _ = try connectionPoolForInternal.with { conn in
-            let encoder = JSONEncoder()
+            let decoder = JSONDecoder()
             for jobSet in [RetrySet(), ScheduledSet()] {
                 do {
                     let now = Date().timeIntervalSince1970
-                    while let job = try conn.range(min: .infinityNegative, max: .value(now), from: jobSet, offset: 0, count: 1).first {
-                        let serialized = try encoder.encode(job).makeString()                
-                        if try conn.remove([serialized], from: jobSet) > 0 {
+                    while let key = try conn.range(min: .infinityNegative, max: .value(now), from: jobSet, offset: 0, count: 1).first {
+                        if try conn.remove([key], from: jobSet) > 0 {
+                            let job = try decoder.decode(UnitOfWork.self, from: key.data(using: .utf8)!)
                             try LumpikClient.enqueue(job, to: job.queue)
                             logger.debug("enqueued \(jobSet): \(String(describing: job.jid))")
                         }

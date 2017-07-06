@@ -146,13 +146,11 @@ extension RedisStore {
         return response!.int!
     }
 
-    func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, offset: Int, count: Int) throws -> [UnitOfWork] {
+    func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, offset: Int, count: Int) throws -> [String] {
         let params = [sortedSet.key, min.string.makeBytes(), max.string.makeBytes(),
                       "LIMIT".makeBytes(), String(offset).makeBytes(), String(count).makeBytes()]
         let response = try redis.command(Command("ZRANGEBYSCORE"), params)
-        let decoder = JSONDecoder()
-        return try response!.array!.flatMap { $0!.string }
-            .map { try decoder.decode(UnitOfWork.self, from: Data($0.makeBytes())) }
+        return response!.array!.flatMap { $0!.string }
     }
 
     func size(_ sortedSet: SortedSet) throws -> Int {
