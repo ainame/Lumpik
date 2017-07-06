@@ -105,6 +105,7 @@ public class Heart {
             }
         } catch {
             // best effort
+            logger.debug("heatbeat error: \(error)")
         }
     }
 }
