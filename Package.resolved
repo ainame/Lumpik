@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/vapor/bits.git",
         "state": {
           "branch": null,
-          "revision": "389f1344cd5819e94c54ee18b35c2bc5589c7f05",
-          "version": "1.0.0"
+          "revision": "c32f5e6ae2007dccd21a92b7e33eba842dd80d2f",
+          "version": "1.1.0"
         }
       },
       {
@@ -24,8 +24,8 @@
         "repositoryURL": "https://github.com/vapor/core.git",
         "state": {
           "branch": null,
-          "revision": "03af35140315ad2d5cbf6c197bcf4a64b9c5e24d",
-          "version": "2.0.2"
+          "revision": "b8330808f4f6b69941961afe8ad6b015562f7b7c",
+          "version": "2.1.2"
         }
       },
       {
@@ -42,8 +42,8 @@
         "repositoryURL": "https://github.com/vapor/debugging.git",
         "state": {
           "branch": null,
-          "revision": "bbd261de01c47f2e4d9acf4097807349330194ea",
-          "version": "1.0.0"
+          "revision": "49c5e8f0a7cb5456a8f7c72c6cd9f1553e5885a8",
+          "version": "1.1.0"
         }
       },
       {
@@ -51,8 +51,8 @@
         "repositoryURL": "https://github.com/vapor/node.git",
         "state": {
           "branch": null,
-          "revision": "26b0547ac4bd5ce8f7ba0217371bdee6c8f1c886",
-          "version": "2.0.3"
+          "revision": "642f357d08ec5aa335ae2e3c4633c72da7b5a0c4",
+          "version": "2.1.1"
         }
       },
       {
@@ -60,8 +60,8 @@
         "repositoryURL": "https://github.com/vapor/random.git",
         "state": {
           "branch": null,
-          "revision": "c3e3737f52b4ac8ffa0eaaba2c19186b9fd816f5",
-          "version": "1.0.0"
+          "revision": "d7c4397d125caba795d14d956efacfe2a27a63d0",
+          "version": "1.2.0"
         }
       },
       {
@@ -78,8 +78,8 @@
         "repositoryURL": "https://github.com/IBM-Swift/BlueSignals.git",
         "state": {
           "branch": null,
-          "revision": "9c8b880d1b2912dfee5fff1a9f5cb9478eeea602",
-          "version": "0.9.46"
+          "revision": "99ac410f8ad4a75f0ec9a9d72512d5028e804253",
+          "version": "0.9.48"
         }
       },
       {
@@ -87,8 +87,8 @@
         "repositoryURL": "https://github.com/vapor/sockets.git",
         "state": {
           "branch": null,
-          "revision": "9f58e4e718388c45ad36fe35c0d7fda323b49a9d",
-          "version": "2.0.1"
+          "revision": "f6b06982e94db71227e99c56fec5899a8526e8ad",
+          "version": "2.1.0"
         }
       },
       {
@@ -105,8 +105,8 @@
         "repositoryURL": "https://github.com/SwiftyBeaver/SwiftyBeaver.git",
         "state": {
           "branch": null,
-          "revision": "2a62f0d72d1868fd2e8fa59b489c4dc8a337b6cb",
-          "version": "1.2.2"
+          "revision": "e4563d158cd7fe2fc29931036bc10fd97c303933",
+          "version": "1.4.0"
         }
       },
       {
@@ -114,8 +114,8 @@
         "repositoryURL": "https://github.com/jpsim/Yams.git",
         "state": {
           "branch": null,
-          "revision": "acf403cb0d950a2d58ea8c63ce001deac2fde222",
-          "version": "0.3.2"
+          "revision": "c7518628d011fbd096ebe75d76d3574dc62d17dc",
+          "version": "0.3.5"
         }
       }
     ]
