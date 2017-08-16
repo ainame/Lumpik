@@ -33,6 +33,11 @@ extension Identity where RawValue == String {
 public struct ProcessIdentity: Identity {
     public let rawValue: String
     
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.rawValue = try container.decode(String.self)
+    }
+   
     public init?(rawValue: String) {
         self.rawValue = rawValue
     }
@@ -45,6 +50,11 @@ public struct ProcessIdentity: Identity {
 public struct Tid: Identity {
     public let rawValue: String
     
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.rawValue = try container.decode(String.self)
+    }
+
     public init?(rawValue: String) {
         self.rawValue = rawValue
     }
@@ -56,6 +66,11 @@ public struct Tid: Identity {
 
 public struct Jid: Identity {
     public let rawValue: String
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.rawValue = try container.decode(String.self)
+    }
     
     public init?(rawValue: String) {
         self.rawValue = rawValue
