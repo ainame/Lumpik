@@ -49,6 +49,18 @@ public struct AnyArgumentValue: Codable, CustomStringConvertible {
     public var description: String {
         return representedString
     }
+    
+    public var intValue: Int {
+        return Int(self.description)!
+    }
+    
+    public var doubleValue: Double {
+        return Double(self.description)!
+    }
+    
+    public var stringValue: String {
+        return String(self.description)
+    }
 }
 
 extension Worker {

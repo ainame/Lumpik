@@ -1,6 +1,5 @@
-// Generated using Sourcery 0.5.8 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 0.7.2 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
-
 
 import Foundation
 import Lumpik
@@ -28,10 +27,8 @@ extension ComplexWorker.Args {
 
     static func from(_ array: [AnyArgumentValue]) -> ComplexWorker.Args? {
         // NOTE: currently stencil template engine can not provide counter with starting 0
-        guard let userId = Int(array[1 - 1].description) ,
-            let comment = String(array[2 - 1].description)  else {
-            return nil
-        }
+        let userId = array[1 - 1].intValue
+        let comment = array[2 - 1].stringValue
 
         return ComplexWorker.Args(
             userId: userId,
@@ -49,9 +46,7 @@ extension EchoWorker.Args {
 
     static func from(_ array: [AnyArgumentValue]) -> EchoWorker.Args? {
         // NOTE: currently stencil template engine can not provide counter with starting 0
-        guard let message = String(array[1 - 1].description)  else {
-            return nil
-        }
+        let message = array[1 - 1].stringValue
 
         return EchoWorker.Args(
             message: message
