@@ -19,22 +19,34 @@ let package = Package(
         .package(url: "https://github.com/jpsim/Yams.git", from: "0.1.0")
     ],
     targets: [
-        .target(name: "Lumpik",
-                dependencies: [
-                    "Redis",
-                    "Daemon",
-                    "Signals",
-                    "SwiftyBeaver",
-                    "Commander",
-                    "Yams"
-                ]),
-        // uncomment if you want to build example
-        .target(name: "Examples", dependencies: ["Lumpik"]),
-        .target(name: "Benchmark", dependencies: ["Lumpik"]),
-    ]// ,
-    // exclude: [
-    //     // comment out if you want to build example
-    //     //     "Sources/Examples",
-    //     //     "Sources/Benchmark",
-    // ]
+        .target(
+            name: "Lumpik",
+            dependencies: [
+                "Redis",
+                "Daemon",
+                "Signals",
+                "SwiftyBeaver",
+                "Commander",
+                "Yams"
+            ],
+            exclude: [
+                "Sources/Examples",
+                "Sources/Benchmark"
+            ]
+        ),
+        .target(
+            name: "Examples",
+            dependencies: ["Lumpik"],
+            exclude: [
+                "Sources/Examples",
+            ]
+        ),
+        .target(
+            name: "Benchmark",
+            dependencies: ["Lumpik"],
+            exclude: [
+                "Sources/Benchmark",
+            ]
+        )
+    ]
 )
