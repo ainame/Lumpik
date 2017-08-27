@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "Lumpik",
     products: [
-        .library(name: "Lumipik", targets: ["Lumpik"]),
+        .library(name: "Lumpik", targets: ["Lumpik"]),
         .library(name: "LumpikStatic",  type: .static,  targets: ["Lumpik"]),
         .library(name: "LumpikDynamic", type: .dynamic, targets: ["Lumpik"]),
         .executable(name: "Examples", targets: ["Examples"]),
