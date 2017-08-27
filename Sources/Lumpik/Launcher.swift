@@ -13,6 +13,7 @@ import Signals
 import Redis
 
 public struct LaunchOptions {
+    public var redisConfig: RedisConfig = RedisConfig()
     public var concurrency: Int = 25
     public var queues: [Queue] = [Queue("default")]
     public var strategy: Fetcher.Type = BasicFetcher.self

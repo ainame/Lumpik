@@ -11,9 +11,15 @@ import Redis
 import Sockets
 
 public struct RedisConfig {
-    public let host: String = "localhost"
-    public let port: Int = 6379
-    public let password: String? = nil
+    public let host: String
+    public let port: Int
+    public let password: String?
+    
+    public init(host: String = "localhost", port: Int = 6379, password: String? = nil) {
+        self.host = host
+        self.port = port
+        self.password = password
+    }
 }
 
 public final class RedisStore: Connectable {
