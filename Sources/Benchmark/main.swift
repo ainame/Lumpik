@@ -3,6 +3,7 @@ import Lumpik
 
 var options = LaunchOptions()
 options.connectionPool = 25
+options.redisConfig = RedisConfig(host: "localhost", port: 6379)
 let router = Router()
 LoggerInitializer.initialize(loglevel: .error, logfile: nil)
 
