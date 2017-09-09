@@ -170,7 +170,7 @@ public final class Processor: RouterDelegate {
                 newJob.errorBacktrace = Thread.callStackSymbols.joined()
             case .limited(let limit):
                 let all = Thread.callStackSymbols.joined()
-                newJob.errorBacktrace = all.substring(to: all.index(all.startIndex, offsetBy: String.IndexDistance(limit)))
+                newJob.errorBacktrace = String(all[all.startIndex ..< all.index(all.startIndex, offsetBy: String.IndexDistance(limit))])
             default:
                 break
             }

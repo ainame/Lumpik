@@ -15,7 +15,7 @@ struct Delay {
     
     // exponential backoff
     static func next(by count: Int) -> Int {
-        let item1: Int = Int(NSDecimalNumber(decimal: Decimal(pow(Double(count), Double(4)))))
+        let item1: Int = Int(truncating: NSDecimalNumber(decimal: Decimal(pow(Double(count), Double(4)))))
         let item2: Int = 15
         let item3: Int = Int(Compat.random(30)) * (count + 1)
         return item1 + item2 + item3
