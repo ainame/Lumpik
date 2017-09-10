@@ -10,7 +10,7 @@ import Foundation
 import Bits
 
 public protocol StoreKeyConvertible: RawRepresentable, Hashable {
-    var key: Bytes { get }
+    var key: String { get }
 }
 
 extension StoreKeyConvertible {
@@ -40,8 +40,8 @@ public class Queue: StoreKeyConvertible, CustomStringConvertible, Codable {
         self.rawValue = rawValue
     }
     
-    public var key: Bytes {
-        return "queue:\(rawValue)".makeBytes()
+    public var key: String {
+        return "queue:\(rawValue)"
     }
     
     public var description: String {
@@ -60,8 +60,8 @@ public class SortedSet: StoreKeyConvertible {
         self.rawValue = rawValue
     }
     
-    public var key: Bytes {
-        return rawValue.makeBytes()
+    public var key: String {
+        return rawValue
     }
 }
 
@@ -76,8 +76,8 @@ public class Set: StoreKeyConvertible {
         self.rawValue = rawValue
     }
     
-    public var key: Bytes {
-        return rawValue.makeBytes()
+    public var key: String {
+        return rawValue
     }
 }
 

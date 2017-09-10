@@ -209,9 +209,9 @@ public final class Processor: RouterDelegate {
         try connectionPool.with { conn in
             try conn.pipelined()
               .enqueue(Command("MULTI"))
-              .enqueue(Command("ZADD"), [deadSet.key, score.string.makeBytes(), payload.makeBytes()])
-              .enqueue(Command("ZREMRANGEBYSCORE"), [deadSet.key, minusInf, toDeleteScore])
-              .enqueue(Command("ZREMRANGEBYRANK"), [deadSet.key, "0".makeBytes(), "-\(DeadSet.maxJobs)".makeBytes()])
+              .enqueue(Command("ZADD"), [deadSet.key.makeBytes(), score.string.makeBytes(), payload.makeBytes()])
+              .enqueue(Command("ZREMRANGEBYSCORE"), [deadSet.key.makeBytes(), minusInf, toDeleteScore])
+              .enqueue(Command("ZREMRANGEBYRANK"), [deadSet.key.makeBytes(), "0".makeBytes(), "-\(DeadSet.maxJobs)".makeBytes()])
               .enqueue(Command("EXEC"))
               .execute()
         }

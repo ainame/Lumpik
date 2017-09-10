@@ -50,7 +50,7 @@ final class BasicFetcher: Fetcher {
             
             for job in jobs {
                 let payload = try encoder.encode(job)
-                try pipeline.enqueue(Command("RPUSH"), [job.queue.key, payload.makeBytes()])
+                try pipeline.enqueue(Command("RPUSH"), [job.queue.key.makeBytes(), payload.makeBytes()])
             }
         
             try pipeline.execute()

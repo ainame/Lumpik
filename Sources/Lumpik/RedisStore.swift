@@ -61,38 +61,59 @@ public final class RedisStore: Connectable {
 
 extension RedisStore {
     public func get<K: StoreKeyConvertible>(_ key: K) throws -> String? {
-        let response = try redis.command(.get, [key.key])
+        return try get(key.key)
+    }
+
+    public func get(_ key: String) throws -> String? {
+        let response = try redis.command(.get, [key])
         return response?.string
     }
-
+  
     public func set<K: StoreKeyConvertible>(_ key: K, value: String) throws -> Int {
-        let response = try redis.command(.set, [key.key, value.makeBytes()])
+        return try set(key.key, value: value)
+    }
+    
+    public func set(_ key: String, value: String) throws -> Int {
+        let response = try redis.command(.set, [key.bytes, value.makeBytes()])
+        return response!.int!
+    }
+   
+    public func increment<K: StoreKeyConvertible>(_ key: K, by count: Int = 1) throws -> Int {
+        return try increment(key.key, by: count)
+    }
+    
+    public func increment(_ key: String, by count: Int = 1) throws -> Int {
+        let response = try redis.command(Command("INCRBY"), [key.bytes, String(count).makeBytes()])
         return response!.int!
     }
 
-    public func increment<K: StoreKeyConvertible>(_ key: K, by count: Int = 1) throws -> Int {
-        let response = try redis.command(Command("INCRBY"), [key.key, String(count).makeBytes()])
-        return response!.int!
-    }
 }
 
 extension RedisStore {
     @discardableResult
     public func enqueue(_ job: [String: Any], to queue: Queue) throws -> Int {
+        return try enqueue(job, to: queue.key)
+    }
+    
+    public func enqueue(_ job: [String: Any], to key: String) throws -> Int {
         let data = try JsonConverter.default.serialize(job)
-        let response = try redis.command(Command("LPUSH"), [queue.key, data.makeBytes()])
+        let response = try redis.command(Command("LPUSH"), [key.bytes, data.makeBytes()])
         return response!.int!
     }
     
     @discardableResult
     public func enqueue<T: Encodable>(_ job: T, to queue: Queue) throws -> Int {
         let data = try JSONEncoder().encode(job)
-        let response = try redis.command(Command("LPUSH"), [queue.key, data.makeBytes()])
+        let response = try redis.command(Command("LPUSH"), [queue.key.makeBytes() , data.makeBytes()])
         return response!.int!
     }
-    
+
     public func dequeue<T: Decodable>(_ queues: [Queue]) throws -> T? {
-        var params = queues.map { $0.key }
+        return try dequeue(queues.map { $0.key })
+    }
+
+    public func dequeue<T: Decodable>(_ queues: [String]) throws -> T? {
+        var params = queues.map { $0.bytes }
         params.append(String(dequeueTimeout).makeBytes())
         
         let response = try redis.command(Command("BRPOP"), params)
@@ -103,36 +124,58 @@ extension RedisStore {
         let data = Data(array[1]!.bytes!)
         return try JSONDecoder().decode(T.self, from: data)
     }
-    
+
     public func size(_ queue: Queue) throws -> Int {
-        let response = try redis.command(Command("LLEN"), [queue.key])
+        return try size(queuekey: queue.key)
+    }
+    
+    public func size(queuekey: String) throws -> Int {
+        let response = try redis.command(Command("LLEN"), [queuekey])
         return response!.int!
     }
 }
 
 extension RedisStore {
     public func add(_ member: [String: Any], to set: Set) throws -> Int {
+        return try add(member, to: set.key)
+    }
+    
+    public func add(_ member: [String: Any], to key: String) throws -> Int {
         let data = try JSONEncoder().encode(member)
-        let response = try redis.command(Command("SADD"), [set.key, data.makeBytes()])
+        let response = try redis.command(Command("SADD"), [key.bytes, data.makeBytes()])
         return response!.int!
     }
 
+    @discardableResult
     public func remove(_ members: [String], from set: Set) throws -> Int {
-        var params = [set.key]
-        members.forEach { params.append($0.makeBytes()) }
+        return try remove(members, fromSet: set.key)
+    }
 
+    @discardableResult
+    public func remove(_ members: [String], fromSet key: String) throws -> Int {
+        var params = [key.bytes]
+        members.forEach { params.append($0.makeBytes()) }
+        
         let response = try redis.command(Command("SREM"), params)
         return response!.int!
     }
-
+    
     public func members(_ set: Set) throws -> [String] {
-        let response = try redis.command(Command("SMEMBERS"), [set.key])
+        return try members(set.key)
+    }
+    
+    public func members(_ key: String) throws -> [String] {
+        let response = try redis.command(Command("SMEMBERS"), [key.bytes])
         let members: [String] = response!.array!.flatMap { $0!.string! }
         return members
     }
 
     public func size(_ set: Set) throws -> Int {
-        let response = try redis.command(Command("SCARD"), [set.key])
+        return try size(setkey: set.key)
+    }
+    
+    public func size(setkey key: String) throws -> Int {
+        let response = try redis.command(Command("SCARD"), [key.bytes])
         return response!.int!
     }
 }
@@ -140,28 +183,45 @@ extension RedisStore {
 extension RedisStore {
     @discardableResult
     public func add<T: Encodable>(_ member: T, with score: SortedSetScore, to sortedSet: SortedSet) throws -> Int {
+        return try add(member, with: score, to: sortedSet.key)
+    }
+    
+    public func add<T: Encodable>(_ member: T, with score: SortedSetScore, to key: String) throws -> Int {
         let data = try JSONEncoder().encode(member)
-        let response = try redis.command(Command("ZADD"), [sortedSet.key, score.string.makeBytes(), data.makeBytes()])
+        let response = try redis.command(Command("ZADD"), [key.bytes, score.string.makeBytes(), data.makeBytes()])
         return response!.int!
     }
 
     @discardableResult
     public func remove(_ members: [String], from sortedSet: SortedSet) throws -> Int {
-        var params = [sortedSet.key]
+        return try remove(members, fromSortedSort: sortedSet.key)
+    }
+    
+    @discardableResult
+    public func remove(_ members: [String], fromSortedSort key: String) throws -> Int {
+        var params = [key.bytes]
         members.forEach { params.append($0.makeBytes()) }
         let response = try redis.command(Command("ZREM"), params)
         return response!.int!
     }
 
     public func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, offset: Int, count: Int) throws -> [String] {
-        let params = [sortedSet.key, min.string.makeBytes(), max.string.makeBytes(),
+        return try range(min: min, max: max, from: sortedSet.key, offset: offset, count: count)
+    }
+    
+    public func range(min: SortedSetScore, max: SortedSetScore, from key: String, offset: Int, count: Int) throws -> [String] {
+        let params = [key.bytes, min.string.makeBytes(), max.string.makeBytes(),
                       "LIMIT".makeBytes(), String(offset).makeBytes(), String(count).makeBytes()]
         let response = try redis.command(Command("ZRANGEBYSCORE"), params)
         return response!.array!.flatMap { $0!.string }
     }
 
     public func size(_ sortedSet: SortedSet) throws -> Int {
-        let response = try redis.command(Command("ZCARD"), [sortedSet.key])
+        return try size(sortedSetkey: sortedSet.key)
+    }
+    
+    public func size(sortedSetkey key: String) throws -> Int {
+        let response = try redis.command(Command("ZCARD"), [key.bytes])
         return response!.int!
     }
 }
