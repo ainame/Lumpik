@@ -23,21 +23,21 @@ public protocol ConnectablePool {
     func with<T>(handler: (Connection) throws -> (T)) throws -> T
 }
 
-enum ConnectablePoolError: Error {
+public enum ConnectablePoolError: Error {
     case timeout
 }
 
 public class ConnectionPool<T: Connectable>: ConnectablePool {
     public typealias Connection = T
     
-    let maxCapacity: Int
+    public let maxCapacity: Int
     
     private var pool = [Connection]()
     private let mutex = Mutex()
     private let semaphore: DispatchSemaphore
     private let poolCounter = AtomicCounter<Int>(0)
     
-    init(maxCapacity: Int) {
+    public init(maxCapacity: Int) {
         self.maxCapacity = maxCapacity
         self.semaphore = DispatchSemaphore(value: maxCapacity)
     }
@@ -104,20 +104,20 @@ extension ConnectablePool {
     }
 }
 
-struct AnyConnectablePool<T: Connectable>: ConnectablePool {
+public struct AnyConnectablePool<T: Connectable>: ConnectablePool {
     let _borrow: () throws -> T
     let _checkin: (T) -> ()
 
-    init<CP: ConnectablePool>(_ connectionPool: CP) where CP.Connection == T {
+    public init<CP: ConnectablePool>(_ connectionPool: CP) where CP.Connection == T {
         self._borrow = connectionPool.borrow
         self._checkin = connectionPool.checkin
     }
     
-    func borrow() throws -> T {
+    public func borrow() throws -> T {
         return try _borrow()
     }
     
-    func checkin(_ connection: T) {
+    public func checkin(_ connection: T) {
         _checkin(connection)
     }
 
