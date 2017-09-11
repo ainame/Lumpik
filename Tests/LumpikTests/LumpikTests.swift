@@ -45,16 +45,18 @@ class LumpikTests: XCTestCase {
     let pool = SingleConnectionPool()
 
     override func setUp() {
-        LumpikClient.connectionPool = AnyConnectablePool(pool)
+        LumpikClient.connectionPoolForInternal = AnyConnectablePool(pool)
         // try! Queue("test").clear()
     }
 
     func testExample() throws {
         try EchoMessageWorker.performAsync(.init(message: "Hello, World!"))
-        _ = try pool.with { conn in
-            let result = try conn.dequeue([Queue("test")])
-            XCTAssertNotNil(result)
-        }
+        XCTAssertNoThrow(
+            _ = try pool.with { conn in
+                let result = try conn.dequeue([Queue("test")])
+                XCTAssertNotNil(result)
+            }
+        )
     }
 
     func testFetcher() {
@@ -67,7 +69,7 @@ class LumpikTests: XCTestCase {
         _ = try pool.with { conn in
             try conn.enqueue(["hoge": 1, "queue": "default"], to: Queue("default"))
             do {
-                _ = try conn.dequeue([Queue("default")])
+                let _: UnitOfWork? = try conn.dequeue([Queue("default")])
                 XCTFail()
             } catch {
                 XCTAssertNotNil(error)
@@ -78,7 +80,7 @@ class LumpikTests: XCTestCase {
     func testRedisEmptyDequeue() throws {
         _ = try pool.with { conn in
             do {
-                let work = try conn.dequeue([Queue("default")])
+                let work: UnitOfWork? = try conn.dequeue([Queue("default")])
                 XCTAssertNil(work)
             } catch(let error) {
                 print(error)

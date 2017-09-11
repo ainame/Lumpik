@@ -32,16 +32,18 @@ class ProcessSetTests: XCTestCase {
     }
     
     func testExample() throws {
-        let string = "{ \"hostname\": \"app-1.example.com\", \"started_at\": 12345678910, \"pid\": 12345, \"tag\": \"myapp\", \"concurrency\": 25, \"labels\": [], \"queues\": [\"default\", \"low\"],\"busy\": 10,\"beat\": 12345678910,\"identity\": \"<unique string identifying the process>\"}"
+        let string = "{ \"hostname\": \"app-1.example.com\", \"started_at\": 12345678910, \"pid\": 12345, \"tag\": \"myapp\", \"concurrency\": 25, \"labels\": [], \"queues\": [\"default\", \"low\"],\"busy\": 10,\"beat\": 12345678910,\"identity\": \"<unique string i dentifying the process>\"}"
         let data = string.data(using: .utf8)!
         let process = try JSONDecoder().decode(Lumpik.Process.self, from:data)
         XCTAssertNotNil(process)
                 
         let heart = Heart(concurrency: 25, queues: [Queue("default")])
         try heart.beat(done: false)
-        try ProcessSet().each { process in
-            print(process)
-            XCTAssertNotNil(process)
-        }
+        XCTAssertNoThrow(
+            try ProcessSet().each { process in
+                print(process)
+                XCTAssertNotNil(process)
+            }
+        )
     }
 }

@@ -34,6 +34,10 @@ let package = Package(
                 "Sources/Benchmark"
             ]
         ),
+        .testTarget(
+            name: "LumpikTests",
+            dependencies: ["Lumpik"]
+        ),
         .target(
             name: "Examples",
             dependencies: ["Lumpik"],

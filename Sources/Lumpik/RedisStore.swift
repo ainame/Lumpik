@@ -108,21 +108,20 @@ extension RedisStore {
         return response!.int!
     }
 
-    public func dequeue<T: Decodable>(_ queues: [Queue]) throws -> T? {
-        return try dequeue(queues.map { $0.key })
+    public func dequeue(_ queues: [Queue]) throws -> UnitOfWork? {
+        let decoder = JSONDecoder()
+        guard let response = try dequeue(queues.map { $0.key }) else { return nil }
+        return try decoder.decode(UnitOfWork.self, from: response.value.data(using: .utf8)!)
     }
 
-    public func dequeue<T: Decodable>(_ queues: [String]) throws -> T? {
+    public func dequeue(_ queues: [String]) throws -> (key: String, value: String)? {
         var params = queues.map { $0.bytes }
         params.append(String(dequeueTimeout).makeBytes())
         
         let response = try redis.command(Command("BRPOP"), params)
-        guard let array = response?.array else {
-            return nil
-        }
-        
-        let data = Data(array[1]!.bytes!)
-        return try JSONDecoder().decode(T.self, from: data)
+        guard let array = response?.array else { return nil }
+
+        return (key: array[0]!.string!, value: array[1]!.string!)
     }
 
     public func size(_ queue: Queue) throws -> Int {
@@ -160,15 +159,13 @@ extension RedisStore {
         return response!.int!
     }
     
-    public func members<T: Decodable>(_ set: Set) throws -> [T] {
+    public func members(_ set: Set) throws -> [String] {
         return try members(set.key)
     }
     
-    public func members<T: Decodable>(_ key: String) throws -> [T] {
+    public func members(_ key: String) throws -> [String] {
         let response = try redis.command(Command("SMEMBERS"), [key.bytes])
-        let decoder = JSONDecoder()
-        let members: [T] = try response!.array!
-            .flatMap { try decoder.decode(T.self, from: $0!.string!.data(using: .utf8)!) }
+        let members: [String] = try response!.array!.flatMap { $0!.string! }
         return members
     }
 
