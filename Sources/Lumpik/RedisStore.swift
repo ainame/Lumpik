@@ -72,6 +72,11 @@ extension RedisStore {
         let response = try redis.command(.set, [key.bytes, value.makeBytes()])
         return response!.int!
     }
+    
+    public func delete(_ key: String) throws -> Int {
+        let response = try redis.command(.delete, [key.bytes])
+        return response!.int!
+    }
    
     public func increment<K: StoreKeyConvertible>(_ key: K, by count: Int = 1) throws -> Int {
         return try increment(key.key, by: count)
