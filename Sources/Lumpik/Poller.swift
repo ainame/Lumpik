@@ -42,7 +42,9 @@ public class Poller {
             for jobSet in [RetrySet(), ScheduledSet()] {
                 do {
                     let now = Date().timeIntervalSince1970
-                    while let key = try conn.range(min: .infinityNegative, max: .value(now), from: jobSet, offset: 0, count: 1).first {
+                    while let key: String = try conn.range(min: .infinityNegative, max: .value(now), from: jobSet,
+                                                           offset: 0, count: 1).first
+                    {
                         if try conn.remove([key], from: jobSet) > 0 {
                             let job = try decoder.decode(UnitOfWork.self, from: key.data(using: .utf8)!)
                             try LumpikClient.enqueue(job, to: job.queue)

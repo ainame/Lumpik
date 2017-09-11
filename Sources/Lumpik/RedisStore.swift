@@ -60,13 +60,13 @@ public final class RedisStore: Connectable {
 }
 
 extension RedisStore {
-    public func get<K: StoreKeyConvertible>(_ key: K) throws -> String? {
+    public func get<K: StoreKeyConvertible, T: Decodable>(_ key: K) throws -> T? {
         return try get(key.key)
     }
 
-    public func get(_ key: String) throws -> String? {
-        let response = try redis.command(.get, [key])
-        return response?.string
+    public func get<T: Decodable>(_ key: String) throws -> T? {
+        guard let response = try redis.command(.get, [key])?.string?.data(using: .utf8) else { return nil }
+        return try JSONDecoder().decode(T.self, from: response)
     }
   
     public func set<K: StoreKeyConvertible>(_ key: K, value: String) throws -> Int {
@@ -160,13 +160,15 @@ extension RedisStore {
         return response!.int!
     }
     
-    public func members(_ set: Set) throws -> [String] {
+    public func members<T: Decodable>(_ set: Set) throws -> [T] {
         return try members(set.key)
     }
     
-    public func members(_ key: String) throws -> [String] {
+    public func members<T: Decodable>(_ key: String) throws -> [T] {
         let response = try redis.command(Command("SMEMBERS"), [key.bytes])
-        let members: [String] = response!.array!.flatMap { $0!.string! }
+        let decoder = JSONDecoder()
+        let members: [T] = try response!.array!
+            .flatMap { try decoder.decode(T.self, from: $0!.string!.data(using: .utf8)!) }
         return members
     }
 
@@ -205,15 +207,18 @@ extension RedisStore {
         return response!.int!
     }
 
-    public func range(min: SortedSetScore, max: SortedSetScore, from sortedSet: SortedSet, offset: Int, count: Int) throws -> [String] {
+    public func range<T: Decodable>(min: SortedSetScore, max: SortedSetScore,
+                                    from sortedSet: SortedSet, offset: Int, count: Int) throws -> [T] {
         return try range(min: min, max: max, from: sortedSet.key, offset: offset, count: count)
     }
     
-    public func range(min: SortedSetScore, max: SortedSetScore, from key: String, offset: Int, count: Int) throws -> [String] {
+    public func range<T: Decodable>(min: SortedSetScore, max: SortedSetScore,
+                                    from key: String, offset: Int, count: Int) throws -> [T] {
         let params = [key.bytes, min.string.makeBytes(), max.string.makeBytes(),
                       "LIMIT".makeBytes(), String(offset).makeBytes(), String(count).makeBytes()]
         let response = try redis.command(Command("ZRANGEBYSCORE"), params)
-        return response!.array!.flatMap { $0!.string }
+        let decoder = JSONDecoder()
+        return try response!.array!.flatMap { try decoder.decode(T.self, from: $0!.string!.data(using: .utf8)!) }
     }
 
     public func size(_ sortedSet: SortedSet) throws -> Int {
