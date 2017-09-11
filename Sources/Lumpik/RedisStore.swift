@@ -60,13 +60,8 @@ public final class RedisStore: Connectable {
 }
 
 extension RedisStore {
-    public func get<K: StoreKeyConvertible, T: Decodable>(_ key: K) throws -> T? {
-        return try get(key.key)
-    }
-
-    public func get<T: Decodable>(_ key: String) throws -> T? {
-        guard let response = try redis.command(.get, [key])?.string?.data(using: .utf8) else { return nil }
-        return try JSONDecoder().decode(T.self, from: response)
+    public func get(_ key: String) throws -> String? {
+        return try redis.command(.get, [key])?.string
     }
   
     public func set<K: StoreKeyConvertible>(_ key: K, value: String) throws -> Int {
