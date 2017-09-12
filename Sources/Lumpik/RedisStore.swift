@@ -64,13 +64,13 @@ extension RedisStore {
         return try redis.command(.get, [key])?.string
     }
   
-    public func set<K: StoreKeyConvertible>(_ key: K, value: String) throws -> Int {
+    public func set<K: StoreKeyConvertible>(_ key: K, value: String) throws -> Bool {
         return try set(key.key, value: value)
     }
     
-    public func set(_ key: String, value: String) throws -> Int {
+    public func set(_ key: String, value: String) throws -> Bool {
         let response = try redis.command(.set, [key.bytes, value.makeBytes()])
-        return response!.int!
+        return response?.string == "OK"
     }
     
     public func delete(_ key: String) throws -> Int {
