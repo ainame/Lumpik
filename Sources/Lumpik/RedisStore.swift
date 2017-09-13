@@ -60,8 +60,16 @@ public final class RedisStore: Connectable {
 }
 
 extension RedisStore {
+    public func keys(_ key: String) throws -> [String] {
+        return try redis.command(Command("KEYS"), [key.makeBytes()])!.array!.map { $0!.string! }
+    }
+    
     public func get(_ key: String) throws -> String? {
         return try redis.command(.get, [key])?.string
+    }
+    
+    public func mget(_ keys: [String]) throws -> [String?] {
+        return try redis.command(Command("MGET"), keys.map { $0.makeBytes() })!.array!.map { $0!.string }
     }
   
     public func set<K: StoreKeyConvertible>(_ key: K, value: String) throws -> Bool {
