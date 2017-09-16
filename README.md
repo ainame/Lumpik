@@ -17,7 +17,7 @@ see [https://github.com/ainame/Lumpik/tree/master/Sources/Examples/](https://git
 ## Benchmark
 
 Please host local redis-server at firtst.
-Do 100,000 no-op jobs, and measure throughput.
+Do 100,000 no-op jobs, and measure its throughput.
 
 ```
 $ git clone https://github.com/ainame/Lumpik.git
