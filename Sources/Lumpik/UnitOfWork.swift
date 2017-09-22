@@ -61,7 +61,7 @@ public struct UnitOfWork: Codable {
         case retryCount = "retry_count"
         case retriedAt = "retried_at"
         case retryQueue = "retry_queue"
-        case failedAt = "failedAt"
+        case failedAt = "failed_at"
         case errorMessage = "error_message"
         case errorBacktrace = "error_backtrace"
         case backtrace
